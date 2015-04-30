@@ -27,9 +27,15 @@ Vector3 ParallelogramLight::randPt() const {
     return m_center + vx + vy;
 }
 
-/*
+Ray ParallelogramLight::randRay() const {
+    Vector3 o = randPt();
+    Vector3 d = m_material->randEmit(normal());
+    return Ray(o, d);
+}
+
+
 void
-Parallelogram::renderGL() {
+ParallelogramLight::renderGL() {
     glColor3f(1, 1, 1);
     glPushMatrix();
     glTranslatef(m_center.x, m_center.y, m_center.z);
@@ -39,9 +45,10 @@ Parallelogram::renderGL() {
     Vector3 pt11 = m_spanX*m_vecX + m_spanY*m_vecY;
     float s = 1.0 / 4.0;
     Vector3 n = normal()*sqrt(m_spanX*m_spanX + m_spanY*m_spanY)*s;
-    for (int i = 0; i < 5; i++){
-        for (int j = 0; j < 5; j++){
-            Vector3 p = (2.0*i / 5.0 - 1.0)*m_spanX*m_vecX + (2.0*i / 5.0 - 1.0)*m_spanY*m_vecY;
+    int a = 4;
+    for (int i = 0; i < a; i++){
+        for (int j = 0; j < a; j++){
+            Vector3 p = (2.0*i / (a - 1.0) - 1.0)*m_spanX*m_vecX + (2.0*j / (a - 1.0) - 1.0)*m_spanY*m_vecY;
             Vector3 q = n + 1.5*p;
             glBegin(GL_LINES);
             glVertex3f(p[0], p[1], p[2]);
@@ -56,4 +63,4 @@ Parallelogram::renderGL() {
     glVertex3f(pt10[0], pt10[1], pt10[2]);
     glEnd();
     glPopMatrix();
-}*/
+}

@@ -4,6 +4,9 @@
 #include "Vector3.h"
 #include "Miro.h"
 #include "Ray.h"
+#include "Parallelogram.h"
+#include "Lambert.h"
+#include <vector>
 
 class Camera
 {
@@ -16,7 +19,8 @@ public:
         RENDER_OPENGL = 0,
         RENDER_RAYTRACE = 1,
         RENDER_PATHTRACE = 2,
-        RENDER_BIDITRACE = 3
+        RENDER_PHOTONTRACE = 3,
+        RENDER_BIDITRACE = 4
     };
 
     void click(Scene* pScene, Image* pImage);
@@ -43,8 +47,13 @@ public:
     inline const Vector3 & eye() const      {return m_eye;}
     inline const Vector3 & bgColor() const  {return m_bgColor;}
 
-    Ray eyeRay(int x, int y, int imageWidth, int imageHeight);
+    //Ray eyeRay(int x, int y, int imageWidth, int imageHeight);
+    Ray eyeRay(float x, float y, int imageWidth, int imageHeight);
+    Ray eyeRayJittered(float x, float y, int imageWidth, int imageHeight);
     
+    Parallelogram imagePlane(int imageWidth, int imageHeight);
+    std::vector<float> imgProject(const Vector3& pt, int imageWidth, int imageHeight);
+
     void drawGL();
 
 private:

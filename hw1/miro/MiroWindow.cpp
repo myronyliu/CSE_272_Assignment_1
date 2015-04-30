@@ -179,6 +179,11 @@ MiroWindow::keyboard(unsigned char key, int x, int y)
             g_camera->setRenderer(Camera::RENDER_PATHTRACE);
         break;
 
+        case 'o':
+        case 'O':
+            g_camera->setRenderer(Camera::RENDER_PHOTONTRACE);
+        break;
+
         case 'b':
         case 'B':
             g_camera->setRenderer(Camera::RENDER_BIDITRACE);

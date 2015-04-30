@@ -229,8 +229,8 @@ makeRoomScene(){
     // create room geometry
 
     Material* mat = new Lambert(Vector3(1.0f, 1.0f, 1.0f));
-    mat->setEmittance(0);
-    mat->setEmitted(Vector3(1.0, 1.0, 1.0));
+    mat->setEmittance(0.5);
+    mat->setEmitted(Vector3(0.0, 0.0, 0.0));
 
     Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
@@ -264,7 +264,8 @@ makeRoomScene(){
     ParallelogramLight * light2 = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.2, 0.2);;
     //light2->flip();
     light->flip();
-    light->setWattage(100);
+    light->setWattage(2);
+    light->setColor(Vector3(1, 0, 0));
     light2->setWattage(2);
 
     // add objects to scene

@@ -21,10 +21,12 @@ public:
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit,
                           const Scene& scene) const;
 
+    // Returns a random direction for an emitted photon given a surface normal
+    virtual Vector3 randEmit(const Vector3& n) const;
     // Generates a random ray in the upper hemisphere according the BRDF
     virtual Vector3 randReflect(const Ray& ray, const HitInfo& hit) const;
     // BRDF
-    virtual float BRDF(const Ray& ray, const HitInfo& hit) const;
+    virtual float BRDF(const Ray& in, const HitInfo& hit, const Ray& out) const;
 
 protected:
     Vector3 m_kd;

@@ -14,6 +14,8 @@ Lambert::~Lambert()
 {
 }
 
+float Lambert::BRDF(const Ray& in, const HitInfo& hit, const Ray& out) const { return 1.0 / M_PI; }
+
 Vector3
 Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 {
@@ -99,6 +101,16 @@ Vector3 Lambert::randReflect(const Ray& ray, const HitInfo& hit) const{
     return v[0] * x + v[1] * y + v[2] * z;
 }
 
-float Lambert::BRDF(const Ray& ray, const HitInfo& hit) const{
-    return 1.0 / M_PI;
+Vector3 Lambert::randEmit(const Vector3& n) const {
+    double u = (double)rand() / (double)RAND_MAX;
+    double v = 2.0 * M_PI*(double)rand() / (double)RAND_MAX;
+    Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
+    Vector3 z = n.normalized();
+    float a = dot(Vector3(1, 0, 0), z);
+    float b = dot(Vector3(0, 1, 0), z);
+    Vector3 y;
+    if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
+    else y = Vector3(0, 1, 0).orthogonal(z).normalize();
+    Vector3 x = cross(y, z).normalize();
+    return d[0] * x + d[1] * y + d[2] * z;
 }

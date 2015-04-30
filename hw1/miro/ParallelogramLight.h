@@ -21,8 +21,9 @@ public:
     virtual void disableBack() { printf("disableBack() not available for lights\n"); }
     virtual void enableFront() { printf("enableFront() not available for lights\n"); }
     virtual void enableBack() { printf("enableBack() not available for lights\n"); }
-    //virtual void renderGL();
+    virtual void renderGL();
 
+    virtual Ray randRay() const;
     virtual Vector3 randPt() const;
     void preCalc() {} // use this if you need to
 

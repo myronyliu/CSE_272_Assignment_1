@@ -42,7 +42,8 @@ public:
     const float spanY() const { return m_spanY; }
     const Vector3 vecX() const { return m_vecX; }
     const Vector3 vecY() const { return m_vecY; }
-    const Vector3 normal() const { return cross(m_vecX, m_vecY).normalize(); }
+    Vector3 normal() const { return cross(m_vecX, m_vecY).normalize(); }
+    virtual Vector3 normal(const Vector3& v) const { return normal(); }
 
     virtual void renderGL();
     virtual bool intersect(HitInfo& result, const Ray& ray,

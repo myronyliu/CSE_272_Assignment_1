@@ -4,16 +4,18 @@
 #include <vector>
 #include "Vector3.h"
 #include "Object.h"
+#include "Ray.h"
 
 class Light: public virtual Object
 {
 public:
     void setWattage(float f) { m_wattage = f; }
     float wattage() const { return m_wattage; }
-    void setColor(Vector3 v) { m_color = v; }
+    void setColor(Vector3 v);
     Vector3 color() const { return m_color; }
     void preCalc() {} // use this if you need to
 
+    Ray randRay() const { return Ray(); }
     virtual Vector3 randPt() const { return Vector3(0, 0, 0); }
 
 protected:

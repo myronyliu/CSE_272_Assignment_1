@@ -11,17 +11,18 @@ public:
     Object() {}
     virtual ~Object() {}
 
-    void setMaterial(const Material* m) {m_material = m;}
+    void setMaterial(Material* m) {m_material = m;}
+    Material* getMaterial() { return m_material; }
 
     virtual void renderGL() {}
     virtual void preCalc() {}
-
+    virtual Vector3 normal(const Vector3& v) const { return Vector3(0, 0, 1); }
 
     virtual bool intersect(HitInfo& result, const Ray& ray,
                            float tMin = 0.0f, float tMax = MIRO_TMAX) = 0;
 
 protected:
-    const Material* m_material;
+    Material* m_material;
 };
 
 typedef std::vector<Object*> Objects;
