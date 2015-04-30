@@ -17,8 +17,8 @@ public:
     void addObject(Object* pObj)        {m_objects.push_back(pObj);}
     const Objects* objects() const      {return &m_objects;}
 
-    void addPointLight(PointLight* pObj)     {m_pointLights.push_back(pObj);}
-    const PointLights* pointLights() const        {return &m_pointLights;}
+    void addPointLight(PointLight* pObj) {m_pointLights.push_back(pObj);}
+    const PointLights* pointLights() const {return &m_pointLights;}
     void addAreaLight(AreaLight* pObj) {
         m_objects.push_back(pObj);
         m_areaLights.push_back(pObj);

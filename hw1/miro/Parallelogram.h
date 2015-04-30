@@ -37,12 +37,12 @@ public:
     virtual void disableFront() { m_front = false; }
     virtual void enableFront() { m_front = true; }
 
-    const Vector3& center() const { return m_center; }
+    const Vector3 center() const { return m_center; }
     const float spanX() const { return m_spanX; }
     const float spanY() const { return m_spanY; }
-    const Vector3& vecX() const { return m_vecX; }
-    const Vector3& vecY() const { return m_vecY; }
-    const Vector3& normal() const { return cross(m_vecX, m_vecY).normalize(); }
+    const Vector3 vecX() const { return m_vecX; }
+    const Vector3 vecY() const { return m_vecY; }
+    const Vector3 normal() const { return cross(m_vecX, m_vecY).normalize(); }
 
     virtual void renderGL();
     virtual bool intersect(HitInfo& result, const Ray& ray,

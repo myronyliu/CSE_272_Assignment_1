@@ -14,6 +14,9 @@ public:
     bool intersect(HitInfo& result, const Ray& ray,
         float tMin = 0.0f, float tMax = MIRO_TMAX) const;
 
+    // Same as above but skips an Object
+    // Skipping is used in shade(...) for instance.
+    // See Lambert.cpp where we skip the current areaLight of interest
     bool intersect(HitInfo& result, const Ray& ray, const Object* skip,
         float tMin = 0.0f, float tMax = MIRO_TMAX) const;
 

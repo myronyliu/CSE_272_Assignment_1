@@ -21,7 +21,7 @@ public:
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit,
                           const Scene& scene) const;
 
-    // Generates a random ray in the upper hemisphere according the the BRDF
+    // Generates a random ray in the upper hemisphere according the BRDF
     virtual Vector3 randReflect(const Ray& ray, const HitInfo& hit) const;
     // BRDF
     virtual float BRDF(const Ray& ray, const HitInfo& hit) const;

@@ -80,7 +80,7 @@ Vector3 Scene::recursiveTrace(const Ray& ray, int bounces, int maxbounces) {
     printf("  current ray dir: ( %f, %f, %f )\n", ray.d[0], ray.d[1], ray.d[2]);
     */
 
-    double rn = (double)rand() / (double)RAND_MAX;
+    double rn = (double)(1 + rand()) / (double)(1 + RAND_MAX);
     double em = hit.material->getEmittance();
     if (rn <= em) {
         //printf("terminated in %i bounces\n", bounces);
@@ -113,7 +113,7 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     HitInfo hitInfo;
     Vector3 shadeResult;
     Vector3 newDir;
-    int samples = 10;
+    int samples = 1;
     
     // loop over all pixels in the image
     for (int j = 0; j < img->height(); ++j){
@@ -124,8 +124,8 @@ Scene::pathtraceImage(Camera *cam, Image *img)
             ray = cam->eyeRay(i, j, img->width(), img->height());
             if (!trace(hitInfo, ray)) continue; // don't bother if the first shot misses
             for (int k = 0; k < samples; k++){
-                pixSum += recursiveTrace(ray, 0, 10);
-                Vector3 p = pixSum;
+                pixSum += recursiveTrace(ray, 0, 2);
+                //Vector3 p = pixSum;
                 //printf("( %f, %f, %f )\n", p[0], p[1], p[2]);
             }
             img->setPixel(i, j, pixSum / (double)samples);

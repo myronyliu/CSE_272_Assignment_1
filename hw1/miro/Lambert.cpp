@@ -55,13 +55,14 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
     for (alightIter = alightlist->begin(); alightIter != alightlist->end(); alightIter++)
     {
         AreaLight* aLight = *alightIter;
-        Vector3 l = aLight->randPt() - hit.P;
+        Vector3 l = aLight->randPt() - hit.P; // shoot a shadow ray to a random point on the area light
         rayLight.o = hit.P;
         rayLight.d = l.normalized();
-        if (scene.trace(hitLight, rayLight, aLight, 0.0001, l.length())) {
-            //printf("good, skipped\n");
-            continue;
-        }
+        
+        // if the shadow ray hits the "backside of the light" continue to the next area light
+        if (!aLight->intersect(hitLight, rayLight)) continue;
+        // if the shadow ray is occluded by another (hence the "skip") object continue the next light
+        if (scene.trace(hitLight, rayLight, aLight, 0.0001, l.length())) continue;
 
         // the inverse-squared falloff
         float falloff = l.length2();
@@ -84,11 +85,9 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 }
 
 Vector3 Lambert::randReflect(const Ray& ray, const HitInfo& hit) const{
-    //return Vector3(1, 2, 3);
     double phi = 2.0 * M_PI*(double)rand() / (double)RAND_MAX;
     double theta = acos((double)rand() / RAND_MAX);
     Vector3 v = Vector3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
-    //printf("%f %f %f\n", v[0], v[1], v[2]);
     // generate a basis with surface normal hit.N as the z-axis
     Vector3 z = hit.N.normalized();
     float a = dot(Vector3(1, 0, 0), z);
@@ -97,9 +96,6 @@ Vector3 Lambert::randReflect(const Ray& ray, const HitInfo& hit) const{
     if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
     else y = Vector3(0, 1, 0).orthogonal(z).normalize();
     Vector3 x = cross(y, z).normalize();
-    //printf("  %f %f %f\n", x[0], x[1], x[2]);
-    //printf("  %f %f %f\n", y[0], y[1], y[2]);
-    //printf("  %f %f %f\n", z[0], z[1], z[2]);
     return v[0] * x + v[1] * y + v[2] * z;
 }
 

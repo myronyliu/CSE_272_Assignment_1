@@ -230,7 +230,7 @@ makeRoomScene(){
 
     Material* mat = new Lambert(Vector3(1.0f, 1.0f, 1.0f));
     mat->setEmittance(0);
-    mat->setEmitted(Vector3(0.0, 0.0, 0.0));
+    mat->setEmitted(Vector3(1.0, 1.0, 1.0));
 
     Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
@@ -238,8 +238,8 @@ makeRoomScene(){
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
     Parallelogram * wall_B = new Parallelogram(Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1); // bottom
 
-    Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.981), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.5, 0.5);
-    cover->disableFront();
+    Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.2, 0.2);
+    cover->disableBack();
 
     wall_T->setMaterial(mat);
     wall_B->setMaterial(mat);
@@ -260,11 +260,11 @@ makeRoomScene(){
     g_scene->addObject(sideL);
     g_scene->addObject(sideR);*/
 
-    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.999), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.2, 0.2);
-    ParallelogramLight * light2 = new ParallelogramLight(Vector3(0, 0, 1.999), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.2, 0.2);
-    light2->flip();
-    //cover->disableBack();
-    light->setWattage(2);
+    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.2, 0.2);
+    ParallelogramLight * light2 = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.2, 0.2);;
+    //light2->flip();
+    light->flip();
+    light->setWattage(100);
     light2->setWattage(2);
 
     // add objects to scene
@@ -273,7 +273,7 @@ makeRoomScene(){
     g_scene->addObject(wall_L);
     g_scene->addObject(wall_R);
     g_scene->addObject(wall_T);
-    //g_scene->addObject(cover);
+    g_scene->addObject(cover);
     g_scene->addAreaLight(light);
     //g_scene->addAreaLight(light2);
 

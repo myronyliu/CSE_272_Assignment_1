@@ -36,8 +36,7 @@ Parallelogram::~Parallelogram()
 }
 
 void
-Parallelogram::renderGL()
-{
+Parallelogram::renderGL() {
     glColor3f(1, 1, 1);
     glPushMatrix();
     glTranslatef(m_center.x, m_center.y, m_center.z);
@@ -45,13 +44,31 @@ Parallelogram::renderGL()
     Vector3 pt01 = -m_spanX*m_vecX + m_spanY*m_vecY;
     Vector3 pt10 = m_spanX*m_vecX - m_spanY*m_vecY;
     Vector3 pt11 = m_spanX*m_vecX + m_spanY*m_vecY;
+    float s = 1.0 / 4.0;
+    Vector3 n = normal()*sqrt(m_spanX*m_spanX + m_spanY*m_spanY)*s;
+    float a = 0.9;
+    Vector3 n00 = a*n - (1 - a)*pt00*s;
+    Vector3 n01 = a*n - (1 - a)*pt01*s;
+    Vector3 n10 = a*n - (1 - a)*pt10*s;
+    Vector3 n11 = a*n - (1 - a)*pt11*s;
     glBegin(GL_QUADS);
     glVertex3f(pt00[0], pt00[1], pt00[2]);
     glVertex3f(pt01[0], pt01[1], pt01[2]);
     glVertex3f(pt11[0], pt11[1], pt11[2]);
     glVertex3f(pt10[0], pt10[1], pt10[2]);
     glEnd();
-    //glutWireSphere(sqrt(m_spanX*m_spanX+m_spanY*m_spanY)/100, 20, 20);
+    glBegin(GL_LINES);
+    glVertex3f(0, 0, 0);
+    glVertex3f(n[0], n[1], n[2]);
+    glEnd();
+    glBegin(GL_TRIANGLES);
+    glVertex3f(n[0], n[1], n[2]);
+    glVertex3f(n00[0], n00[1], n00[2]);
+    glVertex3f(n11[0], n11[1], n11[2]);
+    glVertex3f(n[0], n[1], n[2]);
+    glVertex3f(n01[0], n01[1], n01[2]);
+    glVertex3f(n10[0], n10[1], n10[2]);
+    glEnd();
     glPopMatrix();
 }
 
@@ -78,7 +95,7 @@ Parallelogram::intersect(HitInfo& result, const Ray& ray,
     result.t = nSteps; 
     result.N = -step_perp.normalized();
     //result.P = r;
-    result.P = r + (ray.o-result.P)*0.000001;
+    result.P = r + (ray.o-result.P).normalize()*0.000001;
     result.material = this->m_material; 
     
     return true;
