@@ -169,9 +169,7 @@ Ray Camera::eyeRayJittered(float x, float y, int imageWidth, int imageHeight){
     return eyeRay(x + dx, y + dy, imageWidth, imageHeight);
 }
 
-Parallelogram Camera::imagePlane(int imageWidth, int imageHeight){
-    float W = imageWidth;
-    float H = imageHeight;
+Parallelogram Camera::imagePlane(int W, int H){
     const Vector3 wDir = Vector3(-m_viewDir).normalize();
     const Vector3 uDir = cross(m_up, wDir).normalize();
     const Vector3 vDir = cross(wDir, uDir);
@@ -206,9 +204,7 @@ Parallelogram Camera::imagePlane(int imageWidth, int imageHeight){
 }
 
 Vector3
-Camera::imgProject(const Vector3& pt,int imageWidth, int imageHeight){
-    float W = imageWidth;
-    float H = imageHeight;
+Camera::imgProject(const Vector3& pt,int W, int H){
     const Vector3 wDir = Vector3(-m_viewDir).normalize();
     const Vector3 uDir = cross(m_up, wDir).normalize();
     const Vector3 vDir = cross(wDir, uDir);
@@ -217,14 +213,63 @@ Camera::imgProject(const Vector3& pt,int imageWidth, int imageHeight){
     const float R = aspectRatio*T;
     const float B = -T;
     const float L = -R;
-    float u = dot(pt, uDir);
-    float v = dot(pt, vDir);
-    float w = dot(pt, -wDir); // this should be positive for things in front of the camera
+    float u = dot(pt-m_eye, uDir);
+    float v = dot(pt-m_eye, vDir);
+    float w = dot(pt-m_eye, -wDir); // this should be positive for things in front of the camera
     u /= fabs(w);
     v /= fabs(w);
     w /= fabs(w);
     float px = W*(u - L) / (R - L) - 0.5;
     float py = H*(v - B) / (T - B) - 0.5;
-    Vector3 pt2D(px, py, w);
-    return pt2D;
+    return Vector3(px, py, w);
+}
+
+float
+Camera::pixelCosine(float x, float y, int imageWidth, int imageHeight){
+    const Vector3 wDir = Vector3(-m_viewDir).normalize();
+    const Vector3 uDir = cross(m_up, wDir).normalize();
+    const Vector3 vDir = cross(wDir, uDir);
+    const float aspectRatio = (float)imageWidth / (float)imageHeight;
+    const float top = tan(m_fov*HalfDegToRad);
+    const float right = aspectRatio*top;
+    const float bottom = -top;
+    const float left = -right;
+    const float u = left + (right - left)*((x + 0.5f) / (float)imageWidth);
+    const float v = bottom + (top - bottom)*((y + 0.5f) / (float)imageHeight);
+    return 1.0 / sqrt(1.0 + u*u + v*v);
+}
+
+float
+Camera::pixelSolidAngle(float x, float y, int imageWidth, int imageHeight) {
+    const Vector3 wDir = Vector3(-m_viewDir).normalize();
+    const Vector3 uDir = cross(m_up, wDir).normalize();
+    const Vector3 vDir = cross(wDir, uDir);
+
+    const float aspectRatio = (float)imageWidth / (float)imageHeight;
+
+    const float top = tan(m_fov*HalfDegToRad);
+    const float right = aspectRatio*top;
+
+    const float bottom = -top;
+    const float left = -right;
+
+    const float u = left + (right - left)*((x + 0.5f) / (float)imageWidth);
+    const float v = bottom + (top - bottom)*((y + 0.5f) / (float)imageHeight);
+
+    return atan(
+        (2 * u - 1)*(2 * v - 1) /
+        (2 * sqrt(2 + 4 * u*(u - 1) + 4 * v*(v - 1) + 4))
+        )-
+        atan(
+        (2 * u + 1)*(2 * v - 1) /
+        (2 * sqrt(2 + 4 * u*(u + 1) + 4 * v* (v - 1) + 4))
+        )-
+        atan(
+        (2 * u - 1)*(2 * v + 1) /
+        (2 * sqrt(2 + 4 * u*(u - 1) + 4 * v*(v + 1) + 4))
+        )+
+        atan(
+        (2 * u + 1)*(2 * v + 1) /
+        (2 * sqrt(2 + 4 * u*(u + 1) + 4 * v*(v + 1) + 4))
+        );
 }

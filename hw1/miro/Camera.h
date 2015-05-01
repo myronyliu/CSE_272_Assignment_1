@@ -53,6 +53,8 @@ public:
     
     Parallelogram imagePlane(int imageWidth, int imageHeight);
     Vector3 imgProject(const Vector3& pt, int imageWidth, int imageHeight);
+    float pixelCosine(float x, float y, int imageWidth, int imageHeight);
+    float pixelSolidAngle(float x, float y, int imageWidth, int imageHeight);
 
     void drawGL();
 

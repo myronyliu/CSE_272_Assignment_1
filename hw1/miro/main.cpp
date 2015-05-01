@@ -210,7 +210,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(128, 128);
+    g_image->resize(256, 256);
 
     // set up the camera
     g_camera->setBGColor(Vector3(1.0f, 1.0f, 1.0f));
@@ -229,7 +229,7 @@ makeRoomScene(){
     // create room geometry
 
     Material* mat = new Lambert(Vector3(1.0f, 1.0f, 1.0f));
-    mat->setEmittance(0.5);
+    mat->setEmittance(0.0);
     mat->setEmitted(Vector3(0.0, 0.0, 0.0));
 
     Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
@@ -261,8 +261,8 @@ makeRoomScene(){
     g_scene->addObject(sideR);*/
 
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
-    //light->flip();
-    light->setWattage(2);
+    light->flip(); cover->flip();
+    light->setWattage(10000);
     light->setColor(Vector3(1, 1, 1));
 
     // add objects to scene

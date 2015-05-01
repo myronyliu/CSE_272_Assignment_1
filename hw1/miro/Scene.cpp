@@ -140,35 +140,41 @@ void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& 
     float power = light.wattage() / rp.p; // Monte Carlo sampling so divide by PDF of the random ray
     for (int bounces = 0; bounces < m_maxBounces; bounces++) {
         if (!trace(hit, ray)) {
-            printf("bounce %i left scene\n",bounces);
-            printf(" %f %f %f\n", ray.d[0], ray.d[1], ray.d[2]);
-            printf(" %f %f %f\n", ray.o[0], ray.o[1], ray.o[2]);
+            //printf("bounce %i left scene\n",bounces);
+            //printf(" %f %f %f\n", ray.d[0], ray.d[1], ray.d[2]);
+            //printf(" %f %f %f\n", ray.o[0], ray.o[1], ray.o[2]);
             //std::cout << ray.d << std::endl;
             return; // ray left scene
         }
         double rn = (double)(1 + rand()) / (double)(1 + RAND_MAX);
         double em = hit.material->getEmittance();
-        if (rn <= em) return; // photon was absorbed
+        if (rn <= em){
+            //printf("bounce %i absorbed\n", bounces);
+            return; // photon was absorbed
+        }
         vec3pdf vp = hit.material->randReflect(ray, hit); // pick BRDF weighted random direction
         Vector3 newDir = vp.v;
         newRay.o = hit.P;
         newRay.d = newDir;
-        float brdf = hit.material->BRDF(ray, hit, newRay);
-        float cos = dot(hit.N, newDir);
-        Vector3 dir = hit.material->shade(ray, hit, *this);
+        float brdf_toNew = hit.material->BRDF(ray, hit, newRay); // BRDF for bouncing to new random direction
+        float cos_toNew = dot(hit.N, newDir); // cosine between new and current ray directions
         rayToEye.o = hit.P;
         rayToEye.d = (cam->eye() - hit.P).normalize();
-        if (!trace(hitTry, rayToEye)) {
-            pix = cam->imgProject(hit.P, w, h);
+        if (!trace(hitTry, rayToEye)) { // check if anything is occluding the eye from current hitpoint
+            pix = cam->imgProject(hit.P, w, h); // find the pixel the onto which the current hitpoint projects
             int x = round(pix[0]);
             int y = round(pix[1]);
-            if (pix[2]>0 && x > -1 && x<w && y>-1 && y < h) {
-                std::cout << "updating pixel" << std::endl;
-                img[x][y] += power*dir;
+            if (pix[2]>0 && x > -1 && x<w && y>-1 && y < h) { // check that the pixel is within the viewing window
+                //std::cout << "updating pixel" << std::endl;
+                float brdf_toEye = hit.material->BRDF(ray, hit, rayToEye); // BRDF between current and shadow ray
+                float cos_toEye = dot(hit.N, rayToEye.d); // cosine between shadow ray and current ray
+                Vector3 gather = hit.material->shade(ray, hit, *this);
+                img[x][y] += power*gather*brdf_toEye*cos_toEye;
             }
+            else printf("impossible: %f %f %f \n,",pix[0],pix[1],pix[2]);
         }
         // update power and ray in anticipation for next bounce
-        power *= brdf*cos / vp.p;
+        power *= brdf_toNew*cos_toNew / vp.p;
         ray = newRay;
     }
 }
@@ -177,8 +183,10 @@ void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& 
 void
 Scene::photontraceImage(Camera *cam, Image *img)
 {
+    int w = img->width();
+    int h = img->height();
     vector<vector<Vector3>> im;
-    for (int i = 0; i < img->width(); i++) im.push_back(vector<Vector3>(img->height(), Vector3(0, 0, 0)));
+    for (int i = 0; i < w; i++) im.push_back(vector<Vector3>(h, Vector3(0, 0, 0)));
     // loop over all point lights
     // loop over all area lights
     for (unsigned int aL = 0; aL < m_areaLights.size(); aL++) {
@@ -196,8 +204,10 @@ Scene::photontraceImage(Camera *cam, Image *img)
     }
     printf("Rendering Progress: 100.000%\n");
     debug("done Raytracing!\n");
-    for (int i = 0; i < img->width(); i++){
-        for (int j = 0; j < img->height(); j++){
+    for (int i = 0; i < w; i++){
+        for (int j = 0; j < h; j++){
+            im[i][j] /= (float)m_photonSamples;
+            im[i][j] /= cam->pixelCosine(i, j, w, h)*cam->pixelSolidAngle(i, j, w, h);
             //printf("%f %f %f\n", im[i][j][0], im[i][j][1], im[i][j][2]);
             img->setPixel(i, j, im[i][j]);
         }

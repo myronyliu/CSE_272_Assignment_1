@@ -51,7 +51,7 @@ protected:
     Objects m_objects;
     BVH m_bvh;
     int m_samplesPerPix = 100;
-    int m_photonSamples = 10;
+    int m_photonSamples = 1000000;
     int m_maxBounces = 20;
     PointLights m_pointLights;
     AreaLights m_areaLights;
