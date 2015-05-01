@@ -60,7 +60,7 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         vec3pdf vp = aLight->randPt();
         Vector3 l = vp.v - hit.P; // shoot a shadow ray to a random point on the area light
         rayLight.o = hit.P;
-        rayLight.d = l.normalized();
+        rayLight.d = l;
         
         // if the shadow ray hits the "backside of the light" continue to the next area light
         if (!aLight->intersect(hitLight, rayLight)) continue;

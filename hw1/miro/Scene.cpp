@@ -88,7 +88,7 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
         Vector3 dir = hit.material->shade(ray, hit, *this); // gathered direct lighting
         return
             dir + (1.0 / (1.0 - em))/vp.p*brdf*cos*
-            recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
+                recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
     }
 }
 
