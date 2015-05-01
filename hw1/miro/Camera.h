@@ -52,7 +52,7 @@ public:
     Ray eyeRayJittered(float x, float y, int imageWidth, int imageHeight);
     
     Parallelogram imagePlane(int imageWidth, int imageHeight);
-    std::vector<float> imgProject(const Vector3& pt, int imageWidth, int imageHeight);
+    Vector3 imgProject(const Vector3& pt, int imageWidth, int imageHeight);
 
     void drawGL();
 

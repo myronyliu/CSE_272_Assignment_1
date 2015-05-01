@@ -170,7 +170,7 @@ makeTestScene() {
     //g_scene->addAreaLight(p);
     for (int i = 0; i < 1000; i++){
         Sphere * s = new Sphere;
-        s->setCenter(p->randPt());
+        s->setCenter(p->randPt().v);
         printf("( %f, %f, %f )\n", s->center()[0], s->center()[1], s->center()[2]);
         s->setRadius(0.02);
         //g_scene->addObject(s);
@@ -238,7 +238,7 @@ makeRoomScene(){
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
     Parallelogram * wall_B = new Parallelogram(Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1); // bottom
 
-    Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.2, 0.2);
+    Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     cover->disableBack();
 
     wall_T->setMaterial(mat);
@@ -260,13 +260,10 @@ makeRoomScene(){
     g_scene->addObject(sideL);
     g_scene->addObject(sideR);*/
 
-    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.2, 0.2);
-    ParallelogramLight * light2 = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.2, 0.2);;
-    //light2->flip();
-    light->flip();
+    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
+    //light->flip();
     light->setWattage(2);
-    light->setColor(Vector3(1, 0, 0));
-    light2->setWattage(2);
+    light->setColor(Vector3(1, 1, 1));
 
     // add objects to scene
     g_scene->addObject(wall_B);
@@ -276,7 +273,19 @@ makeRoomScene(){
     g_scene->addObject(wall_T);
     g_scene->addObject(cover);
     g_scene->addAreaLight(light);
-    //g_scene->addAreaLight(light2);
+
+
+    Parallelogram* imgPlane = new Parallelogram;
+    *imgPlane = g_camera->imagePlane(256, 256);
+    //g_scene->addObject(imgPlane);
+
+    for (int i = 0; i < 1000; i++){
+        raypdf rr = light->randRay();
+        Sphere* sphere = new Sphere;
+        sphere->setRadius(0.001);
+        sphere->setCenter(rr.r.o+rr.r.d);
+        //g_scene->addObject(sphere);
+    }
 
     // let objects do pre-calculations if needed
     g_scene->preCalc();

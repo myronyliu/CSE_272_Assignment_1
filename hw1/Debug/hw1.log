@@ -1,17 +1,8 @@
-﻿Build started 4/29/2015 5:57:28 PM.
+﻿Build started 5/1/2015 1:17:25 AM.
      1>Project "C:\Users\yshmnks\Documents\CSE_272\assignment1\hw1\hw1.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /IC:\Users\yshmnks\Documents\CSE_272\assignment1\packages\glm.0.9.6.3\build\native\../..//build/native/include/ /IC:\Users\yshmnks\Documents\CSE_272\assignment1\packages\nupengl.core.0.0.0.1\build\native\../..//build/native/include/ /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt miro\ParallelogramLight.cpp miro\main.cpp
-         ParallelogramLight.cpp
-     1>c:\users\yshmnks\documents\cse_272\assignment1\hw1\miro\parallelogramlight.h(31): warning C4250: 'ParallelogramLight' : inherits 'Parallelogram::Parallelogram::renderGL' via dominance
-                 c:\users\yshmnks\documents\cse_272\assignment1\hw1\miro\parallelogram.h(47) : see declaration of 'Parallelogram::renderGL'
-     1>c:\users\yshmnks\documents\cse_272\assignment1\hw1\miro\parallelogramlight.h(31): warning C4250: 'ParallelogramLight' : inherits 'Parallelogram::Parallelogram::intersect' via dominance
-                 c:\users\yshmnks\documents\cse_272\assignment1\hw1\miro\parallelogram.h(48) : see declaration of 'Parallelogram::intersect'
-     1>c:\users\yshmnks\documents\cse_272\assignment1\hw1\miro\parallelogramlight.cpp(25): warning C4244: 'argument' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\yshmnks\documents\cse_272\assignment1\hw1\miro\parallelogramlight.cpp(26): warning C4244: 'argument' : conversion from 'double' to 'float', possible loss of data
-         Generating Code...
-         Skipping... (no relevant changes detected)
-         main.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /IC:\Users\yshmnks\Documents\CSE_272\assignment1\packages\glm.0.9.6.3\build\native\../..//build/native/include/ /IC:\Users\yshmnks\Documents\CSE_272\assignment1\packages\nupengl.core.0.0.0.1\build\native\../..//build/native/include/ /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt miro\Scene.cpp
+         Scene.cpp
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\yshmnks\Documents\CSE_272\assignment1\Debug\hw1.exe" /INCREMENTAL /NOLOGO C:\Users\yshmnks\Documents\CSE_272\assignment1\packages\nupengl.core.0.0.0.1\build\native\../..//build/native/lib/Win32\v120\glew32.lib C:\Users\yshmnks\Documents\CSE_272\assignment1\packages\nupengl.core.0.0.0.1\build\native\../..//build/native/lib/Win32\v120\glfw3dll.lib C:\Users\yshmnks\Documents\CSE_272\assignment1\packages\nupengl.core.0.0.0.1\build\native\../..//build/native/lib/Win32\v120\freeglut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\yshmnks\Documents\CSE_272\assignment1\Debug\hw1.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\yshmnks\Documents\CSE_272\assignment1\Debug\hw1.lib" /MACHINE:X86 Debug\AreaLight.obj
          Debug\BLPatch.obj
@@ -20,6 +11,7 @@
          Debug\Console.obj
          Debug\Image.obj
          Debug\Lambert.obj
+         Debug\Light.obj
          Debug\main.obj
          Debug\Material.obj
          Debug\MiroWindow.obj
@@ -37,4 +29,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.36
+Time Elapsed 00:00:01.24

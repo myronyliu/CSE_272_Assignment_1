@@ -68,40 +68,26 @@ Scene::raytraceImage(Camera *cam, Image *img)
 
 Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounces) {
     if (bounces >= maxbounces) return Vector3(0, 0, 0);
-    //printf("BOUNCE %i\n", bounces);
     HitInfo hit;
     if (!trace(hit, ray)) {
-        //printf("ray left scene\n");
         return Vector3(0, 0, 0);
     }
-    /*
-    printf("  new hit point:   ( %f, %f, %f )\n", hit.P[0], hit.P[1], hit.P[2]);
-    printf("  current ray pos: ( %f, %f, %f )\n", ray.o[0], ray.o[1], ray.o[2]);
-    printf("  current ray dir: ( %f, %f, %f )\n", ray.d[0], ray.d[1], ray.d[2]);
-    */
-
     double rn = (double)(1 + rand()) / (double)(1 + RAND_MAX);
     double em = hit.material->getEmittance();
     if (rn <= em) {
-        //printf("terminated in %i bounces\n", bounces);
         return (1.0 / em)*hit.material->getEmitted();
     }
     else {
-        Vector3 newDir = hit.material->randReflect(ray, hit); // pick BRDF weighted random direction
-        //printf("%f, %f, %f\n", hit.N[0], hit.N[1], hit.N[2]);
+        vec3pdf vp = hit.material->randReflect(ray, hit);// pick BRDF weighted random direction
+        Vector3 newDir = vp.v;
         Ray newRay = ray;
         newRay.o = hit.P;
         newRay.d = newDir;
         float brdf = hit.material->BRDF(ray, hit, newRay);
         float cos = dot(hit.N, newDir);
-        //float cos = hitInfo.N[0];
         Vector3 dir = hit.material->shade(ray, hit, *this); // gathered direct lighting
-        //printf("  brdf: %f\n", brdf);
-        //printf("  cos : %f\n", cos);
-        //printf("gathered irradiance: ( %f, %f, %f )\n", dir[0], dir[1], dir[2]);
-        //HitInfo newhit;
         return
-            dir + (1.0 / (1.0 - em))*(2.0*M_PI)*brdf*cos*
+            dir + (1.0 / (1.0 - em))/vp.p*brdf*cos*
             recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
     }
 }
@@ -144,35 +130,46 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     debug("done Raytracing!\n");
 }
 
-Splat Scene::recursiveTrace_fromLight(Camera *cam, Image *img, const Ray& ray, int bounces, int maxbounces) {
-    Splat splat;
-    HitInfo hit, hitImg;
-    Parallelogram imgPlane = cam->imagePlane(img->width(),img->height());
-    bool objIntersected = trace(hit, ray);
-    if (imgPlane.intersect(hitImg,ray)) {
-        if (!objIntersected || hit.t > hitImg.t) {
-            std::vector<float> pix = cam->imgProject(hitImg.P, img->width(), img->height());
-            splat.x = pix[0];
-            splat.y = pix[1];
-            splat.rad = hitImg.material->shade(ray, hitImg, *this);
+void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& light, const raypdf& rp) {
+    float w = img.size();
+    float h = img[0].size();
+    Vector3 pix;
+    HitInfo hit, hitTry;
+    Ray ray, newRay, rayToEye;
+    ray = rp.r;
+    float power = light.wattage() / rp.p; // Monte Carlo sampling so divide by PDF of the random ray
+    for (int bounces = 0; bounces < m_maxBounces; bounces++) {
+        if (!trace(hit, ray)) {
+            printf("bounce %i left scene\n",bounces);
+            printf(" %f %f %f\n", ray.d[0], ray.d[1], ray.d[2]);
+            printf(" %f %f %f\n", ray.o[0], ray.o[1], ray.o[2]);
+            //std::cout << ray.d << std::endl;
+            return; // ray left scene
         }
-    }
-    // otherwise ray is not going towards image plane
-    if (bounces >= maxbounces) return Vector3(0, 0, 0);
-    if (!objIntersected) return Vector3(0, 0, 0);
-    double rn = (double)(1 + rand()) / (double)(1 + RAND_MAX);
-    double em = hit.material->getEmittance();
-    if (rn <= em) return (1.0 / em)*hit.material->getEmitted();
-    Vector3 newDir = hit.material->randReflect(ray, hit); // pick BRDF weighted random direction
-    Ray newRay = ray;
-    newRay.o = hit.P;
-    newRay.d = newDir;
-    float brdf = hit.material->BRDF(ray, hit, newRay);
-    float cos = dot(hit.N, newDir);
-    Vector3 dir = hit.material->shade(ray, hit, *this);
-    return
-        dir + (1.0 / (1.0 - em))*(2.0*M_PI)*brdf*cos*
-        recursiveTrace_fromLight(newRay, bounces + 1, maxbounces);
+        double rn = (double)(1 + rand()) / (double)(1 + RAND_MAX);
+        double em = hit.material->getEmittance();
+        if (rn <= em) return; // photon was absorbed
+        vec3pdf vp = hit.material->randReflect(ray, hit); // pick BRDF weighted random direction
+        Vector3 newDir = vp.v;
+        newRay.o = hit.P;
+        newRay.d = newDir;
+        float brdf = hit.material->BRDF(ray, hit, newRay);
+        float cos = dot(hit.N, newDir);
+        Vector3 dir = hit.material->shade(ray, hit, *this);
+        rayToEye.o = hit.P;
+        rayToEye.d = (cam->eye() - hit.P).normalize();
+        if (!trace(hitTry, rayToEye)) {
+            pix = cam->imgProject(hit.P, w, h);
+            int x = round(pix[0]);
+            int y = round(pix[1]);
+            if (pix[2]>0 && x > -1 && x<w && y>-1 && y < h) {
+                std::cout << "updating pixel" << std::endl;
+                img[x][y] += power*dir;
+            }
+        }
+        // update power and ray in anticipation for next bounce
+        power *= brdf*cos / vp.p;
+        ray = newRay;
     }
 }
 
@@ -180,16 +177,32 @@ Splat Scene::recursiveTrace_fromLight(Camera *cam, Image *img, const Ray& ray, i
 void
 Scene::photontraceImage(Camera *cam, Image *img)
 {
-    HitInfo hit;
-
+    vector<vector<Vector3>> im;
+    for (int i = 0; i < img->width(); i++) im.push_back(vector<Vector3>(img->height(), Vector3(0, 0, 0)));
     // loop over all point lights
     // loop over all area lights
-    for (int aL = 0; aL < m_areaLights.size(); aL++) {
+    for (unsigned int aL = 0; aL < m_areaLights.size(); aL++) {
         for (int p = 0; p < m_photonSamples; p++) {
-            Ray ray = m_areaLights[aL]->randRay();
-            //recursiveTrace_fromLight(ray, 0, m_maxBounces);
+            Light* light = m_areaLights[aL];
+            raypdf rp = light->randRay();
+            //printf("%f %f %f\n", rp.r.d[0], rp.r.d[1], rp.r.d[2]);
+            //printf("%f %f %f\n", rp.r.o[0], rp.r.o[1], rp.r.o[2]);
+            tracePhoton(cam, im, *light, rp);
+            if (p % 100 == 0) {
+                printf("Rendering Progress for AreaLight %i: %.3f%%\r", aL, p / float(m_photonSamples)*100.0f);
+                fflush(stdout);
+            }
         }
     }
+    printf("Rendering Progress: 100.000%\n");
+    debug("done Raytracing!\n");
+    for (int i = 0; i < img->width(); i++){
+        for (int j = 0; j < img->height(); j++){
+            //printf("%f %f %f\n", im[i][j][0], im[i][j][1], im[i][j][2]);
+            img->setPixel(i, j, im[i][j]);
+        }
+    }
+    img->draw();
 }
 
 bool

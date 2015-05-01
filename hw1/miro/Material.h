@@ -5,6 +5,12 @@
 #include "Miro.h"
 #include "Vector3.h"
 
+struct vec3pdf {
+    Vector3 v; // random vector
+    double p; // PDF for that random vector
+    vec3pdf(Vector3 V, double P) { v = V; p = P; }
+};
+
 class Material
 {
 public:
@@ -16,8 +22,8 @@ public:
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit,
                           const Scene& scene) const;
 
-    virtual Vector3 randEmit(const Vector3& n) const;
-    virtual Vector3 randReflect(const Ray& ray, const HitInfo& hit) const;
+    virtual vec3pdf randEmit(const Vector3& n) const;
+    virtual vec3pdf randReflect(const Ray& ray, const HitInfo& hit) const;
     virtual float BRDF(const Ray& in, const HitInfo& hit, const Ray& out) const { return 0; }
 
     float getEmittance() const { return emittance; }

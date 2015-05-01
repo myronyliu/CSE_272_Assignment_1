@@ -7,12 +7,7 @@
 #include "AreaLight.h"
 #include "Light.h"
 #include "BVH.h"
-
-struct Splat{
-    float x = 0 ;
-    float y = 0 ;
-    Vector3 rad = Vector3(0,0,0);
-};
+using namespace std;
 
 class Camera;
 class Image;
@@ -49,13 +44,14 @@ public:
     bool trace(HitInfo& minHit, const Ray& ray, const Object* skip,
         float tMin = 0.0f, float tMax = MIRO_TMAX) const;
     Vector3 recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounces);
-    Splat recursiveTrace_fromLight(Camera* cam, Image *img, const Ray& ray, int bounces, int maxbounces);
+    // trace a ray through the scene and return an image with accumlated pixel values from that single photon
+    void tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& light, const raypdf& rayAndProb);
 
 protected:
     Objects m_objects;
     BVH m_bvh;
-    int m_samplesPerPix = 1000;
-    int m_photonSamples = 100000;
+    int m_samplesPerPix = 100;
+    int m_photonSamples = 10;
     int m_maxBounces = 20;
     PointLights m_pointLights;
     AreaLights m_areaLights;

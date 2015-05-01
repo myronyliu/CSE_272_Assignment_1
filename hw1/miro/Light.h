@@ -6,6 +6,12 @@
 #include "Object.h"
 #include "Ray.h"
 
+struct raypdf {
+    Ray r;
+    double p;
+    raypdf(Ray R, double P) { r = R; p = P; }
+};
+
 class Light: public virtual Object
 {
 public:
@@ -15,8 +21,8 @@ public:
     Vector3 color() const { return m_color; }
     void preCalc() {} // use this if you need to
 
-    Ray randRay() const { return Ray(); }
-    virtual Vector3 randPt() const { return Vector3(0, 0, 0); }
+    virtual raypdf randRay() const { return raypdf(Ray(), 1); }
+    virtual vec3pdf randPt() const { return vec3pdf(Vector3(0, 0, 0), 1); }
 
 protected:
     Vector3 m_color;

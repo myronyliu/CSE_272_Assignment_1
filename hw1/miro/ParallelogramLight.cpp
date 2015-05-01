@@ -19,18 +19,19 @@ ParallelogramLight::ParallelogramLight(const Vector3& center,
     setMaterial(mat);
 }
 
-Vector3 ParallelogramLight::randPt() const {
+vec3pdf ParallelogramLight::randPt() const {
     double rx = 1.0 - 2.0*(double)rand() / (double)RAND_MAX;
     double ry = 1.0 - 2.0*(double)rand() / (double)RAND_MAX;
     Vector3 vx = rx*spanX()*vecX();
     Vector3 vy = ry*spanY()*vecY();
-    return m_center + vx + vy;
+    double area = 4.0*m_spanX*m_spanY*cross(m_vecX, m_vecY).length();
+    return vec3pdf(m_center + vx + vy, 1.0 / area);
 }
 
-Ray ParallelogramLight::randRay() const {
-    Vector3 o = randPt();
-    Vector3 d = m_material->randEmit(normal());
-    return Ray(o, d);
+raypdf ParallelogramLight::randRay() const {
+    vec3pdf o = randPt();
+    vec3pdf d = m_material->randEmit(normal());
+    return raypdf(Ray(o.v, d.v),o.p*d.p);
 }
 
 

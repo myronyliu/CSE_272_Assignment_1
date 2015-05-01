@@ -73,6 +73,7 @@
     <ClCompile Include="miro\Console.cpp" />
     <ClCompile Include="miro\Image.cpp" />
     <ClCompile Include="miro\Lambert.cpp" />
+    <ClCompile Include="miro\Light.cpp" />
     <ClCompile Include="miro\main.cpp" />
     <ClCompile Include="miro\Material.cpp" />
     <ClCompile Include="miro\MiroWindow.cpp" />

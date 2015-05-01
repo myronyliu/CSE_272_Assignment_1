@@ -22,9 +22,9 @@ public:
                           const Scene& scene) const;
 
     // Returns a random direction for an emitted photon given a surface normal
-    virtual Vector3 randEmit(const Vector3& n) const;
+    virtual vec3pdf randEmit(const Vector3& n) const;
     // Generates a random ray in the upper hemisphere according the BRDF
-    virtual Vector3 randReflect(const Ray& ray, const HitInfo& hit) const;
+    virtual vec3pdf randReflect(const Ray& ray, const HitInfo& hit) const;
     // BRDF
     virtual float BRDF(const Ray& in, const HitInfo& hit, const Ray& out) const;
 

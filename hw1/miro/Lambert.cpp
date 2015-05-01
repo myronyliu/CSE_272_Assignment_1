@@ -57,7 +57,8 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
     for (alightIter = alightlist->begin(); alightIter != alightlist->end(); alightIter++)
     {
         AreaLight* aLight = *alightIter;
-        Vector3 l = aLight->randPt() - hit.P; // shoot a shadow ray to a random point on the area light
+        vec3pdf vp = aLight->randPt();
+        Vector3 l = vp.v - hit.P; // shoot a shadow ray to a random point on the area light
         rayLight.o = hit.P;
         rayLight.d = l.normalized();
         
@@ -77,7 +78,7 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         Vector3 result = aLight->color(); // add checks for back front on/off later
         result *= m_kd;
 
-        L += std::max(0.0f, nDotL / falloff * aLight->wattage() / PI) * result;
+        L += std::max(0.0f, nDotL / falloff * aLight->wattage() / aLight->area() / PI) * result / (vp.p);
     }
     
     // add the ambient component
@@ -86,7 +87,7 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
     return L;
 }
 
-Vector3 Lambert::randReflect(const Ray& ray, const HitInfo& hit) const{
+vec3pdf Lambert::randReflect(const Ray& ray, const HitInfo& hit) const{
     double phi = 2.0 * M_PI*(double)rand() / (double)RAND_MAX;
     double theta = acos((double)rand() / RAND_MAX);
     Vector3 v = Vector3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
@@ -98,10 +99,10 @@ Vector3 Lambert::randReflect(const Ray& ray, const HitInfo& hit) const{
     if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
     else y = Vector3(0, 1, 0).orthogonal(z).normalize();
     Vector3 x = cross(y, z).normalize();
-    return v[0] * x + v[1] * y + v[2] * z;
+    return vec3pdf(v[0] * x + v[1] * y + v[2] * z, 1 / (2.0*M_PI));
 }
 
-Vector3 Lambert::randEmit(const Vector3& n) const {
+vec3pdf Lambert::randEmit(const Vector3& n) const {
     double u = (double)rand() / (double)RAND_MAX;
     double v = 2.0 * M_PI*(double)rand() / (double)RAND_MAX;
     Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
@@ -112,5 +113,5 @@ Vector3 Lambert::randEmit(const Vector3& n) const {
     if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
     else y = Vector3(0, 1, 0).orthogonal(z).normalize();
     Vector3 x = cross(y, z).normalize();
-    return d[0] * x + d[1] * y + d[2] * z;
+    return vec3pdf(d[0] * x + d[1] * y + d[2] * z, 1.0 / sqrt(1 - u));
 }

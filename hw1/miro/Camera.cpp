@@ -195,7 +195,9 @@ Parallelogram Camera::imagePlane(int imageWidth, int imageHeight){
     Parallelogram p;
     p.setCenter(m_eye + (c00 + c11) / 2.0);
     p.setVecX((c10 - c00).normalize());
-    p.setVecX((c01 - c00).normalize());
+    p.setVecY((c01 - c00).normalize());
+    p.setSpanX((c10 - c00).length() / 2.0);
+    p.setSpanY((c01 - c00).length() / 2.0);
     p.disableFront();
     p.enableBack();
     Material* mat = new Lambert(Vector3(1, 1, 1));
@@ -203,7 +205,7 @@ Parallelogram Camera::imagePlane(int imageWidth, int imageHeight){
     return p;
 }
 
-std::vector<float>
+Vector3
 Camera::imgProject(const Vector3& pt,int imageWidth, int imageHeight){
     float W = imageWidth;
     float H = imageHeight;
@@ -217,11 +219,12 @@ Camera::imgProject(const Vector3& pt,int imageWidth, int imageHeight){
     const float L = -R;
     float u = dot(pt, uDir);
     float v = dot(pt, vDir);
-    float w = dot(pt, -wDir); // this should be positive
-    u /= w;
-    v /= w;
+    float w = dot(pt, -wDir); // this should be positive for things in front of the camera
+    u /= fabs(w);
+    v /= fabs(w);
+    w /= fabs(w);
     float px = W*(u - L) / (R - L) - 0.5;
     float py = H*(v - B) / (T - B) - 0.5;
-    std::vector<float> pt2D = { px, py };
+    Vector3 pt2D(px, py, w);
     return pt2D;
 }

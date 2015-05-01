@@ -11,8 +11,7 @@
 class AreaLight : public Light
 {
 public:
-    // returns a random point on the areaLight
-    virtual Vector3 randPt() const { return Vector3(0, 0, 0); }
+    virtual float area() const { return 0; }
 
     void preCalc() {} // use this if you need to
 
