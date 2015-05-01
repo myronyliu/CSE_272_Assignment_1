@@ -88,7 +88,7 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 }
 
 vec3pdf Lambert::randReflect(const Ray& ray, const HitInfo& hit) const{
-    double phi = 2.0 * M_PI*(double)rand() / (double)RAND_MAX;
+    double phi = 2.0 * M_PI*((double)rand() / RAND_MAX);
     double theta = acos((double)rand() / RAND_MAX);
     Vector3 v = Vector3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
     // generate a basis with surface normal hit.N as the z-axis
@@ -103,8 +103,8 @@ vec3pdf Lambert::randReflect(const Ray& ray, const HitInfo& hit) const{
 }
 
 vec3pdf Lambert::randEmit(const Vector3& n) const {
-    double u = (double)rand() / (double)RAND_MAX;
-    double v = 2.0 * M_PI*(double)rand() / (double)RAND_MAX;
+    double u = ((double)rand() / RAND_MAX);
+    double v = 2.0 * M_PI*((double)rand() / RAND_MAX);
     Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
     Vector3 z = n.normalized();
     float a = dot(Vector3(1, 0, 0), z);

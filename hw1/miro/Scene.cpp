@@ -72,9 +72,9 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     if (!trace(hit, ray)) {
         return Vector3(0, 0, 0);
     }
-    double rn = (double)(1 + rand()) / (double)(1 + RAND_MAX);
+    double rn = (double)rand() / RAND_MAX;
     double em = hit.material->getEmittance();
-    if (rn <= em) {
+    if (em == 1.0 || rn < em) {
         return (1.0 / em)*hit.material->getEmitted();
     }
     else {
