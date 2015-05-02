@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include "ParallelogramLight.h"
 
 ParallelogramLight::ParallelogramLight(const Vector3& center,
@@ -15,7 +16,7 @@ ParallelogramLight::ParallelogramLight(const Vector3& center,
     m_wattage = 100;
     Material* mat = new Lambert(Vector3(1.0, 1.0, 1.0));
     mat->setEmittance(1.0);
-    mat->setEmitted(Vector3(1.0, 1.0, 1.0));
+    mat->setEmitted(Vector3(1,1,1));
     setMaterial(mat);
 }
 
@@ -65,3 +66,5 @@ ParallelogramLight::renderGL() {
     glEnd();
     glPopMatrix();
 }
+
+Vector3 ParallelogramLight::radiance() { return m_wattage*m_color / (2.0*M_PI*area()); }

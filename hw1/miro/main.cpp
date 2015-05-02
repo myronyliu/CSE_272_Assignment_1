@@ -28,21 +28,24 @@ makeRoomScene(){
     g_camera->setUp(Vector3(0, 0, 1));
     g_camera->setFOV(40);
 
-    g_scene->setSamplesPerPix(1024);
-    g_scene->setMaxBounces(2);
+    g_scene->setSamplesPerPix(1000);
+    g_scene->setMaxBounces(20);
 
     // create room geometry
 
     Material* mat = new Lambert(Vector3(0.8f, 0.8f, 0.8f));
+    Material* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
+
+    float shift = 0;
 
     Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
-    Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
-    Parallelogram * wall_R = new Parallelogram(Vector3(1, 0, 1), Vector3(0, 0, 1), Vector3(0, 1, 0), 1, 1); // right
-    Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
-    Parallelogram * wall_B = new Parallelogram(Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1); // bottom
+    Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0-shift, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1+shift, 1); // left
+    Parallelogram * wall_R = new Parallelogram(Vector3(1, 0 - shift, 1), Vector3(0, 0, 1), Vector3(0, 1, 0), 1, 1 + shift); // right
+    Parallelogram * wall_T = new Parallelogram(Vector3(0, 0 - shift, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1 + shift, 1); // top
+    Parallelogram * wall_B = new Parallelogram(Vector3(0, 0 - shift, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1 + shift); // bottom
 
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
-    Material* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
+    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
 
     cover->disableBack();
 
@@ -53,8 +56,8 @@ makeRoomScene(){
     wall_F->setMaterial(mat);
     cover->setMaterial(coverMat);
 
-    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
-    light->flip(); cover->flip();
+    //light->flip(); cover->flip();
+    light->setWattage(100);
 
     // add objects to scene
     g_scene->addObject(wall_B);
