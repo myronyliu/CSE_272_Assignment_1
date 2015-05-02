@@ -21,8 +21,8 @@ ParallelogramLight::ParallelogramLight(const Vector3& center,
 }
 
 vec3pdf ParallelogramLight::randPt() const {
-    double rx = 2.0*((double)rand() / RAND_MAX) - 1.0;
-    double ry = 2.0*((double)rand() / RAND_MAX) - 1.0;
+    double rx = 1.0 - 2.0*(double)rand() / (double)RAND_MAX;
+    double ry = 1.0 - 2.0*(double)rand() / (double)RAND_MAX;
     Vector3 vx = rx*spanX()*vecX();
     Vector3 vy = ry*spanY()*vecY();
     double area = 4.0*m_spanX*m_spanY*cross(m_vecX, m_vecY).length();

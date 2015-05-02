@@ -19,7 +19,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(256,256);
+    g_image->resize(256, 256);
 
     // set up the camera
     g_camera->setBGColor(Vector3(1.0f, 1.0f, 1.0f));
