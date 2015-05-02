@@ -76,7 +76,6 @@ bool
 Parallelogram::intersect(HitInfo& result, const Ray& ray,
                   float tMin, float tMax)
 {
-    if (m_back == false && m_front == false) return false;
     Vector3 RtoP_perp = (m_center - ray.o).orthogonal(m_vecX, m_vecY); // perpendicular displacement vector from ray to plane
     if (dot(RtoP_perp, normal()) >= 0 && m_back == false) return false;
     if (dot(RtoP_perp, normal()) <= 0 && m_front == false) return false;

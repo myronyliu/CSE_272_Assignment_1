@@ -19,7 +19,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(256, 256);
+    g_image->resize(512, 512);
 
     // set up the camera
     g_camera->setBGColor(Vector3(1.0f, 1.0f, 1.0f));
@@ -28,8 +28,8 @@ makeRoomScene(){
     g_camera->setUp(Vector3(0, 0, 1));
     g_camera->setFOV(40);
 
-    g_scene->setSamplesPerPix(1000);
-    g_scene->setMaxBounces(20);
+    g_scene->setSamplesPerPix(256);
+    g_scene->setMaxBounces(10);
 
     // create room geometry
 
@@ -42,11 +42,10 @@ makeRoomScene(){
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0-shift, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1+shift, 1); // left
     Parallelogram * wall_R = new Parallelogram(Vector3(1, 0 - shift, 1), Vector3(0, 0, 1), Vector3(0, 1, 0), 1, 1 + shift); // right
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0 - shift, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1 + shift, 1); // top
+    wall_T->flip();
     Parallelogram * wall_B = new Parallelogram(Vector3(0, 0 - shift, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1 + shift); // bottom
 
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
-    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
-
     cover->disableBack();
 
     wall_T->setMaterial(mat);
@@ -56,8 +55,9 @@ makeRoomScene(){
     wall_F->setMaterial(mat);
     cover->setMaterial(coverMat);
 
-    //light->flip(); cover->flip();
-    light->setWattage(100);
+    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
+    light->flip(); cover->flip();light->setWattage(2);
+    
 
     // add objects to scene
     g_scene->addObject(wall_B);
