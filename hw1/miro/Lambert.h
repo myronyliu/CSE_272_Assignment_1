@@ -27,6 +27,7 @@ public:
     virtual vec3pdf randReflect(const Ray& ray, const HitInfo& hit) const;
     // BRDF
     virtual float BRDF(const Ray& in, const HitInfo& hit, const Ray& out) const;
+    virtual Vector3 powerPerPatchPerSolidAngle(const Vector3& normal, const Vector3& direction) const;
 
 protected:
     Vector3 m_kd;

@@ -36,6 +36,8 @@ public:
     virtual void enableBack() { m_back = true; }
     virtual void disableFront() { m_front = false; }
     virtual void enableFront() { m_front = true; }
+    virtual void enable() { m_front = true; m_back = true; }
+    virtual void disable() { m_front = false; m_back = false; }
 
     const Vector3 center() const { return m_center; }
     const float spanX() const { return m_spanX; }

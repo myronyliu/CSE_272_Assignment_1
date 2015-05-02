@@ -2,5 +2,5 @@
 
 void Light::setColor(Vector3 v){
     m_color = v;
-    m_material->setEmitted(v);
+    m_material->setPowerPerPatch(v);
 }

@@ -31,7 +31,6 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
     PointLights::const_iterator plightIter;
     for (plightIter = plightlist->begin(); plightIter != plightlist->end(); plightIter++)
     {
-        //printf("POINT LIGHT\n");
         PointLight* pLight = *plightIter;
         Vector3 l = pLight->position() - hit.P;
         rayLight.o = hit.P;
@@ -64,9 +63,15 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         rayLight.d = l.normalized();
         
         // if the shadow ray hits the "backside of the light" continue to the next area light
-        if (!aLight->intersect(hitLight, rayLight)) continue;
+        if (!aLight->intersect(hitLight, rayLight)){
+            //printf("front-side of light not visible\n");
+            continue;
+        }
         // if the shadow ray is occluded by another (hence the "skip") object continue the next light
-        if (scene.trace(hitLight, rayLight, aLight, 0.0001, l.length())) continue;
+        if (scene.trace(hitLight, rayLight, aLight, 0.0001, l.length())){
+            //printf("random point on light occluded\n");
+            continue;
+        }
 
         // the inverse-squared falloff
         float falloff = l.length2();
@@ -76,10 +81,12 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 
         // get the diffuse component
         float nDotL = dot(hit.N, l);
-        Vector3 result = aLight->color(); // add checks for back front on/off later
+        Vector3 result = aLight->color();
         result *= m_kd;
 
-        L += std::max(0.0f, nDotL / falloff * aLight->wattage() / aLight->area() / PI) * result / (vp.p);
+        L += std::max(0.0f, dot(hitLight.N, -l))*
+            std::max(0.0f, nDotL / falloff*
+            aLight->wattage() / aLight->area() / PI) * result / (vp.p);
     }
     
     // add the ambient component
@@ -121,4 +128,9 @@ vec3pdf Lambert::randEmit(const Vector3& n) const {
     else y = Vector3(0, 1, 0).orthogonal(z).normalize();
     Vector3 x = cross(y, z).normalize();
     return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1-u)/M_PI);
+}
+
+Vector3 Lambert::powerPerPatchPerSolidAngle(const Vector3& normal, const Vector3& direction) const {
+    if (dot(normal, direction) < 0) return Vector3(0, 0, 0);
+    return m_powerPerPatch / (2.0*M_PI);
 }

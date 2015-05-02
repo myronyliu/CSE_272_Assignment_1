@@ -34,7 +34,6 @@ BVH::intersect(HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
                 minHit = tempMinHit;
         }
     }
-
     return hit;
 }
 
