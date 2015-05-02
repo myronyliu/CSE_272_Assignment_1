@@ -72,26 +72,27 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     if (!trace(hit, ray)) {
         return Vector3(0, 0, 0);
     }
-    double rn = (double)(1 + rand()) / (double)(1 + RAND_MAX);
-    double em = hit.material->getEmittance();
-    //if (em == NULL) std::cout << "wtf" << std::endl;
+    //Vector3 down(0, 0, -1);
+    //if (2.0 - hit.P[2] < 0.00001 && hit.N == down && bounces>0) printf("ceiling hit on bounce\n");
+    double rn = (double)(rand()) / RAND_MAX;
+    double em = hit.material->emittance();
+    //printf("%f%\r", em);
     if (em == 1.0 || rn < em) {
-        return (1.0 / em)*hit.material->getEmitted();
+        Vector3 rad = hit.material->powerPerPatchPerSolidAngle(hit.N, hit.P - ray.o);
+        //rad /= 4.0*M_PI*(hit.P - ray.o).length2();
+        return (1.0 / em)*rad;
     }
     else {
         vec3pdf vp = hit.material->randReflect(ray, hit);// pick BRDF weighted random direction
         Vector3 newDir = vp.v;
-        Ray newRay = ray;
+        Ray newRay;
         newRay.o = hit.P;
         newRay.d = newDir;
         float brdf = hit.material->BRDF(ray, hit, newRay);
         float cos = dot(hit.N, newDir);
-        Vector3 dir = hit.material->shade(ray, hit, *this); // gathered direct lighting
-        //return
-        //    dir + (1.0 / (1.0 - em)) / vp.p*brdf*cos*
-        //    recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
+        Vector3 gather = hit.material->shade(ray, hit, *this); // gathered direct lighting
         return
-            dir + (1.0 / (1.0 - em)) / M_PI*brdf*cos*
+            gather + (1.0 / (1.0 - em))/vp.p*brdf*cos*
             recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
     }
 }
@@ -150,7 +151,7 @@ void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& 
             //std::cout << ray.d << std::endl;
             return; // ray left scene
         }double rn = (double)rand() / RAND_MAX;
-        double em = hit.material->getEmittance();
+        double em = hit.material->emittance();
         if (em == 1.0 || rn < em) {
             //printf("bounce %i absorbed\n", bounces);
             return; // photon was absorbed
@@ -177,7 +178,7 @@ void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& 
             else printf("impossible: %f %f %f \n,",pix[0],pix[1],pix[2]);
         }
         // update power and ray in anticipation for next bounce
-        power *= brdf_toNew*cos_toNew / vp.p;
+        power *= brdf_toNew*cos_toNew;// / vp.p;
         ray = newRay;
     }
 }

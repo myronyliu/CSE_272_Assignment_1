@@ -16,7 +16,7 @@ ParallelogramLight::ParallelogramLight(const Vector3& center,
     m_wattage = 100;
     Material* mat = new Lambert(Vector3(1.0, 1.0, 1.0));
     mat->setEmittance(1.0);
-    mat->setEmitted(Vector3(1,1,1));
+    mat->setPowerPerPatch(m_wattage*m_color / area());
     setMaterial(mat);
 }
 

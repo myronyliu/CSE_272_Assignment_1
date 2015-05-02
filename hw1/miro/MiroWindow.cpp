@@ -3,6 +3,7 @@
 #include "Miro.h"
 #include "Camera.h"
 #include "Image.h"
+#include "Scene.h"
 #include <stdlib.h>
 #include <time.h>
 
@@ -168,6 +169,35 @@ MiroWindow::keyboard(unsigned char key, int x, int y)
             }
             break;
         }
+
+
+        case '[':
+        case '{':
+            g_scene->setSamplesPerPix(g_scene->samplesPerPix() - 1);
+            printf("Samples per pixel: _%i_____%\r", g_scene->samplesPerPix());
+            fflush(stdout);
+        break;
+
+        case ']':
+        case '}':
+            g_scene->setSamplesPerPix(g_scene->samplesPerPix() + 1);
+            printf("Samples per pixel: _%i_____%\r", g_scene->samplesPerPix());
+            fflush(stdout);
+        break;
+
+        case ';':
+        case ':':
+            g_scene->setMaxBounces(g_scene->maxBounces() - 1);
+            printf("Maximum bounces: _%i_____%\r", g_scene->maxBounces());
+            fflush(stdout);
+            break;
+
+        case '\'':
+        case '\"':
+            g_scene->setMaxBounces(g_scene->maxBounces() + 1);
+            printf("Maximum bounces: _%i%_____\r", g_scene->maxBounces());
+            fflush(stdout);
+        break;
 
         case 'r':
         case 'R':

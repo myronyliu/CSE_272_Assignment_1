@@ -26,14 +26,15 @@ public:
     virtual vec3pdf randReflect(const Ray& ray, const HitInfo& hit) const;
     virtual float BRDF(const Ray& in, const HitInfo& hit, const Ray& out) const { return 0; }
 
-    float getEmittance() const { return emittance; }
-    Vector3 getEmitted() const { return emitted; }
-    void setEmittance(const float& e) { emittance = e; }
-    void setEmitted(const Vector3& c) { emitted = c; }
+    float emittance() const { return m_emittance; }
+    Vector3 powerPerPatch() const { return m_powerPerPatch; }
+    void setEmittance(const float& e) { m_emittance = e; }
+    void setPowerPerPatch(const Vector3& c) { m_powerPerPatch = c; }
+    virtual Vector3 powerPerPatchPerSolidAngle(const Vector3&normal, const Vector3& direction) const;
 
 protected:
-    Vector3 emitted = Vector3(0,0,0); // emitted RGB color
-    float emittance = 0; // probability of reflecting light
+    Vector3 m_powerPerPatch = Vector3(0, 0, 0); // emitted power per dx.dy patch area
+    float m_emittance = 0; // probability of reflecting light
 };
 
 #endif // CSE168_MATERIAL_H_INCLUDED

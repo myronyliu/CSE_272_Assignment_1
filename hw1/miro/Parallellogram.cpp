@@ -9,8 +9,8 @@ Parallelogram::Parallelogram(
     const float& spanX, const float& spanY)
 {
     m_center = center;
-    m_vecX = vecX;
-    m_vecY = vecY;
+    m_vecX = vecX.normalized();
+    m_vecY = vecY.normalized();
     m_spanX = spanX;
     m_spanY = spanY;
     m_front = true;
@@ -23,8 +23,8 @@ Parallelogram::Parallelogram(
     const bool& front, const bool& back)
 {
     m_center = center;
-    m_vecX = vecX;
-    m_vecY = vecY;
+    m_vecX = vecX.normalized();
+    m_vecY = vecY.normalized();
     m_spanX = spanX;
     m_spanY = spanY;
     m_front = front;
@@ -86,17 +86,19 @@ Parallelogram::intersect(HitInfo& result, const Ray& ray,
     float nSteps = RtoP_perp.length() / step_perp.length();
     Vector3 r = ray.o + nSteps*ray.d; // location where the ray hits in the (extended) plane
 
-    float r_x = dot(r-m_center, m_vecX.normalized()); // find components along skew-basis
-    float r_y = dot(r-m_center, m_vecY.normalized());
-
-    if (fabs(r_x) > m_spanX || fabs(r_y) > m_spanY) return false; // ray hits outside of plane
+    Vector3 cr = r - m_center; // vector from center to r
+    Vector3 YperpX = m_vecY.orthogonal(m_vecX).normalized();
+    Vector3 cr_x = cr - (dot(cr, YperpX) / dot(m_vecY, YperpX))*m_vecY; // find componenets along skew-basis
+    Vector3 cr_y = cr - cr_x;
+    if (cr_x.length() > m_spanX || cr_y.length() > m_spanY) return false; // ray hits outside of plane
     if (nSteps<tMin || nSteps>tMax) return false;
 
-    result.t = nSteps; 
+    Vector3 eps = 0.0001*(ray.o - r).normalize();
+    result.t = nSteps;
     result.N = -step_perp.normalized();
-    //result.P = r;
-    result.P = r + (ray.o-result.P).normalize()*0.000001;
-    result.material = this->m_material; 
-    
+    result.P = r + eps;
+    //result.P = r + (ray.o-result.P).normalize()*0.000001;
+    result.material = this->m_material;
+    //printf("emittance: %f%\r", m_material->getEmittance());
     return true;
 }
