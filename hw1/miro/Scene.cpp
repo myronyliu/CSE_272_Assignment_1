@@ -72,14 +72,10 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     if (!trace(hit, ray)) {
         return Vector3(0, 0, 0);
     }
-    //Vector3 down(0, 0, -1);
-    //if (2.0 - hit.P[2] < 0.00001 && hit.N == down && bounces>0) printf("ceiling hit on bounce\n");
-    double rn = (double)(rand()) / RAND_MAX;
+    double rn = (double)(rand() / RAND_MAX);
     double em = hit.material->emittance();
-    //printf("%f%\r", em);
     if (em == 1.0 || rn < em) {
         Vector3 rad = hit.material->powerPerPatchPerSolidAngle(hit.N, hit.P - ray.o);
-        //rad /= 4.0*M_PI*(hit.P - ray.o).length2();
         return (1.0 / em)*rad;
     }
     else {
@@ -88,11 +84,11 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
         Ray newRay;
         newRay.o = hit.P;
         newRay.d = newDir;
-        float brdf = 1.0 / M_PI; //hit.material->BRDF(ray, hit, newRay);
+        float brdf = hit.material->BRDF(ray, hit, newRay);
         float cos = dot(hit.N, newDir);
         Vector3 gather = hit.material->shade(ray, hit, *this); // gathered direct lighting
         return
-            gather + (1.0 / (1.0 - em))/vp.p*brdf*cos*
+            gather + (1.0 / (1.0 - em))/vp.p*brdf*cos*0.8*
             recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
     }
 }
@@ -117,8 +113,8 @@ Scene::pathtraceImage(Camera *cam, Image *img)
             for (int k = 0; k < m_samplesPerPix; k++){
                 Ray ray = cam->eyeRayJittered(i, j, img->width(), img->height());
                 if (!trace(hitInfo, ray)) continue;
-                if (dot(hitInfo.N, Vector3(0, 0, -1)) > 0) { pixSum += Vector3(1.0, 0.0, 0.0);  }
-                else pixSum += recursiveTrace_fromEye(ray, 0, m_maxBounces) / (double)m_samplesPerPix;
+                //if (dot(hitInfo.N, Vector3(0, 0, -1)) > 0) { pixSum += Vector3(1.0, 0.0, 0.0);  }
+                pixSum += recursiveTrace_fromEye(ray, 0, m_maxBounces) / (double)m_samplesPerPix;
             }
             img->setPixel(i, j, pixSum);
         }

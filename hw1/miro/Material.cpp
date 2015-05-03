@@ -20,7 +20,7 @@ Material::powerPerPatchPerSolidAngle(const Vector3& normal, const Vector3& direc
 
 vec3pdf
 Material::randReflect(const Ray&, const HitInfo&) const{
-    double phi = 2.0 * M_PI*(double)rand() / (double)RAND_MAX;
+    double phi = 2.0 * M_PI*((double)rand() / RAND_MAX);
     double theta = acos(2.0*(double)rand() / RAND_MAX - 1.0);
     return vec3pdf(Vector3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta)), 1.0 / (4.0*M_PI));
 }

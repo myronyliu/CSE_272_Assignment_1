@@ -75,9 +75,6 @@
     <ClCompile Include="miro\Light.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="miro\Quad.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="miro\BLPatch.h">
@@ -150,9 +147,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="miro\Light.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="miro\Quad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

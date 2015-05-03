@@ -81,7 +81,7 @@ Parallelogram::intersect(HitInfo& result, const Ray& ray,
     if (dot(RtoP_perp, normal()) <= 0 && m_front == false) return false;
     Vector3 dir = ray.d;
     Vector3 step_perp = dir.orthogonal(m_vecX, m_vecY); // perpendicular (relative to plane) step for ray
-    if (dot(RtoP_perp, step_perp) < 0) return false;
+    if (dot(RtoP_perp, step_perp) <= 0 || step_perp.length() == 0.0) return false;
     float nSteps = RtoP_perp.length() / step_perp.length();
     Vector3 r = ray.o + nSteps*ray.d; // location where the ray hits in the (extended) plane
 
@@ -96,8 +96,6 @@ Parallelogram::intersect(HitInfo& result, const Ray& ray,
     result.t = nSteps;
     result.N = -step_perp.normalized();
     result.P = r + eps;
-    //result.P = r + (ray.o-result.P).normalize()*0.000001;
     result.material = this->m_material;
-    //printf("emittance: %f%\r", m_material->getEmittance());
     return true;
 }

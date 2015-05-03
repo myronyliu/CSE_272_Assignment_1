@@ -96,13 +96,11 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 }
 
 vec3pdf Lambert::randReflect(const Ray& ray, const HitInfo& hit) const{
-    //double phi = 2.0 * M_PI*((double)rand() / RAND_MAX);
-    //double theta = acos((double)rand() / RAND_MAX);
-    //Vector3 d = Vector3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
-    double u = ((double)rand() / RAND_MAX);
-    while (u == 1) u = ((double)rand() / RAND_MAX);
+    double u;
+    do  u = ((double)rand() / RAND_MAX);  while (u == 1);
     double v = 2.0 * M_PI*((double)rand() / RAND_MAX);
     Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
+
     // generate a basis with surface normal hit.N as the z-axis
     Vector3 z = hit.N.normalized();
     float a = dot(Vector3(1, 0, 0), z);
@@ -111,13 +109,12 @@ vec3pdf Lambert::randReflect(const Ray& ray, const HitInfo& hit) const{
     if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
     else y = Vector3(0, 1, 0).orthogonal(z).normalize();
     Vector3 x = cross(y, z).normalize();
-    //return vec3pdf(d[0] * x + d[1] * y + d[2] * z, 1.0 / (2.0*M_PI));
-    return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1 - u) / M_PI);
+    return vec3pdf(d[0] * x + d[1] * y + d[2] * z, 1.0 / (2.0*M_PI));
 }
 
 vec3pdf Lambert::randEmit(const Vector3& n) const {
     double u = ((double)rand() / RAND_MAX);
-    while (u == 1) u = ((double)rand() / RAND_MAX);
+    while (u == 1.0) u = ((double)rand() / RAND_MAX);
     double v = 2.0 * M_PI*((double)rand() / RAND_MAX);
     Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
     Vector3 z = n.normalized();

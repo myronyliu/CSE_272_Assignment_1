@@ -19,7 +19,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(512, 512);
+    g_image->resize(256, 256);
 
     // set up the camera
     g_camera->setBGColor(Vector3(1.0f, 1.0f, 1.0f));
@@ -28,7 +28,7 @@ makeRoomScene(){
     g_camera->setUp(Vector3(0, 0, 1));
     g_camera->setFOV(40);
 
-    g_scene->setSamplesPerPix(256);
+    g_scene->setSamplesPerPix(512);
     g_scene->setMaxBounces(10);
 
     // create room geometry
@@ -42,10 +42,6 @@ makeRoomScene(){
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
     Parallelogram * wall_B = new Parallelogram(Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1); // bottom
 
-    //Parallelogram * wall_N = new Parallelogram(Vector3(0, -1, 1), Vector3(0, 0, 1), Vector3(1, 0, 0), 1, 1); // near
-    //wall_N->setMaterial(mat);
-    //g_scene->addObject(wall_N);
-
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     cover->disableBack();
 
@@ -56,8 +52,8 @@ makeRoomScene(){
     wall_F->setMaterial(mat);
     cover->setMaterial(coverMat);
 
-    //light->flip(); cover->flip();
-    light->setWattage(5);
+    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
+    //light->flip(); cover->flip(); light->setWattage(2);
 
     // add objects to scene
     g_scene->addObject(wall_B);
@@ -77,7 +73,12 @@ main(int argc, char*argv[])
 {
     // create a scene
     makeRoomScene();
-
+    //unsigned int cw;
+    //_controlfp_s(&cw, 0, 0);
+    //cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|
+    //        EM_DENORMAL|EM_INVALID);
+    //unsigned int cwOriginal;
+    //_controlfp_s(&cwOriginal,cw, _MCW_EM);
     MiroWindow miro(&argc, argv);
     miro.mainLoop();
 
