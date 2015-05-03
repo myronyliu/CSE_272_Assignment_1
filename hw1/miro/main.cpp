@@ -28,8 +28,9 @@ makeRoomScene(){
     g_camera->setUp(Vector3(0, 0, 1));
     g_camera->setFOV(40);
 
-    g_scene->setSamplesPerPix(10);
-    g_scene->setMaxBounces(2);
+    g_scene->setSamplesPerPix(100);
+    g_scene->setMaxBounces(20);
+    g_scene->setPhotonSamples(100000);
 
     // create room geometry
 
@@ -59,7 +60,7 @@ makeRoomScene(){
     cover->setMaterial(coverMat);
 
     light->flip(); cover->flip();
-    light->setWattage(5);
+    light->setWattage(2);
 
     // add objects to scene
     g_scene->addObject(wall_B);
@@ -69,6 +70,16 @@ makeRoomScene(){
     g_scene->addObject(wall_T);
     g_scene->addObject(cover);
     g_scene->addAreaLight(light);
+
+    /*int w = g_image->width();
+    int h = g_image->height();
+    for (float i = 0; i < w; i+=16){
+        for (float j = 0; j < h; j+=16){
+            float sa = g_camera->pixelSolidAngle(i,j,w,h);
+            Parallelogram* para = new Parallelogram(Vector3(2*i/w, 2*j/w, sa/2), Vector3(0, 0, 1), Vector3(0, 0, 1), sa, sa);
+            g_scene->addObject(para);
+        }
+    }*/
 
     // let objects do pre-calculations if needed
     g_scene->preCalc();
