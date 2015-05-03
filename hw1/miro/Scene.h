@@ -12,6 +12,11 @@ using namespace std;
 class Camera;
 class Image;
 
+struct LightPDF {
+    Light* l;
+    float p;
+};
+
 class Scene
 {
 public:
@@ -26,9 +31,12 @@ public:
     void setSamplingHeuristic(float p) { m_samplingHeuristic = fmin(fmax(0, p), 1); }
     float samplingHeuristic() { return m_samplingHeuristic; }
 
-    void addPointLight(PointLight* pObj) {m_pointLights.push_back(pObj);}
+    void addPointLight(PointLight* pObj) {
+        m_lights.push_back(pObj);
+        m_pointLights.push_back(pObj);}
     const PointLights* pointLights() const {return &m_pointLights;}
     void addAreaLight(AreaLight* pObj) {
+        m_lights.push_back(pObj);
         m_objects.push_back(pObj);
         m_areaLights.push_back(pObj);
     }
@@ -47,14 +55,17 @@ public:
         float tMin = 0.0f, float tMax = MIRO_TMAX) const;
     Vector3 recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounces);
     // trace a ray through the scene and return an image with accumlated pixel values from that single photon
-    void tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& light, const raypdf& rayAndProb);
+    void tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& light, const RayPDF& rayAndProb);
+
+    LightPDF randLightByWattage();
 
 protected:
     Objects m_objects;
     BVH m_bvh;
     int m_samplesPerPix = 100;
-    int m_photonSamples = 1000000;
+    int m_photonSamples = 100000000;
     int m_maxBounces = 20;
+    Lights m_lights;
     PointLights m_pointLights;
     AreaLights m_areaLights;
     float m_samplingHeuristic = 0.5; // probability of sampling BRDF. Complement is for sampling light

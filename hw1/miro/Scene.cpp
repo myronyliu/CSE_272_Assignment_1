@@ -75,14 +75,14 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     double rn = (double)(rand() / RAND_MAX);
     double em = hit.material->emittance();
     if (em == 1.0 || rn < em) {
-        Vector3 rad = hit.material->powerPerPatchPerSolidAngle(hit.N, ray.o - hit.P);
+        Vector3 rad = hit.material->radiance(hit.N, ray.o - hit.P);
         if (bounces == 0) return (1.0 / em)*rad;
         else return Vector3(0, 0, 0);
     }
     rn = (double)rand() / RAND_MAX;
     vec3pdf vp;
     if (m_samplingHeuristic == 1 || rn < m_samplingHeuristic) { // sample BRDF
-        vp = hit.material->randReflect(ray, hit);// pick BRDF weighted random direction
+        vp = hit.material->randReflect(-ray.d, hit.N); // pick BRDF weighted random direction
     }
     else { // sample AreaLight
         int numAL = m_areaLights.size();
@@ -93,17 +93,17 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
         vp.v -= hit.P;
         vp.p *= vp.v.length2() / fabs(dot(vp.v.normalized(),randAL->normal(lightPt))); // convert PDF from 1/A to 1/SA
     }
-        Vector3 newDir = vp.v;
-        Ray newRay;
-        newRay.o = hit.P;
-        newRay.d = newDir;
-        float brdf = hit.material->BRDF(ray, hit, newRay);
-        float cos = dot(hit.N, newDir);
-        Vector3 gather = hit.material->shade(ray, hit, *this); // gathered direct lighting
-        return
+    Vector3 newDir = vp.v;
+    Ray newRay;
+    newRay.o = hit.P;
+    newRay.d = newDir;
+    float brdf = hit.material->BRDF(-ray.d, hit.N, newRay.d);
+    float cos = dot(hit.N, newDir);
+    Vector3 gather = hit.material->shade(ray, hit, *this); // gathered direct lighting
+    return
             gather + (1.0 / (1.0 - em))/vp.p*brdf*cos*0.8*
-            recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
-    }
+        recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
+}
 
 void
 Scene::pathtraceImage(Camera *cam, Image *img)
@@ -140,51 +140,60 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     debug("done Raytracing!\n");
 }
 
-void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& light, const raypdf& rp) {
+void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& light, const RayPDF& rp) {
     float w = img.size();
     float h = img[0].size();
     Vector3 pix;
-    HitInfo hit, hitTry;
-    Ray ray, newRay, rayToEye;
-    ray = rp.r;
-    float power = light.wattage() / rp.p; // Monte Carlo sampling so divide by PDF of the random ray
+    HitInfo hit, tryHitEye;
+    Ray rayIn, rayOut, rayToEye;
+    rayOut = rp.r;
+    Vector3 power = light.wattage()*light.color() / rp.p; // Monte Carlo sampling so divide by PDF of the random ray
+    // The following is for the initial emission (to make the light visible)
+/*    rayToEye.o = rayOut.o;
+    rayToEye.d = (cam->eye() - rayToEye.o).normalize();
+    if (!trace(tryHitEye, rayToEye)) { // check if anything is occluding the eye from current hitpoint
+        pix = cam->imgProject(rayToEye.o, w, h); // find the pixel the onto which the current hitpoint projects
+        int x = round(pix[0]);
+        int y = round(pix[1]);
+        if (pix[2]>0 && x > -1 && x<w && y>-1 && y < h) { // check that the pixel is within the viewing window
+            Vector3 initValue = light.material()->radiance(light.normal(rayOut.o), rayToEye.d)*light.area();
+            initValue *= dot(light.normal(rayOut.o), rayToEye.d);
+            initValue *= cam->pixelCosine(pix[0], pix[1], w, h);
+            initValue /= light.material()->sum_L_cosTheta_dOmega();
+            initValue /= (rayOut.o - cam->eye()).length2();
+            img[x][y] += power*initValue;
+        }
+    }*/
+    // now for the bounces
     for (int bounces = 0; bounces < m_maxBounces; bounces++) {
-        if (!trace(hit, ray)) {
-            //printf("bounce %i left scene\n",bounces);
-            //printf(" %f %f %f\n", ray.d[0], ray.d[1], ray.d[2]);
-            //printf(" %f %f %f\n", ray.o[0], ray.o[1], ray.o[2]);
-            //std::cout << ray.d << std::endl;
+        if (!trace(hit, rayIn)) {
             return; // ray left scene
-        }double rn = (double)rand() / RAND_MAX;
+        }
+        double rn = (double)rand() / RAND_MAX;
         double em = hit.material->emittance();
         if (em == 1.0 || rn < em) {
-            //printf("bounce %i absorbed\n", bounces);
             return; // photon was absorbed
-        }
-        vec3pdf vp = hit.material->randReflect(ray, hit); // pick BRDF weighted random direction
-        Vector3 newDir = vp.v;
-        newRay.o = hit.P;
-        newRay.d = newDir;
-        float brdf_toNew = hit.material->BRDF(ray, hit, newRay); // BRDF for bouncing to new random direction
-        float cos_toNew = dot(hit.N, newDir); // cosine between new and current ray directions
+        } // otherwise photon will be reflected
         rayToEye.o = hit.P;
         rayToEye.d = (cam->eye() - hit.P).normalize();
-        if (!trace(hitTry, rayToEye)) { // check if anything is occluding the eye from current hitpoint
+        if (!trace(tryHitEye, rayToEye)) { // check if anything is occluding the eye from current hitpoint
             pix = cam->imgProject(hit.P, w, h); // find the pixel the onto which the current hitpoint projects
             int x = round(pix[0]);
             int y = round(pix[1]);
             if (pix[2]>0 && x > -1 && x<w && y>-1 && y < h) { // check that the pixel is within the viewing window
-                //std::cout << "updating pixel" << std::endl;
-                float brdf_toEye = hit.material->BRDF(ray, hit, rayToEye); // BRDF between current and shadow ray
-                float cos_toEye = dot(hit.N, rayToEye.d); // cosine between shadow ray and current ray
-                Vector3 gather = hit.material->shade(ray, hit, *this);
-                img[x][y] += power*gather*brdf_toEye*cos_toEye;
+                float brdf = hit.material->BRDF(rayToEye.d, hit.N, -rayIn.d); // BRDF between eye-ray and incoming-ray
+                float cos = dot(rayToEye.d, hit.N); // cosine between eye-ray and surface-normal
+                float lengthSqr = (cam->eye() - hit.P).length2();
+                float cosAlpha = cam->pixelCosine(pix[0], pix[1], w, h);
+                img[x][y] += power*brdf*cos*cosAlpha / lengthSqr;
             }
-            else printf("impossible: %f %f %f \n,",pix[0],pix[1],pix[2]);
         }
-        // update power and ray in anticipation for next bounce
-        power *= brdf_toNew*cos_toNew;// / vp.p;
-        ray = newRay;
+        vec3pdf vp = hit.material->randReflect(-rayIn.d, hit.N); // pick BRDF.cos weighted random direction
+        Vector3 dirOut = vp.v;
+        rayOut.o = hit.P;
+        rayOut.d = dirOut;
+        rayIn = rayOut;
+        power /= vp.p; // Monte Carlo
     }
 }
 
@@ -196,28 +205,22 @@ Scene::photontraceImage(Camera *cam, Image *img)
     int h = img->height();
     vector<vector<Vector3>> im;
     for (int i = 0; i < w; i++) im.push_back(vector<Vector3>(h, Vector3(0, 0, 0)));
-    // loop over all point lights
-    // loop over all area lights
-    for (unsigned int aL = 0; aL < m_areaLights.size(); aL++) {
-        for (int p = 0; p < m_photonSamples; p++) {
-            Light* light = m_areaLights[aL];
-            raypdf rp = light->randRay();
-            //printf("%f %f %f\n", rp.r.d[0], rp.r.d[1], rp.r.d[2]);
-            //printf("%f %f %f\n", rp.r.o[0], rp.r.o[1], rp.r.o[2]);
+    for (int p = 0; p < m_photonSamples; p++) { // shoot a photon...
+        LightPDF lp = randLightByWattage(); // ... off of a random light (I don't think we need the PDF here)
+        Light* light = lp.l;
+        RayPDF rp = light->randRay();
             tracePhoton(cam, im, *light, rp);
             if (p % 100 == 0) {
-                printf("Rendering Progress for AreaLight %i: %.3f%%\r", aL, p / float(m_photonSamples)*100.0f);
+            printf("Rendering Progress: %.3f%%\r", p / float(m_photonSamples)*100.0f);
                 fflush(stdout);
             }
         }
-    }
     printf("Rendering Progress: 100.000%\n");
-    debug("done Raytracing!\n");
+    debug("done Photontracing!\n");
     for (int i = 0; i < w; i++){
         for (int j = 0; j < h; j++){
             im[i][j] /= (float)m_photonSamples;
             im[i][j] /= cam->pixelCosine(i, j, w, h)*cam->pixelSolidAngle(i, j, w, h);
-            //printf("%f %f %f\n", im[i][j][0], im[i][j][1], im[i][j][2]);
             img->setPixel(i, j, im[i][j]);
         }
     }
@@ -234,4 +237,21 @@ bool
 Scene::trace(HitInfo& minHit, const Ray& ray, const Object* skip, float tMin, float tMax) const
 {
     return m_bvh.intersect(minHit, ray, skip, tMin, tMax);
+}
+
+LightPDF Scene::randLightByWattage() {
+    LightPDF rlbw;
+    int n = m_lights.size();
+    vector<float> wattageConcattage(n + 1, 0);
+    for (int i = 0; i < n; i++){
+        float w = m_lights[i]->wattage();
+        wattageConcattage[i + 1] = wattageConcattage[i] + w;
+    }
+    float r = wattageConcattage[n] * (float)rand() / RAND_MAX;
+    for (int i = 0; i < n; i++){ // find the interval in which r lies and return the light along with PDF;
+        if (r < wattageConcattage[i] || r > wattageConcattage[i + 1]) continue;
+        rlbw.l = m_lights[i];
+        rlbw.p = m_lights[i]->wattage() / wattageConcattage[n];
+        return rlbw;
+    }
 }

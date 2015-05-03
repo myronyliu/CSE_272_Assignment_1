@@ -12,7 +12,7 @@ public:
     virtual ~Object() {}
 
     void setMaterial(Material* m) {m_material = m;}
-    Material* getMaterial() { return m_material; }
+    Material* material() const { return m_material; }
 
     virtual void renderGL() {}
     virtual void preCalc() {}

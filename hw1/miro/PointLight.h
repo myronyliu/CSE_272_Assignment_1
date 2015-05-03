@@ -5,7 +5,7 @@
 #include "Vector3.h"
 #include "Light.h"
 
-class PointLight
+class PointLight: public Light
 {
 public:
     void setPosition(const Vector3& v)  {m_position = v;}

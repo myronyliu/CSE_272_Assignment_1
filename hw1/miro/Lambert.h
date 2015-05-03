@@ -24,10 +24,11 @@ public:
     // Returns a random direction for an emitted photon given a surface normal
     virtual vec3pdf randEmit(const Vector3& n) const;
     // Generates a random ray in the upper hemisphere according the BRDF
-    virtual vec3pdf randReflect(const Ray& ray, const HitInfo& hit) const;
+    virtual vec3pdf Lambert::randReflect(const Vector3& in, const Vector3& normal) const;
     // BRDF
-    virtual float BRDF(const Ray& in, const HitInfo& hit, const Ray& out) const;
-    virtual Vector3 powerPerPatchPerSolidAngle(const Vector3& normal, const Vector3& direction) const;
+    virtual float BRDF(const Vector3& in, const Vector3& normal, const Vector3& out) const;
+    virtual Vector3 radiance(const Vector3& normal, const Vector3& direction) const;
+    virtual Vector3 sum_L_cosTheta_dOmega() const;
 
 protected:
     Vector3 m_kd;

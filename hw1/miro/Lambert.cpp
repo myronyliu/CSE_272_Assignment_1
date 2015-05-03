@@ -15,7 +15,7 @@ Lambert::~Lambert()
 {
 }
 
-float Lambert::BRDF(const Ray& in, const HitInfo& hit, const Ray& out) const { return 1.0 / M_PI; }
+float Lambert::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out) const { return 1.0 / M_PI; }
 
 Vector3
 Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
@@ -95,14 +95,17 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
     return L;
 }
 
-vec3pdf Lambert::randReflect(const Ray& ray, const HitInfo& hit) const{
-    double u;
-    do  u = ((double)rand() / RAND_MAX);  while (u == 1);
+vec3pdf Lambert::randReflect(const Vector3& in, const Vector3& normal) const{
+    //double phi = 2.0 * M_PI*((double)rand() / RAND_MAX);
+    //double theta = acos((double)rand() / RAND_MAX);
+    //Vector3 d = Vector3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
+    double u = ((double)rand() / RAND_MAX);
+    while (u == 1) u = ((double)rand() / RAND_MAX);
     double v = 2.0 * M_PI*((double)rand() / RAND_MAX);
     Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
 
     // generate a basis with surface normal hit.N as the z-axis
-    Vector3 z = hit.N.normalized();
+    Vector3 z = normal.normalized();
     float a = dot(Vector3(1, 0, 0), z);
     float b = dot(Vector3(0, 1, 0), z);
     Vector3 y;
@@ -127,7 +130,9 @@ vec3pdf Lambert::randEmit(const Vector3& n) const {
     return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1-u)/M_PI);
 }
 
-Vector3 Lambert::powerPerPatchPerSolidAngle(const Vector3& normal, const Vector3& direction) const {
+Vector3 Lambert::radiance(const Vector3& normal, const Vector3& direction) const {
     if (dot(normal, direction) < 0) return Vector3(0, 0, 0);
-    return m_powerPerPatch / (2.0*M_PI);
+    return m_powerPerArea / (2.0*M_PI);
 }
+
+Vector3 Lambert::sum_L_cosTheta_dOmega() const { return M_PI*radiance(Vector3(0, 0, 1), Vector3(0, 0, 1)); }

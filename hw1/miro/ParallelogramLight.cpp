@@ -16,7 +16,7 @@ ParallelogramLight::ParallelogramLight(const Vector3& center,
     m_wattage = 100;
     Material* mat = new Lambert(Vector3(1.0, 1.0, 1.0));
     mat->setEmittance(1.0);
-    mat->setPowerPerPatch(m_wattage*m_color / area());
+    mat->setPowerPerArea(m_wattage*m_color / area());
     setMaterial(mat);
 }
 
@@ -29,10 +29,10 @@ vec3pdf ParallelogramLight::randPt() const {
     return vec3pdf(m_center + vx + vy, 1.0 / area);
 }
 
-raypdf ParallelogramLight::randRay() const {
+RayPDF ParallelogramLight::randRay() const {
     vec3pdf o = randPt();
     vec3pdf d = m_material->randEmit(cross(m_vecX,m_vecY).normalize());
-    return raypdf(Ray(o.v, d.v),o.p*d.p);
+    return RayPDF(Ray(o.v, d.v),o.p*d.p);
 }
 
 
@@ -66,5 +66,3 @@ ParallelogramLight::renderGL() {
     glEnd();
     glPopMatrix();
 }
-
-Vector3 ParallelogramLight::radiance() { return m_wattage*m_color / (2.0*M_PI*area()); }
