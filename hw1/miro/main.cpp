@@ -43,13 +43,7 @@ makeRoomScene(){
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
     Parallelogram * wall_B = new Parallelogram(Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1); // bottom
 
-    //Parallelogram * wall_N = new Parallelogram(Vector3(0, -1, 1), Vector3(0, 0, 1), Vector3(1, 0, 0), 1, 1); // near
-    //wall_N->setMaterial(mat);
-    //g_scene->addObject(wall_N);
-
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
-    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
-
     cover->disableBack();
 
     wall_T->setMaterial(mat);
@@ -90,7 +84,12 @@ main(int argc, char*argv[])
 {
     // create a scene
     makeRoomScene();
-
+    //unsigned int cw;
+    //_controlfp_s(&cw, 0, 0);
+    //cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|
+    //        EM_DENORMAL|EM_INVALID);
+    //unsigned int cwOriginal;
+    //_controlfp_s(&cwOriginal,cw, _MCW_EM);
     MiroWindow miro(&argc, argv);
     miro.mainLoop();
 

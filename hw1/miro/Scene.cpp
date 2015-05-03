@@ -72,11 +72,8 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     if (!trace(hit, ray)) {
         return Vector3(0, 0, 0);
     }
-    //Vector3 down(0, 0, -1);
-    //if (2.0 - hit.P[2] < 0.00001 && hit.N == down && bounces>0) printf("ceiling hit on bounce\n");
-    double rn = (double)(rand()) / RAND_MAX;
+    double rn = (double)(rand() / RAND_MAX);
     double em = hit.material->emittance();
-    //printf("%f%\r", em);
     if (em == 1.0 || rn < em) {
         Vector3 rad = hit.material->radiance(hit.N, ray.o - hit.P);
         if (bounces == 0) return (1.0 / em)*rad;
@@ -104,7 +101,7 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     float cos = dot(hit.N, newDir);
     Vector3 gather = hit.material->shade(ray, hit, *this); // gathered direct lighting
     return
-        gather + (1.0 / (1.0 - em))/vp.p*brdf*cos*
+            gather + (1.0 / (1.0 - em))/vp.p*brdf*cos*0.8*
         recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
 }
 
@@ -128,9 +125,10 @@ Scene::pathtraceImage(Camera *cam, Image *img)
             for (int k = 0; k < m_samplesPerPix; k++){
                 Ray ray = cam->eyeRayJittered(i, j, img->width(), img->height());
                 if (!trace(hitInfo, ray)) continue;
-                pixSum += recursiveTrace_fromEye(ray, 0, m_maxBounces);
+                //if (dot(hitInfo.N, Vector3(0, 0, -1)) > 0) { pixSum += Vector3(1.0, 0.0, 0.0);  }
+                pixSum += recursiveTrace_fromEye(ray, 0, m_maxBounces) / (double)m_samplesPerPix;
             }
-            img->setPixel(i, j, pixSum / (double)m_samplesPerPix);
+            img->setPixel(i, j, pixSum);
         }
         img->drawScanline(j);
         glFinish();
@@ -211,12 +209,12 @@ Scene::photontraceImage(Camera *cam, Image *img)
         LightPDF lp = randLightByWattage(); // ... off of a random light (I don't think we need the PDF here)
         Light* light = lp.l;
         RayPDF rp = light->randRay();
-        tracePhoton(cam, im, *light, rp);
+            tracePhoton(cam, im, *light, rp);
             if (p % 100 == 0) {
             printf("Rendering Progress: %.3f%%\r", p / float(m_photonSamples)*100.0f);
-            fflush(stdout);
+                fflush(stdout);
+            }
         }
-    }
     printf("Rendering Progress: 100.000%\n");
     debug("done Photontracing!\n");
     for (int i = 0; i < w; i++){
