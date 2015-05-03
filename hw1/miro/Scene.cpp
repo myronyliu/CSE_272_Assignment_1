@@ -140,10 +140,10 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     debug("done Raytracing!\n");
 }
 
-void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const LightPDF& lp, const RayPDF& rp) {
+void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPDF& rp) {
+    float w = img->width();
+    float h = img->height();
     Light* light = lp.l;
-    float w = img[0].size();
-    float h = img.size();
     Vector3 pix;
     HitInfo hit, tryHitEye;
     Ray rayIn, rayOut, rayToEye;
@@ -153,8 +153,8 @@ void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const LightPD
     // The following is for the initial emission (to make the light visible)
     rayToEye.o = rayOut.o;
     rayToEye.d = (cam->eye() - rayToEye.o).normalize();
-    //float cos = dot(light.normal(rayOut.o), rayToEye.d);
-    float cos = 1;
+    float cos = dot(light->normal(rayOut.o), rayToEye.d);
+    //float cos = 1;
     //printf("%f, %f, %f\n", light.normal(rayOut.o)[0], light.normal(rayOut.o)[1], light.normal(rayOut.o)[2]);
     /*if (!trace(tryHitEye, rayToEye) && dot(rayToEye.d, light.normal(rayToEye.o)) > 0) { // check if anything is occluding the eye from current hitpoint
         pix = cam->imgProject(rayToEye.o, w, h); // find the pixel the onto which the current hitpoint projects
@@ -211,20 +211,19 @@ Scene::photontraceImage(Camera *cam, Image *img)
     int w = img->width();
     int h = img->height();
     for (int p = 0; p < m_photonSamples; p++) { // shoot a photon...
-        LightPDF lp = randLightByWattage(); // ... off of a random light
+        LightPDF lp = randLightByWattage(); // ... off of a random light (I don't think we need the PDF here)
         Light* light = lp.l;
         RayPDF rp = light->randRay();
-        //printf("%f,%f,%f    %f \n", rp.r.d[0], rp.r.d[1], rp.r.d[2], rp.p);
-        tracePhoton(cam, im, lp, rp);
-            if (p % 100 == 0) {
+        tracePhoton(cam, img, lp, rp);
+        if (p % 100 == 0) {
             printf("Rendering Progress: %.3f%%\r", p / float(m_photonSamples)*100.0f);
-                fflush(stdout);
-            }
+            fflush(stdout);
+        }
         if (p>0 && p % (m_photonSamples / 5) == 0)
         {
             img->draw();
         }
-        }
+    }
     printf("Rendering Progress: 100.000%\n");
     debug("done Photontracing!\n");
     for (int i = 0; i < w; i++){

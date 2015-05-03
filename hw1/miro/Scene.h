@@ -55,7 +55,7 @@ public:
         float tMin = 0.0f, float tMax = MIRO_TMAX) const;
     Vector3 recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounces);
     // trace a ray through the scene and return an image with accumlated pixel values from that single photon
-    void tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const LightPDF& lightAndProb, const RayPDF& rayAndProb);
+    void tracePhoton(Camera *cam, Image *img, const LightPDF& lightAndProb, const RayPDF& rayAndProb);
 
     LightPDF randLightByWattage();
 
