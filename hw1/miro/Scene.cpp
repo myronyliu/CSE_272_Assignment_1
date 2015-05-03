@@ -78,23 +78,34 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     double em = hit.material->emittance();
     //printf("%f%\r", em);
     if (em == 1.0 || rn < em) {
-        Vector3 rad = hit.material->powerPerPatchPerSolidAngle(hit.N, hit.P - ray.o);
-        //rad /= 4.0*M_PI*(hit.P - ray.o).length2();
-        return (1.0 / em)*rad;
+        Vector3 rad = hit.material->powerPerPatchPerSolidAngle(hit.N, ray.o - hit.P);
+        if (bounces == 0) return (1.0 / em)*rad;
+        else return Vector3(0, 0, 0);
     }
-    else {
-        vec3pdf vp = hit.material->randReflect(ray, hit);// pick BRDF weighted random direction
-        Vector3 newDir = vp.v;
-        Ray newRay;
-        newRay.o = hit.P;
-        newRay.d = newDir;
-        float brdf = hit.material->BRDF(ray, hit, newRay);
-        float cos = dot(hit.N, newDir);
-        Vector3 gather = hit.material->shade(ray, hit, *this); // gathered direct lighting
-        return
-            gather + (1.0 / (1.0 - em))/vp.p*brdf*cos*
-            recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
+    rn = (double)rand() / RAND_MAX;
+    vec3pdf vp;
+    if (m_samplingHeuristic == 1 || rn < m_samplingHeuristic) { // sample BRDF
+        vp = hit.material->randReflect(ray, hit);// pick BRDF weighted random direction
     }
+    else { // sample AreaLight
+        int numAL = m_areaLights.size();
+        int randALind = std::fmin(floor((double)numAL* rand() / RAND_MAX), numAL - 1);
+        AreaLight* randAL = m_areaLights[randALind];
+        vp = randAL->randPt();
+        Vector3 lightPt = vp.v;
+        vp.v -= hit.P;
+        vp.p *= vp.v.length2() / fabs(dot(vp.v.normalized(),randAL->normal(lightPt))); // convert PDF from 1/A to 1/SA
+    }
+    Vector3 newDir = vp.v;
+    Ray newRay;
+    newRay.o = hit.P;
+    newRay.d = newDir;
+    float brdf = hit.material->BRDF(ray, hit, newRay);
+    float cos = dot(hit.N, newDir);
+    Vector3 gather = hit.material->shade(ray, hit, *this); // gathered direct lighting
+    return
+        gather + (1.0 / (1.0 - em))/vp.p*brdf*cos*
+        recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
 }
 
 void
@@ -104,9 +115,7 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     
     // loop over all pixels in the image
     for (int j = 0; j < img->height(); ++j){
-    //for (int j = img->height() / 4; j < img->height(); j += 2 * img->height()){
         for (int i = 0; i < img->width(); ++i){
-        //for (int i = img->width() / 2; i < img->width(); i += 2 * img->width()){
             Ray ray00 = cam->eyeRay((float)i - 0.5, (float)j - 0.5, img->width(), img->height());
             Ray ray01 = cam->eyeRay((float)i - 0.5, (float)j + 0.5, img->width(), img->height());
             Ray ray10 = cam->eyeRay((float)i + 0.5, (float)j - 0.5, img->width(), img->height());
@@ -116,8 +125,6 @@ Scene::pathtraceImage(Camera *cam, Image *img)
                 !trace(hitInfo, ray10) &&
                 !trace(hitInfo, ray11)) continue;
             Vector3 pixSum = Vector3(0.0, 0.0, 0.0);
-            //Ray ray = cam->eyeRay(i, j, img->width(), img->height());
-            //if (!trace(hitInfo, ray)) continue;
             for (int k = 0; k < m_samplesPerPix; k++){
                 Ray ray = cam->eyeRayJittered(i, j, img->width(), img->height());
                 if (!trace(hitInfo, ray)) continue;

@@ -13,6 +13,7 @@ class AreaLight : public Light
 public:
     virtual float area() const { return 0; }
 
+    virtual Vector3 normal(const Vector3& point) { return Vector3(0, 0, 1); }
     virtual Vector3 radiance() { return Vector3(0, 0, 0); }
     void preCalc() {} // use this if you need to
 

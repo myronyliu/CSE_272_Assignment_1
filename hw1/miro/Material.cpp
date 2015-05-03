@@ -16,7 +16,7 @@ Material::shade(const Ray&, const HitInfo&, const Scene&) const
 }
 
 Vector3
-Material::powerPerPatchPerSolidAngle(const Vector3& normal, const Vector3& direction) const { return m_powerPerPatch / (2.0*M_PI); }
+Material::powerPerPatchPerSolidAngle(const Vector3& normal, const Vector3& direction) const { return m_powerPerPatch / (4.0*M_PI); }
 
 vec3pdf
 Material::randReflect(const Ray&, const HitInfo&) const{

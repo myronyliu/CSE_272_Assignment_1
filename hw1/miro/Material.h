@@ -8,6 +8,7 @@
 struct vec3pdf {
     Vector3 v; // random vector
     double p; // PDF for that random vector
+    vec3pdf() { v = Vector3(0, 0, 0), p = 1; }
     vec3pdf(Vector3 V, double P) { v = V; p = P; }
 };
 
