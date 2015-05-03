@@ -140,9 +140,9 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     debug("done Raytracing!\n");
 }
 
-void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& light, const RayPDF& rp) {
-    float w = img.size();
-    float h = img[0].size();
+void Scene::tracePhoton(Camera *cam, Image *img, const Light& light, const RayPDF& rp) {
+    float w = img->width();
+    float h = img->height();
     Vector3 pix;
     HitInfo hit, tryHitEye;
     Ray rayIn, rayOut, rayToEye;
@@ -165,13 +165,14 @@ void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& 
         }
     }*/
     // now for the bounces
+    rayIn = rayOut;
     for (int bounces = 0; bounces < m_maxBounces; bounces++) {
         if (!trace(hit, rayIn)) {
             return; // ray left scene
         }
         double rn = (double)rand() / RAND_MAX;
         double em = hit.material->emittance();
-        if (em == 1.0 || rn < em) {
+        if (em == 1.0 || rn < 0.2) {
             return; // photon was absorbed
         } // otherwise photon will be reflected
         rayToEye.o = hit.P;
@@ -185,7 +186,7 @@ void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const Light& 
                 float cos = dot(rayToEye.d, hit.N); // cosine between eye-ray and surface-normal
                 float lengthSqr = (cam->eye() - hit.P).length2();
                 float cosAlpha = cam->pixelCosine(pix[0], pix[1], w, h);
-                img[x][y] += power*brdf*cos*cosAlpha / lengthSqr;
+                img->setPixel(x, y, img->getPixel(x, y) + power/m_photonSamples*brdf*cos*cosAlpha / lengthSqr);
             }
         }
         vec3pdf vp = hit.material->randReflect(-rayIn.d, hit.N); // pick BRDF.cos weighted random direction
@@ -203,28 +204,33 @@ Scene::photontraceImage(Camera *cam, Image *img)
 {
     int w = img->width();
     int h = img->height();
-    vector<vector<Vector3>> im;
-    for (int i = 0; i < w; i++) im.push_back(vector<Vector3>(h, Vector3(0, 0, 0)));
     for (int p = 0; p < m_photonSamples; p++) { // shoot a photon...
         LightPDF lp = randLightByWattage(); // ... off of a random light (I don't think we need the PDF here)
         Light* light = lp.l;
         RayPDF rp = light->randRay();
-            tracePhoton(cam, im, *light, rp);
-            if (p % 100 == 0) {
+        tracePhoton(cam, img, *light, rp);
+        if (p % 100 == 0) {
             printf("Rendering Progress: %.3f%%\r", p / float(m_photonSamples)*100.0f);
-                fflush(stdout);
-            }
+            fflush(stdout);
         }
+        if (p>0 && p % (m_photonSamples / 5) == 0)
+        {
+            img->draw();
+        }
+    }
     printf("Rendering Progress: 100.000%\n");
     debug("done Photontracing!\n");
     for (int i = 0; i < w; i++){
         for (int j = 0; j < h; j++){
-            im[i][j] /= (float)m_photonSamples;
-            im[i][j] /= cam->pixelCosine(i, j, w, h)*cam->pixelSolidAngle(i, j, w, h);
-            img->setPixel(i, j, im[i][j]);
+            Vector3 pix = img->getPixel(i, j);
+            img->setPixel(i, j,
+                pix / (cam->pixelCosine(i, j, w, h)*cam->pixelSolidAngle(i, j, w, h)));
         }
     }
     img->draw();
+    printf("Rendering Progress: 100.000%\n");
+    debug("done Raytracing!\n");
+    glFinish();
 }
 
 bool

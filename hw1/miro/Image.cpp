@@ -71,6 +71,14 @@ void Image::setPixel(int x, int y, const Pixel& p)
     }
 }
 
+Vector3 Image::getPixel(int x, int y) const
+{
+    if (x >= 0 && x < m_width && y < m_height && y >= 0)
+    {
+        return Vector3(m_pixels[y*m_width + x].r / 255.0f, m_pixels[y*m_width + x].g / 255.0f, m_pixels[y*m_width + x].b / 255.0f);
+    }
+}
+
 void Image::drawScanline(int y)
 {
     glRasterPos2f(-1, -1 + 2*y / (float)m_height);
@@ -79,8 +87,7 @@ void Image::drawScanline(int y)
 
 void Image::draw()
 {
-    for (int i = 0; i < m_height; i++)
-        drawScanline(i);
+    glDrawPixels(m_width, m_height, GL_RGB, GL_UNSIGNED_BYTE, &m_pixels[0]);
 }
 
 void Image::writePPM(char* pcFile)
