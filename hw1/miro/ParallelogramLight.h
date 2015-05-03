@@ -23,7 +23,7 @@ public:
     virtual void enableBack() { printf("enableBack() not available for lights\n"); }
     virtual void renderGL();
 
-    virtual Vector3 normal(const Vector3& point) { return cross(m_vecX,m_vecY).normalized(); }
+    virtual Vector3 normal(const Vector3& point) const { return cross(m_vecX, m_vecY).normalize(); }
     virtual float area() const { return 4.0f*m_spanX*m_spanY*cross(m_vecX, m_vecY).length(); }
     virtual RayPDF randRay() const;
     virtual vec3pdf randPt() const;

@@ -112,7 +112,7 @@ vec3pdf Lambert::randReflect(const Vector3& in, const Vector3& normal) const{
     if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
     else y = Vector3(0, 1, 0).orthogonal(z).normalize();
     Vector3 x = cross(y, z).normalize();
-    return vec3pdf(d[0] * x + d[1] * y + d[2] * z, 1.0 / (2.0*M_PI));
+    return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1 - u) / M_PI);
 }
 
 vec3pdf Lambert::randEmit(const Vector3& n) const {
@@ -135,4 +135,6 @@ Vector3 Lambert::radiance(const Vector3& normal, const Vector3& direction) const
     return m_powerPerArea / (2.0*M_PI);
 }
 
-Vector3 Lambert::sum_L_cosTheta_dOmega() const { return M_PI*radiance(Vector3(0, 0, 1), Vector3(0, 0, 1)); }
+Vector3 Lambert::sum_L_cosTheta_dOmega() const {
+    return M_PI*radiance(Vector3(0, 0, 1), Vector3(0, 0, 1));
+}

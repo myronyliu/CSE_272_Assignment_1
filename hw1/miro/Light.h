@@ -16,7 +16,7 @@ struct RayPDF {
 class Light: public virtual Object
 {
 public:
-    void setWattage(float f) { m_wattage = f; }
+    void setWattage(float f);
     float wattage() const { return m_wattage; }
     void setColor(Vector3 v);
     Vector3 color() const { return m_color; }

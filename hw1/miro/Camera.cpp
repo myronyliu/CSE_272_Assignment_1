@@ -271,5 +271,10 @@ Camera::pixelSolidAngle(float x, float y, int imageWidth, int imageHeight) {
         atan(
         (2 * u + 1)*(2 * v + 1) /
         (2 * sqrt(2 + 4 * u*(u + 1) + 4 * v*(v + 1) + 4))
-        ); 
+        );
+    
+    float area = (right - left) / (float)imageWidth;
+    area *= (top - bottom) / (float)imageHeight;
+
+    return area*pixelCosine(x, y, imageWidth, imageHeight) / (1 + u*u + v*v);
 }
