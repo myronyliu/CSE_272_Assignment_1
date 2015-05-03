@@ -15,14 +15,16 @@ class Image;
 class Scene
 {
 public:
-    void setSamplesPerPix(int i) { m_samplesPerPix = i; }
+    void setSamplesPerPix(int i) { m_samplesPerPix = fmax(0, i); }
     int samplesPerPix() { return m_samplesPerPix; }
-    void setPhotonSamples(int i) { m_photonSamples = i; }
+    void setPhotonSamples(int i) { m_photonSamples = fmax(0, i); }
     int photonSamples() { return m_photonSamples; }
-    void setMaxBounces(int i) { m_maxBounces = i; }
+    void setMaxBounces(int i) { m_maxBounces = fmax(0, i); }
     int maxBounces() { return m_maxBounces; }
-    void addObject(Object* pObj)        {m_objects.push_back(pObj);}
-    const Objects* objects() const      {return &m_objects;}
+    void addObject(Object* pObj) { m_objects.push_back(pObj); }
+    const Objects* objects() const { return &m_objects; }
+    void setSamplingHeuristic(float p) { m_samplingHeuristic = fmin(fmax(0, p), 1); }
+    float samplingHeuristic() { return m_samplingHeuristic; }
 
     void addPointLight(PointLight* pObj) {m_pointLights.push_back(pObj);}
     const PointLights* pointLights() const {return &m_pointLights;}
@@ -55,6 +57,7 @@ protected:
     int m_maxBounces = 20;
     PointLights m_pointLights;
     AreaLights m_areaLights;
+    float m_samplingHeuristic = 0.5; // probability of sampling BRDF. Complement is for sampling light
 };
 
 extern Scene * g_scene;

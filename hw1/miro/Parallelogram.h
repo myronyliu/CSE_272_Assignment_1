@@ -44,7 +44,7 @@ public:
     const float spanY() const { return m_spanY; }
     const Vector3 vecX() const { return m_vecX; }
     const Vector3 vecY() const { return m_vecY; }
-    Vector3 normal() const { return cross(m_vecX, m_vecY).normalize(); }
+    virtual Vector3 normal() const { return cross(m_vecX, m_vecY).normalize(); }
     virtual Vector3 normal(const Vector3& v) const { return normal(); }
     //virtual float area() const { return 4.0*m_spanX*m_spanY*cross(m_vecX, m_vecY).length(); }
 

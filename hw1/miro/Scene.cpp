@@ -75,11 +75,24 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     double rn = (double)(rand() / RAND_MAX);
     double em = hit.material->emittance();
     if (em == 1.0 || rn < em) {
-        Vector3 rad = hit.material->powerPerPatchPerSolidAngle(hit.N, hit.P - ray.o);
-        return (1.0 / em)*rad;
+        Vector3 rad = hit.material->powerPerPatchPerSolidAngle(hit.N, ray.o - hit.P);
+        if (bounces == 0) return (1.0 / em)*rad;
+        else return Vector3(0, 0, 0);
     }
-    else {
-        vec3pdf vp = hit.material->randReflect(ray, hit);// pick BRDF weighted random direction
+    rn = (double)rand() / RAND_MAX;
+    vec3pdf vp;
+    if (m_samplingHeuristic == 1 || rn < m_samplingHeuristic) { // sample BRDF
+        vp = hit.material->randReflect(ray, hit);// pick BRDF weighted random direction
+    }
+    else { // sample AreaLight
+        int numAL = m_areaLights.size();
+        int randALind = std::fmin(floor((double)numAL* rand() / RAND_MAX), numAL - 1);
+        AreaLight* randAL = m_areaLights[randALind];
+        vp = randAL->randPt();
+        Vector3 lightPt = vp.v;
+        vp.v -= hit.P;
+        vp.p *= vp.v.length2() / fabs(dot(vp.v.normalized(),randAL->normal(lightPt))); // convert PDF from 1/A to 1/SA
+    }
         Vector3 newDir = vp.v;
         Ray newRay;
         newRay.o = hit.P;
@@ -91,7 +104,6 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
             gather + (1.0 / (1.0 - em))/vp.p*brdf*cos*0.8*
             recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
     }
-}
 
 void
 Scene::pathtraceImage(Camera *cam, Image *img)

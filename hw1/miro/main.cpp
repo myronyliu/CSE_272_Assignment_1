@@ -35,7 +35,7 @@ makeRoomScene(){
 
     Material* mat = new Lambert(Vector3(0.8f, 0.8f, 0.8f));
     Material* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
-
+    
     Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
     Parallelogram * wall_R = new Parallelogram(Vector3(1, 0, 1), Vector3(0, 0, 1), Vector3(0, 1, 0), 1, 1); // right

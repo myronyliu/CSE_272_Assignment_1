@@ -173,29 +173,43 @@ MiroWindow::keyboard(unsigned char key, int x, int y)
 
         case '[':
         case '{':
-            g_scene->setSamplesPerPix(g_scene->samplesPerPix() - 1);
+            g_scene->setSamplesPerPix(g_scene->samplesPerPix() - 10);
             printf("Samples per pixel: _%i_____%\r", g_scene->samplesPerPix());
             fflush(stdout);
         break;
 
         case ']':
         case '}':
-            g_scene->setSamplesPerPix(g_scene->samplesPerPix() + 1);
-            printf("Samples per pixel: _%i_____%\r", g_scene->samplesPerPix());
+            g_scene->setSamplesPerPix(g_scene->samplesPerPix() + 10);
+            printf("Samples per pixel: _%i__________%\r", g_scene->samplesPerPix());
             fflush(stdout);
         break;
 
         case ';':
         case ':':
             g_scene->setMaxBounces(g_scene->maxBounces() - 1);
-            printf("Maximum bounces: _%i_____%\r", g_scene->maxBounces());
+            printf("Maximum bounces: _%i__________%\r", g_scene->maxBounces());
             fflush(stdout);
             break;
 
         case '\'':
         case '\"':
             g_scene->setMaxBounces(g_scene->maxBounces() + 1);
-            printf("Maximum bounces: _%i%_____\r", g_scene->maxBounces());
+            printf("Maximum bounces: _%i__________%\r", g_scene->maxBounces());
+            fflush(stdout);
+            break;
+
+        case '.':
+        case '>':
+            g_scene->setSamplingHeuristic(g_scene->samplingHeuristic() - 0.1);
+            printf("BRDF sampling heuristic: _%.2f_____%\r", g_scene->samplingHeuristic());
+            fflush(stdout);
+        break;
+
+        case '/':
+        case '?':
+            g_scene->setSamplingHeuristic(g_scene->samplingHeuristic() + 0.1);
+            printf("BRDF sampling heuristic: _%.2f_____%\r", g_scene->samplingHeuristic());
             fflush(stdout);
         break;
 

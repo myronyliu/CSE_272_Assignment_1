@@ -31,7 +31,7 @@ vec3pdf ParallelogramLight::randPt() const {
 
 raypdf ParallelogramLight::randRay() const {
     vec3pdf o = randPt();
-    vec3pdf d = m_material->randEmit(normal());
+    vec3pdf d = m_material->randEmit(cross(m_vecX,m_vecY).normalize());
     return raypdf(Ray(o.v, d.v),o.p*d.p);
 }
 
@@ -46,7 +46,7 @@ ParallelogramLight::renderGL() {
     Vector3 pt10 = m_spanX*m_vecX - m_spanY*m_vecY;
     Vector3 pt11 = m_spanX*m_vecX + m_spanY*m_vecY;
     float s = 1.0 / 4.0;
-    Vector3 n = normal()*sqrt(m_spanX*m_spanX + m_spanY*m_spanY)*s;
+    Vector3 n = cross(m_vecX,m_vecY).normalize()*sqrt(m_spanX*m_spanX + m_spanY*m_spanY)*s;
     int a = 4;
     for (int i = 0; i < a; i++){
         for (int j = 0; j < a; j++){
