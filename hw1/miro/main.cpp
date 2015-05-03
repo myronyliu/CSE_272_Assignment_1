@@ -22,13 +22,12 @@ makeRoomScene(){
     g_image->resize(256, 256);
 
     // set up the camera
-    g_camera->setBGColor(Vector3(1.0f, 1.0f, 1.0f));
     g_camera->setEye(Vector3(0, -4, 1));
     g_camera->setLookAt(Vector3(0, -3, 1));
     g_camera->setUp(Vector3(0, 0, 1));
     g_camera->setFOV(40);
 
-    g_scene->setSamplesPerPix(100);
+    g_scene->setSamplesPerPix(512);
     g_scene->setMaxBounces(20);
     g_scene->setPhotonSamples(1000000);
 
@@ -43,7 +42,6 @@ makeRoomScene(){
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
     Parallelogram * wall_B = new Parallelogram(Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1); // bottom
 
-    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     cover->disableBack();
 

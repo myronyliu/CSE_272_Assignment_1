@@ -191,7 +191,7 @@ void Scene::tracePhoton(Camera *cam, vector<vector<Vector3>>& img, const LightPD
                 float brdf = hit.material->BRDF(-rayIn.d, hit.N, rayToEye.d); // BRDF between eye-ray and incoming-ray
                 float lengthSqr = (cam->eye() - hit.P).length2();
                 float cosAlpha = cam->pixelCosine(pix[0], pix[1], w, h);
-                img[x][y] += power*brdf*cos*cosAlpha / lengthSqr;
+                img->setPixel(x, y, img->getPixel(x, y) + power/m_photonSamples*brdf*cos*cosAlpha / lengthSqr);
             }
         }
         vec3pdf vp = hit.material->randReflect(-rayIn.d, hit.N); // pick BRDF.cos weighted random direction
@@ -210,29 +210,34 @@ Scene::photontraceImage(Camera *cam, Image *img)
 {
     int w = img->width();
     int h = img->height();
-    vector<vector<Vector3>> im;
-    for (int i = 0; i < w; i++) im.push_back(vector<Vector3>(h, Vector3(0, 0, 0)));
     for (int p = 0; p < m_photonSamples; p++) { // shoot a photon...
         LightPDF lp = randLightByWattage(); // ... off of a random light
         Light* light = lp.l;
         RayPDF rp = light->randRay();
         //printf("%f,%f,%f    %f \n", rp.r.d[0], rp.r.d[1], rp.r.d[2], rp.p);
         tracePhoton(cam, im, lp, rp);
-        if (p % 100 == 0) {
-        printf("Rendering Progress: %.3f%%\r", p / float(m_photonSamples)*100.0f);
-            fflush(stdout);
+            if (p % 100 == 0) {
+            printf("Rendering Progress: %.3f%%\r", p / float(m_photonSamples)*100.0f);
+                fflush(stdout);
+            }
+        if (p>0 && p % (m_photonSamples / 5) == 0)
+        {
+            img->draw();
         }
-    }
+        }
     printf("Rendering Progress: 100.000%\n");
     debug("done Photontracing!\n");
     for (int i = 0; i < w; i++){
         for (int j = 0; j < h; j++){
-            im[i][j] /= (float)m_photonSamples;
-            im[i][j] /= cam->pixelCosine(i, j, w, h)*cam->pixelSolidAngle(i, j, w, h);
-            img->setPixel(i, j, im[i][j]);
+            Vector3 pix = img->getPixel(i, j);
+            img->setPixel(i, j,
+                pix / (cam->pixelCosine(i, j, w, h)*cam->pixelSolidAngle(i, j, w, h)));
         }
     }
     img->draw();
+    printf("Rendering Progress: 100.000%\n");
+    debug("done Raytracing!\n");
+    glFinish();
 }
 
 bool
