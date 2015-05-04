@@ -328,37 +328,47 @@ Scene::biditraceImage(Camera *cam, Image *img)
 }
 
 RayPath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {
-    HitInfo hit;
     RayPath raypath(cam->eyeRay(x, y, img->width(), img->height()));
-    if (!trace(hit, raypath.m_rayInit)) return raypath;
-    raypath.m_hits.push_back(hit);
     return generateRayPath(raypath);
 }
 
 RayPath Scene::randLightPath() {
     LightPDF lp = randLightByWattage();
     Light* light = lp.l;
+
     RayPDF rp = light->randRay();
     RayPath raypath(rp.r);
+
     HitInfo first_hit(0.0f, rp.r.o, light->normal(rp.r.o));
-    first_hit.material = light->material();
     raypath.m_hits.push_back(first_hit);
+    first_hit.material = light->material();
     raypath.m_light = light;
+
     return generateRayPath(raypath);
 }
 
 RayPath Scene::generateRayPath(RayPath & raypath) {
     HitInfo hit;
-    for (int i = 1; i < m_maxPaths; i++){
-        vec3pdf vp = raypath.m_hits[i - 1].material->randReflect(-raypath.m_rays[i - 1].d, raypath.m_hits[i - 1].N);
-        Ray newRay(raypath.m_hits[i - 1].P, vp.v);
+    if (!trace(hit, raypath.m_rayInit)) return raypath;
+    raypath.m_hits.push_back(hit);
+
+    int bounce = 0;
+    while (bounce < m_maxPaths)
+    {
+        Ray lastRay = raypath.m_rays.back();
+        HitInfo lastHit = raypath.m_hits.back();
+
+        vec3pdf vp = lastHit.material->randReflect(-lastRay.d, lastHit.N);
+        Ray newRay(lastHit.P, vp.v);
         if (!trace(hit, newRay)) return raypath;
-        float brdf = raypath.m_hits[i - 1].material->BRDF(-raypath.m_rays[i - 1].d, raypath.m_hits[i - 1].N, vp.v);
-        float cos = dot(raypath.m_hits[i - 1].N, newRay.d);
+        float brdf = lastHit.material->BRDF(-lastRay.d, lastHit.N, vp.v);
+        float cos = dot(lastHit.N, newRay.d);
         raypath.m_rays.push_back(newRay);
         raypath.m_hits.push_back(hit);
-        raypath.m_probs.push_back(raypath.m_probs[i-1] * vp.p);
-        raypath.m_fluxDecay.push_back(brdf*cos*raypath.m_fluxDecay[i-1]);
+        raypath.m_probs.push_back(raypath.m_probs.back() * vp.p);
+        raypath.m_fluxDecay.push_back(brdf*cos*raypath.m_fluxDecay.back());
+
+        bounce++;
     }
     return raypath;
 }
