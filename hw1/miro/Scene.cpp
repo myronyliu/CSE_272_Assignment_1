@@ -6,6 +6,8 @@
 #include "Console.h"
 
 #include <algorithm>
+#include <iostream>
+#include <fstream>
 
 Scene * g_scene = 0;
 
@@ -49,6 +51,7 @@ Scene::raytraceImage(Camera *cam, Image *img)
     HitInfo hitInfo;
     Vector3 shadeResult;
 
+
     // loop over all pixels in the image
     for (int j = 0; j < img->height(); ++j)
     {
@@ -66,6 +69,7 @@ Scene::raytraceImage(Camera *cam, Image *img)
     }
     printf("Rendering Progress: 100.000%\n");
     debug("done Raytracing!\n");
+
 }
 
 Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounces) {
@@ -111,6 +115,9 @@ void
 Scene::pathtraceImage(Camera *cam, Image *img)
 {
     HitInfo hitInfo;
+
+    std::ofstream plotfile;
+    plotfile.open("pathtraceplot.txt");
     
     // loop over all pixels in the image
     for (int j = 0; j < img->height(); ++j){
@@ -129,6 +136,9 @@ Scene::pathtraceImage(Camera *cam, Image *img)
                 if (!trace(hitInfo, ray)) continue;
                 //if (dot(hitInfo.N, Vector3(0, 0, -1)) > 0) { pixSum += Vector3(1.0, 0.0, 0.0);  }
                 pixSum += recursiveTrace_fromEye(ray, 0, m_maxBounces) / (double)m_samplesPerPix;
+                if (j == 256 && i == 256){
+                    plotfile << pixSum[0] << std::endl;
+                }
             }
             img->setPixel(i, j, pixSum);
         }
@@ -140,6 +150,7 @@ Scene::pathtraceImage(Camera *cam, Image *img)
 
     printf("Rendering Progress: 100.000%\n");
     debug("done Raytracing!\n");
+    plotfile.close();
 }
 
 void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPDF& rp) {
@@ -215,6 +226,10 @@ Scene::photontraceImage(Camera *cam, Image *img)
 {
     int w = img->width();
     int h = img->height();
+
+    std::ofstream plotfile;
+    plotfile.open("photontraceplot.txt");
+    
     for (int p = 0; p < m_photonSamples; p++) { // shoot a photon...
         LightPDF lp = randLightByWattage(); // ... off of a random light (I don't think we need the PDF here)
         Light* light = lp.l;
@@ -228,6 +243,9 @@ Scene::photontraceImage(Camera *cam, Image *img)
         {
             img->draw();
         }
+        if (p % 10000000 ==0) {
+            plotfile << img->getPixel(256, 256)[0] << std::endl;
+        }
     }
     for (int i = 0; i < w; i++){
         for (int j = 0; j < h; j++){
@@ -240,6 +258,7 @@ Scene::photontraceImage(Camera *cam, Image *img)
     printf("Rendering Progress: 100.000%\n");
     debug("done Photontracing!\n");
     glFinish();
+    plotfile.close();
 }
 
 bool
@@ -279,10 +298,12 @@ Scene::biditraceImage(Camera *cam, Image *img)
     int h = img->height();
     HitInfo hitInfo;
 
+    std::ofstream plotfile;
+    plotfile.open("biditraceplot.txt");
+
     float W = 0.5;
 
     for (int y = 0; y < h; y++)
-    //for (int y = h-1; y >= 0; y--)
     {
         for (int x = 0; x < w; x++)
         {
@@ -295,6 +316,10 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 !trace(hitInfo, ray10) &&
                 !trace(hitInfo, ray11)) continue;
             Vector3 fluxSum(0, 0, 0);
+            if (y == 256 && x == 256)
+            {
+                
+            }
             for (int k = 0; k < bidiSamplesPerPix(); k++){
                 RayPath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hits.size() == 0) {
@@ -314,6 +339,10 @@ Scene::biditraceImage(Camera *cam, Image *img)
                         fluxSum += weight * estimateFlux(i, j, eyePath, lightPath);
                     }
                 }
+
+                if (y == 256 && x == 256){
+                    plotfile << fluxSum[0] / bidiSamplesPerPix()/ M_PI / 0.04 << std::endl;
+                }
             }
             img->setPixel(x, y, fluxSum / bidiSamplesPerPix()/ M_PI / 0.04);
         }
@@ -325,7 +354,7 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
     printf("Rendering Progress: 100.000%\n");
     debug("Done Bidi Pathtracing!\n");
-
+    plotfile.close();
 }
 
 RayPath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {

@@ -28,7 +28,7 @@ makeRoomScene(){
     g_camera->setFOV(40);
 
     g_scene->setSamplesPerPix(512);
-    g_scene->setBidiSamplesPerPix(2);
+    g_scene->setBidiSamplesPerPix(512);
     g_scene->setMaxBounces(20);
     g_scene->setMaxPaths(5);
     g_scene->setPhotonSamples(10000000);
@@ -77,12 +77,15 @@ main(int argc, char*argv[])
 {
     // create a scene
     makeRoomScene();
-    //unsigned int cw;
-    //_controlfp_s(&cw, 0, 0);
-    //cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|
-    //        EM_DENORMAL|EM_INVALID);
-    //unsigned int cwOriginal;
-    //_controlfp_s(&cwOriginal,cw, _MCW_EM);
+    /* Float debugging flags */
+    /*
+    unsigned int cw;
+    _controlfp_s(&cw, 0, 0);
+    cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|
+            EM_DENORMAL|EM_INVALID);
+    unsigned int cwOriginal;
+    _controlfp_s(&cwOriginal,cw, _MCW_EM);
+    */
     MiroWindow miro(&argc, argv);
     miro.mainLoop();
 
