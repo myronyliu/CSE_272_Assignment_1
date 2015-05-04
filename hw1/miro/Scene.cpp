@@ -314,7 +314,6 @@ Scene::biditraceImage(Camera *cam, Image *img)
                         fluxSum += weight * estimateFlux(i, j, eyePath, lightPath);
                     }
                 }
-                for (int i = 0; i < di + dj - 1; i++) fluxSum += fixedLengthFlux[i] / count[i];
             }
             img->setPixel(x, y, fluxSum / bidiSamplesPerPix()/ M_PI / 0.04);
         }
