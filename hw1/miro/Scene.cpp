@@ -136,8 +136,8 @@ Scene::pathtraceImage(Camera *cam, Image *img)
                 if (!trace(hitInfo, ray)) continue;
                 //if (dot(hitInfo.N, Vector3(0, 0, -1)) > 0) { pixSum += Vector3(1.0, 0.0, 0.0);  }
                 pixSum += recursiveTrace_fromEye(ray, 0, m_maxBounces) / (double)m_samplesPerPix;
-                if (j == 256 && i == 256){
-                    plotfile << pixSum[0] << std::endl;
+                if (j == img->width()/2 && i == img->height()/2){
+                    plotfile << pixSum[0] * k << std::endl;
                 }
             }
             img->setPixel(i, j, pixSum);
@@ -243,9 +243,9 @@ Scene::photontraceImage(Camera *cam, Image *img)
         {
             img->draw();
         }
-        if (p % 10000000 ==0) {
-            plotfile << img->getPixel(256, 256)[0] << std::endl;
-    }
+        if (p % 1000000 == 0) {
+            plotfile << img->getPixel(w/2, h/2)[0]/(p+1)*m_photonSamples << std::endl;
+        }
     }
     for (int i = 0; i < w; i++){
         for (int j = 0; j < h; j++){
@@ -316,10 +316,6 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 !trace(hitInfo, ray10) &&
                 !trace(hitInfo, ray11)) continue;
             Vector3 fluxSum(0, 0, 0);
-            if (y == 256 && x == 256)
-            {
-                
-            }
             for (int k = 0; k < bidiSamplesPerPix(); k++){
                 RayPath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hits.size() == 0) {
@@ -327,7 +323,7 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 }
                 RayPath lightPath = randLightPath();
 
-                /*fluxSum += eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
+                fluxSum += eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
                 for (unsigned int i = 0; i < lightPath.m_hits.size(); i++)
                 {
                     for (unsigned int j = 1; j < eyePath.m_hits.size(); j++)
@@ -338,32 +334,32 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
                         fluxSum += weight * estimateFlux(i, j, eyePath, lightPath);
                     }
-                }*/
+                }
 
                 ///// - MULTIPLE IMORTANCE SAMPLING -  /////
-                int dj = eyePath.m_hits.size();
-                int di = lightPath.m_hits.size();
-                vector<Vector3> fixedLengthFlux(di + dj - 1, Vector3(0, 0, 0));
-                vector<float> fixedLengthPDF(di + dj - 1, 0);
-                fixedLengthFlux[0] = eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
-                fixedLengthPDF[0] = 1;
-                fluxSum += fixedLengthFlux[0];
-                for (unsigned int i = 0; i < di; i++){
-                    for (unsigned int j = 1; j < dj; j++) {
-                        Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
-                        float pathPDF = lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
-                        fixedLengthPDF[i + j] += pathPDF;
-                        fixedLengthFlux[i + j] += pathPDF*flux;
-                    }
-                }
-                for (int i = 0; i < di + dj - 1; i++){
-                    if (fixedLengthPDF[i]>0) fluxSum += fixedLengthFlux[i] / fixedLengthPDF[i];
-                }
-
-                if (y == 256 && x == 256){
-                    plotfile << fluxSum[0] / bidiSamplesPerPix()/ M_PI / 0.04 << std::endl;
-                }
+                //int dj = eyePath.m_hits.size();
+                //int di = lightPath.m_hits.size();
+                //vector<Vector3> fixedLengthFlux(di + dj - 1, Vector3(0, 0, 0));
+                //vector<float> fixedLengthPDF(di + dj - 1, 0);
+                //fixedLengthFlux[0] = eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
+                //fixedLengthPDF[0] = 1;
+                //fluxSum += fixedLengthFlux[0];
+                //for (unsigned int i = 0; i < di; i++){
+                //    for (unsigned int j = 1; j < dj; j++) {
+                //        Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
+                //        float pathPDF = lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
+                //        fixedLengthPDF[i + j] += pathPDF;
+                //        fixedLengthFlux[i + j] += pathPDF*flux;
+                //    }
+                //}
+                //for (int i = 0; i < di + dj - 1; i++){
+                //    if (fixedLengthPDF[i]>0) fluxSum += fixedLengthFlux[i] / fixedLengthPDF[i];
+                //}
                 ///// ^ MULTIPLE IMPORTANCE SAMPLING ^ /////
+
+                if (y == h/2 && x == w/2){
+                    plotfile << fluxSum[0] / (k+1) / M_PI / 0.04 << std::endl;
+                }
             }
             img->setPixel(x, y, fluxSum / bidiSamplesPerPix()/ M_PI / 0.04);
         }
