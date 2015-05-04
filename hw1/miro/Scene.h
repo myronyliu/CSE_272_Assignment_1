@@ -69,7 +69,7 @@ public:
     RayPath randLightPath();
     RayPath generateRayPath(RayPath &);
 
-    Vector3 fixedLengthFlux(int pathLength, RayPath eyePath, RayPath lightPath);
+    Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath);
 
 protected:
     Objects m_objects;

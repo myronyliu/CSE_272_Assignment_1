@@ -28,9 +28,9 @@ makeRoomScene(){
     g_camera->setFOV(40);
 
     g_scene->setSamplesPerPix(512);
-    g_scene->setBidiSamplesPerPix(1);
+    g_scene->setBidiSamplesPerPix(4);
     g_scene->setMaxBounces(5);
-    g_scene->setMaxPaths(2);
+    g_scene->setMaxPaths(3);
     g_scene->setPhotonSamples(1000000);
 
     // create room geometry

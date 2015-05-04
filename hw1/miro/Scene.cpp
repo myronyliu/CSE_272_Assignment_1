@@ -276,11 +276,21 @@ Scene::biditraceImage(Camera *cam, Image *img)
 {
     int w = img->width();
     int h = img->height();
+    HitInfo hitInfo;
 
-    for (int y = h-1; y >= 0; y--)
+    for (int y = 0; y < h; y++)
+    //for (int y = h-1; y >= 0; y--)
     {
         for (int x = 0; x < w; x++)
         {
+            Ray ray00 = cam->eyeRay((float)x - 0.5, (float)y - 0.5, img->width(), img->height());
+            Ray ray01 = cam->eyeRay((float)x - 0.5, (float)y + 0.5, img->width(), img->height());
+            Ray ray10 = cam->eyeRay((float)x + 0.5, (float)y - 0.5, img->width(), img->height());
+            Ray ray11 = cam->eyeRay((float)x + 0.5, (float)y + 0.5, img->width(), img->height());
+            if (!trace(hitInfo, ray00) &&
+                !trace(hitInfo, ray01) &&
+                !trace(hitInfo, ray10) &&
+                !trace(hitInfo, ray11)) continue;
             for (int k = 0; k < bidiSamplesPerPix(); k++){
                 Vector3 fluxSum(0, 0, 0);
                 RayPath eyePath = randEyePath(x, y, cam, img);
@@ -289,15 +299,17 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 }
                 RayPath lightPath = randLightPath();
 
-                int totalPathLength = eyePath.m_rays.size() + lightPath.m_rays.size();
-                for (int pathLength = 0; pathLength < totalPathLength; pathLength++)
+                for (unsigned int i = 0; i < lightPath.m_rays.size(); i++)
                 {
-                    Vector3 flux = fixedLengthFlux(pathLength, eyePath, lightPath);
+                    for (unsigned int j = 0; j < eyePath.m_rays.size(); j++)
+                    {
+                        Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
 
-                    float weight = 1.0;// / (eyePath.m_rays.size() * lightPath.m_rays.size());
-                    fluxSum += weight * flux;
+                        float weight = 1.0;// / (eyePath.m_rays.size() * lightPath.m_rays.size());
+                        fluxSum += weight * flux;
+                    }
                 }
-                img->setPixel(x, y, fluxSum);
+                img->setPixel(x, y, fluxSum/ bidiSamplesPerPix());
             }
         }
         img->drawScanline(y);
@@ -324,7 +336,9 @@ RayPath Scene::randLightPath() {
     Light* light = lp.l;
     RayPDF rp = light->randRay();
     RayPath raypath(rp.r);
-    raypath.m_hits.push_back(HitInfo(0.0f, rp.r.o, light->normal(rp.r.o)));
+    HitInfo first_hit(0.0f, rp.r.o, light->normal(rp.r.o));
+    first_hit.material = light->material();
+    raypath.m_hits.push_back(first_hit);
     return generateRayPath(raypath);
 }
 
@@ -342,28 +356,27 @@ RayPath Scene::generateRayPath(RayPath & raypath) {
     return raypath;
 }
 
-Vector3 Scene::fixedLengthFlux(int pathLength, RayPath eyePath, RayPath lightPath) {
+Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
+    Vector3 flux = Vector3(0, 0, 0);
     HitInfo h;
-    /* PathLength == 0: i=0 && j=0 */
-    if (pathLength == 0) {
+    if (i == 0 && j==0) {
         return eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
     }
-
-    /* PathLength > 1: i=0 && j>0 */
-    Vector3 flux = Vector3(0, 0, 0);
-    Vector3 lightPoint = lightPath.m_hits[0].P;
-    Ray rayEye = eyePath.m_rays[pathLength - 1];
-    HitInfo hit = eyePath.m_hits[pathLength - 1];
-    const Material* mat = hit.material;
-    Ray rayShadow(hit.P, (hit.P - lightPoint).normalize()); // visibility ray FROM material TO light
-    float shadowLength2 =  (hit.P - lightPoint).length2();
-    if (!trace(h, rayShadow)) {
-        flux += mat->BRDF(rayShadow.d, hit.N, -rayEye.d) * // the BRDF
-            dot(lightPath.m_hits[0].N, -rayShadow.d)*dot(hit.N, rayShadow.d) / shadowLength2; // the form factor
+    else if (i == 0 && j > 0){
+        Vector3 lightPoint = lightPath.m_hits[0].P;
+        Ray rayEye = eyePath.m_rays[j-1];
+        HitInfo hit = eyePath.m_hits[j-1];
+        const Material* mat = hit.material;
+        Ray rayShadow(hit.P, (hit.P - lightPoint).normalize()); // visibility ray FROM eye point TO light
+        float shadowLength2 = (hit.P - lightPoint).length2();
+        if (!trace(h, rayShadow, 0.1, sqrt(shadowLength2)-0.1)) {
+            flux = 20 * mat->BRDF(rayShadow.d, hit.N, -rayEye.d) * // the BRDF
+                dot(lightPath.m_hits[0].N, -rayShadow.d)*dot(hit.N, rayShadow.d) / shadowLength2; // the form factor
+        }
+        //return Vector3(1.0, 0.0, 0.0);
     }
-
-    for (int eyeLength = 1; eyeLength < pathLength; eyeLength++) {
-
+    else
+    {
     }
     return flux;
 }
