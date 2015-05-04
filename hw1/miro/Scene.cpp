@@ -204,7 +204,7 @@ void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPD
         rayOut.o = hit.P;
         rayOut.d = dirOut;
         rayIn = rayOut;
-        power = power * brdf / vp.p;
+        power = power * brdf;
     }
 }
 
@@ -223,7 +223,7 @@ Scene::photontraceImage(Camera *cam, Image *img)
             printf("Rendering Progress: %.3f%%\r", p / float(m_photonSamples)*100.0f);
             fflush(stdout);
         }
-        if (p>0 && p % (m_photonSamples / 5) == 0)
+        if (p>0 && p % (m_photonSamples / 3) == 0)
         {
             img->draw();
         }
@@ -232,7 +232,7 @@ Scene::photontraceImage(Camera *cam, Image *img)
         for (int j = 0; j < h; j++){
             Vector3 pix = img->getPixel(i, j);
             img->setPixel(i, j,
-                pix / (cam->pixelCosine(i, j, w, h)*cam->pixelSolidAngle(i, j, w, h))/m_photonSamples);
+                pix / (cam->pixelCosine(i, j, w, h) * cam->pixelSolidAngle(i, j, w, h) * m_photonSamples));
         }
     }
     img->draw();

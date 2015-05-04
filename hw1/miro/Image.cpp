@@ -56,9 +56,9 @@ void Image::setPixel(int x, int y, const Vector3& p)
     // do some tone mapping
     if (x >= 0 && x < m_width && y < m_height && y >= 0)
     {
-        m_pixels[y*m_width+x].r = Map(p.x);
-        m_pixels[y*m_width+x].g = Map(p.y);
-        m_pixels[y*m_width+x].b = Map(p.z);
+        m_pixels[y*m_width+x].r = p.x;
+        m_pixels[y*m_width+x].g = p.y;
+        m_pixels[y*m_width+x].b = p.z;
     }
 }
 
