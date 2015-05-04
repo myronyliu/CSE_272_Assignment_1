@@ -80,6 +80,7 @@
     <ClCompile Include="miro\Parallellogram.cpp" />
     <ClCompile Include="miro\ParallelogramLight.cpp" />
     <ClCompile Include="miro\PointLight.cpp" />
+    <ClCompile Include="miro\RayPath.cpp" />
     <ClCompile Include="miro\Scene.cpp" />
     <ClCompile Include="miro\Sphere.cpp" />
     <ClCompile Include="miro\Triangle.cpp" />
@@ -106,6 +107,7 @@
     <ClInclude Include="miro\PointLight.h" />
     <ClInclude Include="miro\Ray.h" />
     <ClInclude Include="miro\Parallelogram.h" />
+    <ClInclude Include="miro\RayPath.h" />
     <ClInclude Include="miro\Scene.h" />
     <ClInclude Include="miro\Sphere.h" />
     <ClInclude Include="miro\Triangle.h" />
