@@ -292,8 +292,8 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 !trace(hitInfo, ray01) &&
                 !trace(hitInfo, ray10) &&
                 !trace(hitInfo, ray11)) continue;
+            Vector3 fluxSum(0, 0, 0);
             for (int k = 0; k < bidiSamplesPerPix(); k++){
-                Vector3 fluxSum(0, 0, 0);
                 RayPath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hits.size() == 0) {
                     continue;
@@ -301,9 +301,10 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 RayPath lightPath = randLightPath();
 
                 fluxSum += eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
-                for (unsigned int i = 0; i < lightPath.m_hits.size(); i++)
+                //for (unsigned int i = 0; i <= lightPath.m_hits.size(); i++)
+                for (unsigned int i = 0; i < 1; i++)
                 {
-                    for (unsigned int j = 1; j < eyePath.m_hits.size(); j++)
+                    for (unsigned int j = 1; j <= eyePath.m_hits.size(); j++)
                     {
                         Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
                         float weight = 1.0;
@@ -313,8 +314,9 @@ Scene::biditraceImage(Camera *cam, Image *img)
                         fluxSum += weight * flux;
                     }
                 }
-                img->setPixel(x, y, fluxSum / bidiSamplesPerPix());
             }
+            float cosSA = cam->pixelCosine(x, y, img->width(), img->height())*cam->pixelSolidAngle(x, y, img->width(), img->height());
+            img->setPixel(x, y, fluxSum / bidiSamplesPerPix());
         }
         img->drawScanline(y);
         glFinish();
@@ -339,6 +341,8 @@ RayPath Scene::randLightPath() {
     RayPDF rp = light->randRay();
     RayPath raypath(rp.r);
     raypath.m_fluxDecay.push_back(1.0);
+
+    raypath.m_probs.push_back(1.0); /////////
 
     HitInfo first_hit(0.0f, rp.r.o, light->normal(rp.r.o));
     raypath.m_hits.push_back(first_hit);
@@ -384,15 +388,26 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         Ray rayEye = eyePath.m_rays[j-1];
         HitInfo hit = eyePath.m_hits[j-1];
         const Material* mat = hit.material;
-        Ray rayShadow(hit.P, (hit.P - lightPoint).normalize()); // visibility ray FROM eye point TO light
+        Ray rayShadow(lightPoint, (hit.P - lightPoint).normalize()); // visibility ray FROM eye point TO light
         float shadowLength2 = (hit.P - lightPoint).length2();
-        if (!trace(h, rayShadow, 0.000001, sqrt(shadowLength2)-0.000001)) {
-            //float brdfChain = pow(mat->BRDF(rayShadow.d, hit.N, -rayEye.d), j-1);
-            float brdf = mat->BRDF(rayShadow.d, hit.N, -rayEye.d);
-            float form = dot(lightPath.m_hits[0].N, -rayShadow.d)*dot(hit.N, rayShadow.d) / shadowLength2;
-            flux = lightPath.m_light->wattage() * brdf *  form;
-            if (j > 1) flux *= eyePath.m_fluxDecay[j - 2];
+        if (trace(h, rayShadow, 0.00001, sqrt(shadowLength2) - 0.00001)) { // plus epsilon because we want to intersect cover
+            //cout << "light not visible" << endl;
+            return flux;
         }
+        if (dot(lightPath.m_hits[0].N, rayShadow.d) <= 0) {
+            //cout << rayShadow.d << endl;
+            //cout << "light facing away" << endl;
+            return flux; // hits backside of light
+        }
+        //float brdfChain = pow(mat->BRDF(rayShadow.d, hit.N, -rayEye.d), j-1);
+        float brdf = mat->BRDF(rayShadow.d, hit.N, -rayEye.d);
+        float form = dot(lightPath.m_hits[0].N, -rayShadow.d)*dot(hit.N, rayShadow.d) / shadowLength2;
+        flux = lightPath.m_light->wattage() * brdf *  form;
+        if (j > 1){
+            flux *= eyePath.m_fluxDecay[j - 2];
+        }
+        
+        //if (flux == Vector3(0, 0, 0)) cout << "why ";
     }
     else
     {
@@ -402,7 +417,7 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         const Material* matj = hitj.material;
         Ray rayShadow(hitj.P, (hiti.P - hitj.P).normalize());
         float shadowLength2 = (hiti.P - hitj.P).length2();
-        if (!trace(h, rayShadow, 0.000001, sqrt(shadowLength2) - 0.000001)) {
+        if (!trace(h, rayShadow, 0.00001, sqrt(shadowLength2) - 0.00001)) {
             //float brdfChain = pow(mati->BRDF(-rayShadow.d, hiti.N, -lightPath.m_rays[i - 1].d), i + j - 2);
             float brdfi = mati->BRDF(-rayShadow.d, hiti.N, -lightPath.m_rays[i - 1].d);
             float brdfj = matj->BRDF(rayShadow.d, hitj.N, -eyePath.m_rays[j - 1].d);

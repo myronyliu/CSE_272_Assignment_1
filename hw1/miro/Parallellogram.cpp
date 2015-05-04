@@ -92,7 +92,7 @@ Parallelogram::intersect(HitInfo& result, const Ray& ray,
     if (cr_x.length() > m_spanX || cr_y.length() > m_spanY) return false; // ray hits outside of plane
     if (nSteps<tMin || nSteps>tMax) return false;
 
-    Vector3 eps = 0.0001*(ray.o - r).normalize();
+    Vector3 eps = 0.000001*(ray.o - r).normalize();
     result.t = nSteps;
     result.N = -step_perp.normalized();
     result.P = r + eps;
