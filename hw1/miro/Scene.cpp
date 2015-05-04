@@ -298,6 +298,7 @@ RayPath Scene::randLightPath() {
     Light* light = lp.l;
     RayPDF rp = light->randRay();
     RayPath raypath(rp.r);
+    raypath.m_normalInit = light->normal(rp.r.o);
     return generateRayPath(raypath);
 }
 
@@ -321,18 +322,19 @@ RayPath Scene::generateRayPath(RayPath & raypath)
 Vector3 Scene::fixedLengthFlux(int pathLength, RayPath eyePath, RayPath lightPath) {
     HitInfo h;
     if (pathLength == 0) {
-        return eyePath.hits[0].material->radiance(eyePath.hits[0].N, -eyePath.rays[0].d);
+        return eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
     }
     Vector3 flux = Vector3(0, 0, 0);
     // first consider "i=0" in the paper
-    Ray rayIn = lightPath.rayInit;
-    Ray rayOut = eyePath.rays[pathLength - 1];
-    HitInfo hit = eyePath.hits[pathLength - 1];
+    Ray rayIn = lightPath.m_rayInit;
+    Ray rayOut = eyePath.m_rays[pathLength - 1];
+    HitInfo hit = eyePath.m_hits[pathLength - 1];
     const Material* mat = hit.material;
-    Ray shadow(rayIn.o, (rayOut.o - rayIn.o).normalize());
+    Ray shadow(rayIn.o, (rayIn.o-rayOut.o).normalize()); // visibility ray FROM material TO light
+    float shadowLength2 = (rayIn.o-rayOut.o).length2();
     if (!trace(h, shadow)) {
         Vector3 fluxAdd = mat->BRDF(-rayIn.d, hit.N, rayOut.d); // the BRDF
-        //fluxAdd *= dot(); // the form factor
+        fluxAdd *= dot(lightPath.m_normalInit, -shadow.d)*dot(hit.N, shadow.d) / shadowLength2; // the form factor
     }
     for (int eyeLength = 1; eyeLength < pathLength; eyeLength++) {
 
