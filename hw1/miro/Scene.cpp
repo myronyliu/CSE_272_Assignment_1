@@ -299,9 +299,10 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 }
                 RayPath lightPath = randLightPath();
 
-                for (unsigned int i = 0; i < lightPath.m_rays.size(); i++)
+                fluxSum += eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
+                for (unsigned int i = 0; i < lightPath.m_hits.size(); i++)
                 {
-                    for (unsigned int j = 0; j < eyePath.m_rays.size(); j++)
+                    for (unsigned int j = 1; j < eyePath.m_hits.size(); j++)
                     {
                         Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
 
@@ -360,10 +361,8 @@ RayPath Scene::generateRayPath(RayPath & raypath) {
 Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
     Vector3 flux = Vector3(0, 0, 0);
     HitInfo h;
-    if (i == 0 && j==0) {
-        return eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
-    }
-    else if (i == 0 && j > 0){
+    
+    if (i == 0){
         Vector3 lightPoint = lightPath.m_hits[0].P;
         Ray rayEye = eyePath.m_rays[j-1];
         HitInfo hit = eyePath.m_hits[j-1];
@@ -378,6 +377,18 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
     }
     else
     {
+        HitInfo hitj = eyePath.m_hits[j - 1];
+        HitInfo hiti = lightPath.m_hits[i];
+        const Material* mati = hiti.material;
+        const Material* matj = hitj.material;
+        Ray rayShadow(hitj.P, (hiti.P - hitj.P).normalize());
+        float shadowLength2 = (hiti.P - hitj.P).length2();
+        if (!trace(h, rayShadow, 0.1, sqrt(shadowLength2) - 0.1)) {
+            float brdfi = mati->BRDF(-rayShadow.d, hiti.N, -lightPath.m_rays[i - 1].d);
+            float brdfj = matj->BRDF(rayShadow.d, hitj.N, -eyePath.m_rays[j - 1].d);
+            float form = dot(-rayShadow.d, hiti.N)*dot(rayShadow.d, hitj.N) / shadowLength2;
+            flux = lightPath.m_light->wattage() *brdfi*brdfj*form;
+        }
     }
     return flux;
 }
