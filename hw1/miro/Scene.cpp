@@ -314,17 +314,25 @@ RayPath Scene::randLightPath() {
     }
     return raypath;
 }
-/*
-Vector3 Scene::fixedLengthFlux(int pathLength, RayPath eyePath, RayPath lightPath) {
-    if (pathLength == 0) {
-        return eyePath[0].h.material->radiance(eyePath[0].h.N, -eyePath[0].r.d);
-    }
-    
-    Vector3 flux = Vector3(0, 0, 0);
-    // first consider no light path
 
+Vector3 Scene::fixedLengthFlux(int pathLength, RayPath eyePath, RayPath lightPath) {
+    HitInfo h;
+    if (pathLength == 0) {
+        return eyePath.hits[0].material->radiance(eyePath.hits[0].N, -eyePath.rays[0].d);
+    }
+    Vector3 flux = Vector3(0, 0, 0);
+    // first consider "i=0" in the paper
+    Ray rayIn = lightPath.rayInit;
+    Ray rayOut = eyePath.rays[pathLength - 1];
+    HitInfo hit = eyePath.hits[pathLength - 1];
+    const Material* mat = hit.material;
+    Ray shadow(rayIn.o, (rayOut.o - rayIn.o).normalize());
+    if (!trace(h, shadow)) {
+        Vector3 fluxAdd = mat->BRDF(-rayIn.d, hit.N, rayOut.d); // the BRDF
+        //fluxAdd *= dot(); // the form factor
+    }
     for (int eyeLength = 1; eyeLength < pathLength; eyeLength++) {
 
     }
     return Vector3(0, 0, 0);
-}*/
+}
