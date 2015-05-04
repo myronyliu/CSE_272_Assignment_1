@@ -101,7 +101,7 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     float cos = dot(hit.N, newDir);
     Vector3 gather = hit.material->shade(ray, hit, *this); // gathered direct lighting
     return
-            gather + (1.0 / (1.0 - em))/vp.p*brdf*cos*0.8*
+            gather + (1.0 / (1.0 - em))/vp.p*brdf*cos*
         recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
 }
 
@@ -302,12 +302,13 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 RayPath lightPath = randLightPath();
 
                 fluxSum += eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
-                for (unsigned int i = 0; i < lightPath.m_hits.size(); i++)
+                //for (unsigned int i = 0; i < lightPath.m_hits.size(); i++)
+                for (unsigned int i = 0; i < 1; i++)
                 {
                     for (unsigned int j = 1; j < eyePath.m_hits.size(); j++)
                     {
                         Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
-                        float weight = 1;
+                        float weight = 1.0;
                         //if (i == 0 && j>1) weight = pow(W, j - 1);
                         //else weight = pow(W, j - 1)*(1 - W);
 
@@ -374,10 +375,11 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         Ray rayShadow(hit.P, (hit.P - lightPoint).normalize()); // visibility ray FROM eye point TO light
         float shadowLength2 = (hit.P - lightPoint).length2();
         if (!trace(h, rayShadow, 0.1, sqrt(shadowLength2)-0.1)) {
-            flux = lightPath.m_light->wattage() * mat->BRDF(rayShadow.d, hit.N, -rayEye.d) * // the BRDF
-                dot(lightPath.m_hits[0].N, -rayShadow.d)*dot(hit.N, rayShadow.d) / shadowLength2; // the form factor
+            float brdfChain = pow(mat->BRDF(rayShadow.d, hit.N, -rayEye.d), j-1);
+            float brdf = mat->BRDF(rayShadow.d, hit.N, -rayEye.d);
+            float form = dot(lightPath.m_hits[0].N, -rayShadow.d)*dot(hit.N, rayShadow.d) / shadowLength2;
+            flux = lightPath.m_light->wattage() * brdfChain * brdf *  form;
         }
-        //return Vector3(1.0, 0.0, 0.0);
     }
     else
     {
@@ -388,10 +390,11 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         Ray rayShadow(hitj.P, (hiti.P - hitj.P).normalize());
         float shadowLength2 = (hiti.P - hitj.P).length2();
         if (!trace(h, rayShadow, 0.1, sqrt(shadowLength2) - 0.1)) {
+            float brdfChain = pow(mati->BRDF(-rayShadow.d, hiti.N, -lightPath.m_rays[i - 1].d), i + j - 2);
             float brdfi = mati->BRDF(-rayShadow.d, hiti.N, -lightPath.m_rays[i - 1].d);
             float brdfj = matj->BRDF(rayShadow.d, hitj.N, -eyePath.m_rays[j - 1].d);
             float form = dot(-rayShadow.d, hiti.N)*dot(rayShadow.d, hitj.N) / shadowLength2;
-            flux = lightPath.m_light->wattage() *brdfi*brdfj*form;
+            flux = lightPath.m_light->wattage() * brdfChain *brdfi * brdfj * form;
         }
     }
     return flux;

@@ -13,7 +13,9 @@ public:
     Ray m_rayInit;
     std::vector<Ray> m_rays;
     std::vector<HitInfo> m_hits;
+
     std::vector<float> m_probs;
+    std::vector<float> m_brdfs;
 
     Light * m_light;
 };

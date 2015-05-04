@@ -28,15 +28,17 @@ makeRoomScene(){
     g_camera->setFOV(40);
 
     g_scene->setSamplesPerPix(512);
-    g_scene->setBidiSamplesPerPix(10);
-    g_scene->setMaxBounces(20);
-    g_scene->setMaxPaths(5);
+    g_scene->setBidiSamplesPerPix(16);
+    g_scene->setMaxBounces(16);
+    g_scene->setMaxPaths(10);
     g_scene->setPhotonSamples(1000000);
 
     // create room geometry
 
-    Material* mat = new Lambert(Vector3(0.8f, 0.8f, 0.8f));
-    Material* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
+    Lambert* mat = new Lambert(Vector3(1.0f, 1.0f, 1.0f));
+    mat->setKd(0.8f);
+    Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
+    coverMat->setKd(0.0f);
     
     Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
@@ -55,7 +57,7 @@ makeRoomScene(){
     wall_F->setMaterial(mat);
     cover->setMaterial(coverMat);
 
-    //light->flip(); cover->flip(); light->setWattage(2);
+    light->flip(); cover->flip(); light->setWattage(50);
 
     // add objects to scene
     g_scene->addObject(wall_B);

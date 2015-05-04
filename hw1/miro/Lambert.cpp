@@ -15,7 +15,7 @@ Lambert::~Lambert()
 {
 }
 
-float Lambert::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out) const { return 1.0 / M_PI; }
+float Lambert::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out) const { return (kd()[0] + kd()[1] + kd()[2])/3 * 1.0 / M_PI; }
 
 Vector3
 Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
