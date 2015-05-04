@@ -302,20 +302,19 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 RayPath lightPath = randLightPath();
 
                 fluxSum += eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
-                //for (unsigned int i = 0; i < lightPath.m_hits.size(); i++)
-                for (unsigned int i = 0; i < 1; i++)
+                for (unsigned int i = 0; i < lightPath.m_hits.size(); i++)
                 {
                     for (unsigned int j = 1; j < eyePath.m_hits.size(); j++)
                     {
                         Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
                         float weight = 1.0;
-                        //if (i == 0 && j>1) weight = pow(W, j - 1);
-                        //else weight = pow(W, j - 1)*(1 - W);
+                        if (i == 0 && j>1) weight = pow(W, j - 1);
+                        else weight = pow(W, j - 1)*(1 - W);
 
                         fluxSum += weight * flux;
                     }
                 }
-                img->setPixel(x, y, fluxSum/ bidiSamplesPerPix());
+                img->setPixel(x, y, fluxSum / bidiSamplesPerPix());
             }
         }
         img->drawScanline(y);
