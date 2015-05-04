@@ -269,3 +269,60 @@ LightPDF Scene::randLightByWattage() {
         return rlbw;
     }
 }
+
+
+
+/*
+RayPath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {
+    RayPath raypath;
+    raypath.rayInit = cam->eyeRay(x, y, img->width(), img->height());
+    HitInfo hit;
+    if (!trace(hit, raypath.rayInit)) return raypath;
+    // otherwise something was hit
+    raypath.rays.push_back(raypath.rayInit); // this is redundant but oh well;
+    raypath.hits.push_back(hit);
+    for (int i = 1; i < m_maxBounces; i++){
+        RayPDF rp = raypath.hits[i - 1].material->randReflect(raypath.rays[i - 1], raypath.hits[i - 1]);
+        if (!trace(hit, rp.r)) return raypath;
+        raypath.rays.push_back(rp.r);
+        raypath.hits.push_back(hit);
+        raypath.probs.push_back(rp.p);
+    }
+    return raypath;
+}
+
+RayPath Scene::randLightPath() {
+    LightPDF lp = randLightByWattage();
+    Light* light = lp.l;
+    RayPDF rp = light->randRay();
+    ///////////////////////////////////////
+    RayPath raypath;
+    raypath.rayInit = rp.r;
+    HitInfo hit;
+    if (!trace(hit, raypath.rayInit)) return raypath;
+    // otherwise something was hit
+    raypath.rays.push_back(raypath.rayInit); // this is redundant but oh well;
+    raypath.hits.push_back(hit);
+    for (int i = 1; i < m_maxBounces; i++){
+        rp = raypath.hits[i - 1].material->randReflect(raypath.rays[i - 1], raypath.hits[i - 1]);
+        if (!trace(hit, rp.r)) return raypath;
+        raypath.rays.push_back(rp.r);
+        raypath.hits.push_back(hit);
+        raypath.probs.push_back(rp.p);
+    }
+    return raypath;
+}
+
+Vector3 Scene::fixedLengthFlux(int pathLength, RayPath eyePath, RayPath lightPath) {
+    if (pathLength == 0) {
+        return eyePath[0].h.material->radiance(eyePath[0].h.N, -eyePath[0].r.d);
+    }
+    
+    Vector3 flux = Vector3(0, 0, 0);
+    // first consider no light path
+
+    for (int eyeLength = 1; eyeLength < pathLength; eyeLength++) {
+
+    }
+    return Vector3(0, 0, 0);
+}*/

@@ -7,6 +7,7 @@
 #include "AreaLight.h"
 #include "Light.h"
 #include "BVH.h"
+#include "RayPath.h"
 using namespace std;
 
 class Camera;
@@ -58,6 +59,12 @@ public:
     void tracePhoton(Camera *cam, Image *img, const LightPDF& lightAndProb, const RayPDF& rayAndProb);
 
     LightPDF randLightByWattage();
+
+
+    RayPath randEyePath(float i, float j, Camera* cam, Image* img);
+    RayPath randLightPath();
+
+    Vector3 fixedLengthFlux(int pathLength, RayPath eyePath, RayPath lightPath);
 
 protected:
     Objects m_objects;
