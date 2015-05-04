@@ -312,7 +312,10 @@ Scene::biditraceImage(Camera *cam, Image *img)
 }
 
 RayPath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {
+    HitInfo hit;
     RayPath raypath(cam->eyeRay(x, y, img->width(), img->height()));
+    if (!trace(hit, raypath.m_rayInit)) return raypath;
+    raypath.m_hits.push_back(hit);
     return generateRayPath(raypath);
 }
 
@@ -327,9 +330,7 @@ RayPath Scene::randLightPath() {
 
 RayPath Scene::generateRayPath(RayPath & raypath) {
     HitInfo hit;
-    if (!trace(hit, raypath.m_rayInit)) return raypath;
-    // otherwise something was hit
-    raypath.m_hits.push_back(hit);
+    raypath.m_probs.push_back(1.0);
     for (int i = 1; i < m_maxPaths; i++){
         vec3pdf vp = raypath.m_hits[i - 1].material->randReflect(-raypath.m_rays[i - 1].d, raypath.m_hits[i - 1].N);
         Ray newRay(raypath.m_hits[i - 1].P, vp.v);
@@ -364,5 +365,5 @@ Vector3 Scene::fixedLengthFlux(int pathLength, RayPath eyePath, RayPath lightPat
     for (int eyeLength = 1; eyeLength < pathLength; eyeLength++) {
 
     }
-    return Vector3(0, 0, 0);
+    return flux;
 }
