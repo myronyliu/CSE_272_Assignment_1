@@ -281,8 +281,11 @@ Scene::biditraceImage(Camera *cam, Image *img)
     {
         for (int x = 0; x < w; x++)
         {
+            std::cout << "Generating eye paths." << std::endl;
             RayPath eyePath = randEyePath(x, y, cam, img);
+            std::cout << "Generating light paths." << std::endl;
             RayPath lightPath = randLightPath();
+            
         }
     }
 
