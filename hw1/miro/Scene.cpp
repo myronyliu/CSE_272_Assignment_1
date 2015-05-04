@@ -338,6 +338,7 @@ RayPath Scene::randLightPath() {
 
     RayPDF rp = light->randRay();
     RayPath raypath(rp.r);
+    raypath.m_fluxDecay.push_back(1.0);
 
     HitInfo first_hit(0.0f, rp.r.o, light->normal(rp.r.o));
     raypath.m_hits.push_back(first_hit);
@@ -366,7 +367,8 @@ RayPath Scene::generateRayPath(RayPath & raypath) {
         raypath.m_rays.push_back(newRay);
         raypath.m_hits.push_back(hit);
         raypath.m_probs.push_back(raypath.m_probs.back() * vp.p);
-        raypath.m_fluxDecay.push_back(brdf*cos*raypath.m_fluxDecay.back());
+        if (raypath.m_fluxDecay.size() == 0) raypath.m_fluxDecay.push_back(brdf*cos); // for eyePath
+        else raypath.m_fluxDecay.push_back(brdf*cos*raypath.m_fluxDecay.back()); // for lightPath
 
         bounce++;
     }
@@ -389,7 +391,7 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
             float brdf = mat->BRDF(rayShadow.d, hit.N, -rayEye.d);
             float form = dot(lightPath.m_hits[0].N, -rayShadow.d)*dot(hit.N, rayShadow.d) / shadowLength2;
             flux = lightPath.m_light->wattage() * brdf *  form;
-            flux *= eyePath.m_fluxDecay[j - 1];
+            if (j > 1) flux *= eyePath.m_fluxDecay[j - 2];
         }
     }
     else

@@ -10,7 +10,6 @@ class RayPath
 public:
     RayPath(Ray rayInit) : m_rayInit(rayInit), m_light(nullptr) {
         m_rays.push_back(rayInit);
-        m_fluxDecay.push_back(1.0);
         m_probs.push_back(1.0);
     };
 
