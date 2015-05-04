@@ -119,6 +119,7 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     std::ofstream plotfile;
     plotfile.open("pathtraceplot.txt");
     
+    int integrationStart = glutGet(GLUT_ELAPSED_TIME);
     // loop over all pixels in the image
     for (int j = 0; j < img->height(); ++j){
         for (int i = 0; i < img->width(); ++i){
@@ -149,6 +150,10 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     }
 
     printf("Rendering Progress: 100.000%\n");
+
+    int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
+    std::cout << "Rendering took " << ((integrationEnd - integrationStart) / 1000.0f) << "s" << std::endl;
+
     debug("done Raytracing!\n");
     plotfile.close();
 }
@@ -230,6 +235,7 @@ Scene::photontraceImage(Camera *cam, Image *img)
     std::ofstream plotfile;
     plotfile.open("photontraceplot.txt");
     
+    int integrationStart = glutGet(GLUT_ELAPSED_TIME);
     for (int p = 0; p < m_photonSamples; p++) { // shoot a photon...
         LightPDF lp = randLightByWattage(); // ... off of a random light (I don't think we need the PDF here)
         Light* light = lp.l;
@@ -255,9 +261,13 @@ Scene::photontraceImage(Camera *cam, Image *img)
         }
     }
     img->draw();
-    printf("Rendering Progress: 100.000%\n");
-    debug("done Photontracing!\n");
     glFinish();
+    printf("Rendering Progress: 100.000%\n");
+
+    int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
+    std::cout << "Rendering took " << ((integrationEnd - integrationStart) / 1000.0f) << "s" << std::endl;
+
+    debug("done Photontracing!\n");
     plotfile.close();
 }
 
@@ -300,6 +310,8 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
     std::ofstream plotfile;
     plotfile.open("biditraceplot.txt");
+
+    int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
     float W = 0.5;
 
@@ -370,6 +382,10 @@ Scene::biditraceImage(Camera *cam, Image *img)
     }
 
     printf("Rendering Progress: 100.000%\n");
+
+    int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
+    std::cout << "Rendering took " << ((integrationEnd - integrationStart) / 1000.0f) << "s" << std::endl;
+
     debug("Done Bidi Pathtracing!\n");
     plotfile.close();
 }
