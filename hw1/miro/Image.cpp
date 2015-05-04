@@ -81,13 +81,32 @@ Vector3 Image::getPixel(int x, int y) const
 
 void Image::drawScanline(int y)
 {
+    float * gamma_image = new float[3 * m_width * m_height];
+    for (int x = 0; x < m_width; x++)
+    {
+        gamma_image[3*(m_width*y+x)+0] = pow(m_pixels[y*m_width+x].r,1/2.2);
+        gamma_image[3*(m_width*y+x)+1] = pow(m_pixels[y*m_width+x].g,1/2.2);
+        gamma_image[3*(m_width*y+x)+2] = pow(m_pixels[y*m_width+x].b,1/2.2);
+    }
     glRasterPos2f(-1, -1 + 2*y / (float)m_height);
-    glDrawPixels(m_width, 1, GL_RGB, GL_FLOAT, &m_pixels[y*m_width]);
+    glDrawPixels(m_width, 1, GL_RGB, GL_FLOAT, &gamma_image[3*y*m_width]);
+    delete[] gamma_image;
 }
 
 void Image::draw()
 {
-    glDrawPixels(m_width, m_height, GL_RGB, GL_FLOAT, &m_pixels[0]);
+    float * gamma_image = new float[3 * m_width * m_height];
+    for (int y = 0; y < m_width; y++)
+    {
+        for (int x = 0; x < m_width; x++)
+        {
+            gamma_image[3*(m_width*y+x)+0] = pow(m_pixels[y*m_width+x].r,1/2.2);
+            gamma_image[3*(m_width*y+x)+1] = pow(m_pixels[y*m_width+x].g,1/2.2);
+            gamma_image[3*(m_width*y+x)+2] = pow(m_pixels[y*m_width+x].b,1/2.2);
+        }
+    }
+    glDrawPixels(m_width, m_height, GL_RGB, GL_FLOAT, &gamma_image[0]);
+    delete[] gamma_image;
 }
 
 void Image::writePPM(char* pcFile)

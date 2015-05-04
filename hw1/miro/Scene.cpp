@@ -9,6 +9,8 @@
 #include <iostream>
 #include <fstream>
 
+using namespace std;
+
 Scene * g_scene = 0;
 
 void
@@ -135,10 +137,10 @@ Scene::pathtraceImage(Camera *cam, Image *img)
             for (int k = 0; k < m_samplesPerPix; k++){
                 Ray ray = cam->eyeRayJittered(i, j, img->width(), img->height());
                 if (!trace(hitInfo, ray)) continue;
-                //if (dot(hitInfo.N, Vector3(0, 0, -1)) > 0) { pixSum += Vector3(1.0, 0.0, 0.0);  }
                 pixSum += recursiveTrace_fromEye(ray, 0, m_maxBounces) / (double)m_samplesPerPix;
+
                 if (j == img->width()/2 && i == img->height()/2){
-                    plotfile << pixSum[0] * k << std::endl;
+                    plotfile << pixSum[0] / (k+1) * m_samplesPerPix << std::endl;
                 }
             }
             img->setPixel(i, j, pixSum);
@@ -250,7 +252,7 @@ Scene::photontraceImage(Camera *cam, Image *img)
             img->draw();
         }
         if (p % 1000000 == 0) {
-            plotfile << img->getPixel(w/2, h/2)[0]/(p+1)*m_photonSamples << std::endl;
+            plotfile << img->getPixel(w/2, h/2)[0] *m_photonSamples/(p+1) << std::endl;
         }
     }
     for (int i = 0; i < w; i++){

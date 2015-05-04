@@ -8,7 +8,6 @@
 #include "Light.h"
 #include "BVH.h"
 #include "RayPath.h"
-using namespace std;
 
 class Camera;
 class Image;
