@@ -278,6 +278,8 @@ Scene::biditraceImage(Camera *cam, Image *img)
     int h = img->height();
     HitInfo hitInfo;
 
+    float W = 0.5;
+
     for (int y = 0; y < h; y++)
     //for (int y = h-1; y >= 0; y--)
     {
@@ -305,8 +307,10 @@ Scene::biditraceImage(Camera *cam, Image *img)
                     for (unsigned int j = 1; j < eyePath.m_hits.size(); j++)
                     {
                         Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
+                        float weight = 1;
+                        //if (i == 0 && j>1) weight = pow(W, j - 1);
+                        //else weight = pow(W, j - 1)*(1 - W);
 
-                        float weight = 1.0;// / (eyePath.m_rays.size() * lightPath.m_rays.size());
                         fluxSum += weight * flux;
                     }
                 }
