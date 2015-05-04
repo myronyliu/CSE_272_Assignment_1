@@ -28,7 +28,7 @@ makeRoomScene(){
     g_camera->setFOV(40);
 
     g_scene->setSamplesPerPix(512);
-    g_scene->setBidiSamplesPerPix(512);
+    g_scene->setBidiSamplesPerPix(4);
     g_scene->setMaxBounces(20);
     g_scene->setMaxPaths(5);
     g_scene->setPhotonSamples(10000000);
