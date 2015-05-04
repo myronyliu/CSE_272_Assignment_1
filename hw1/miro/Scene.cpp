@@ -277,36 +277,55 @@ Scene::biditraceImage(Camera *cam, Image *img)
     int w = img->width();
     int h = img->height();
 
-    for (int y = 0; y < h; y++)
+    for (int y = h-1; y >= 0; y--)
     {
         for (int x = 0; x < w; x++)
         {
-            std::cout << "Generating eye paths." << std::endl;
-            RayPath eyePath = randEyePath(x, y, cam, img);
-            std::cout << "Generating light paths." << std::endl;
-            RayPath lightPath = randLightPath();
-            
+            for (int k = 0; k < bidiSamplesPerPix(); k++){
+                Vector3 fluxSum(0, 0, 0);
+                RayPath eyePath = randEyePath(x, y, cam, img);
+                if (eyePath.m_hits.size() == 0) {
+                    continue;
+                }
+                RayPath lightPath = randLightPath();
+
+                int totalPathLength = eyePath.m_rays.size() + lightPath.m_rays.size();
+                for (int pathLength = 0; pathLength < totalPathLength; pathLength++)
+                {
+                    Vector3 flux = fixedLengthFlux(pathLength, eyePath, lightPath);
+
+                    float weight = 1.0;// / (eyePath.m_rays.size() * lightPath.m_rays.size());
+                    fluxSum += weight * flux;
+                }
+                img->setPixel(x, y, fluxSum);
+            }
         }
+        img->drawScanline(y);
+        glFinish();
+        printf("Rendering Progress: %.3f%%\r", y / float(img->height())*100.0f);
+        fflush(stdout);
     }
+
+    printf("Rendering Progress: 100.000%\n");
+    debug("Done Bidi Pathtracing!\n");
 
 }
 
 RayPath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {
     RayPath raypath(cam->eyeRay(x, y, img->width(), img->height()));
     return generateRayPath(raypath);
-    }
+}
 
 RayPath Scene::randLightPath() {
     LightPDF lp = randLightByWattage();
     Light* light = lp.l;
     RayPDF rp = light->randRay();
     RayPath raypath(rp.r);
-    raypath.m_normalInit = light->normal(rp.r.o);
+    raypath.m_hits.push_back(HitInfo(0.0f, rp.r.o, light->normal(rp.r.o)));
     return generateRayPath(raypath);
 }
 
-RayPath Scene::generateRayPath(RayPath & raypath)
-{
+RayPath Scene::generateRayPath(RayPath & raypath) {
     HitInfo hit;
     if (!trace(hit, raypath.m_rayInit)) return raypath;
     // otherwise something was hit
@@ -317,28 +336,31 @@ RayPath Scene::generateRayPath(RayPath & raypath)
         if (!trace(hit, newRay)) return raypath;
         raypath.m_rays.push_back(newRay);
         raypath.m_hits.push_back(hit);
-        raypath.m_probs.push_back(vp.p);
+        raypath.m_probs.push_back(raypath.m_probs[i-1] * vp.p);
     }
     return raypath;
 }
 
 Vector3 Scene::fixedLengthFlux(int pathLength, RayPath eyePath, RayPath lightPath) {
     HitInfo h;
+    /* PathLength == 0: i=0 && j=0 */
     if (pathLength == 0) {
         return eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
     }
+
+    /* PathLength > 1: i=0 && j>0 */
     Vector3 flux = Vector3(0, 0, 0);
-    // first consider "i=0" in the paper
-    Ray rayIn = lightPath.m_rayInit;
-    Ray rayOut = eyePath.m_rays[pathLength - 1];
+    Vector3 lightPoint = lightPath.m_hits[0].P;
+    Ray rayEye = eyePath.m_rays[pathLength - 1];
     HitInfo hit = eyePath.m_hits[pathLength - 1];
     const Material* mat = hit.material;
-    Ray shadow(rayIn.o, (rayIn.o-rayOut.o).normalize()); // visibility ray FROM material TO light
-    float shadowLength2 = (rayIn.o-rayOut.o).length2();
-    if (!trace(h, shadow)) {
-        Vector3 fluxAdd = mat->BRDF(-rayIn.d, hit.N, rayOut.d); // the BRDF
-        fluxAdd *= dot(lightPath.m_normalInit, -shadow.d)*dot(hit.N, shadow.d) / shadowLength2; // the form factor
+    Ray rayShadow(hit.P, (hit.P - lightPoint).normalize()); // visibility ray FROM material TO light
+    float shadowLength2 =  (hit.P - lightPoint).length2();
+    if (!trace(h, rayShadow)) {
+        flux += mat->BRDF(rayShadow.d, hit.N, -rayEye.d) * // the BRDF
+            dot(lightPath.m_hits[0].N, -rayShadow.d)*dot(hit.N, rayShadow.d) / shadowLength2; // the form factor
     }
+
     for (int eyeLength = 1; eyeLength < pathLength; eyeLength++) {
 
     }

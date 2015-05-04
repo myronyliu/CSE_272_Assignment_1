@@ -22,7 +22,9 @@ class Scene
 {
 public:
     void setSamplesPerPix(int i) { m_samplesPerPix = fmax(0, i); }
+    void setBidiSamplesPerPix(int i) { m_bidiSamplesPerPix = fmax(0, i); }
     int samplesPerPix() { return m_samplesPerPix; }
+    int bidiSamplesPerPix() { return m_bidiSamplesPerPix; }
     void setPhotonSamples(int i) { m_photonSamples = fmax(0, i); }
     int photonSamples() { return m_photonSamples; }
     void setMaxBounces(int i) { m_maxBounces = fmax(0, i); }
@@ -73,6 +75,7 @@ protected:
     Objects m_objects;
     BVH m_bvh;
     int m_samplesPerPix = 100;
+    int m_bidiSamplesPerPix = 50;
     int m_photonSamples = 100000000;
     int m_maxBounces = 20;
     int m_maxPaths = 3;
