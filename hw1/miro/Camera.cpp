@@ -89,7 +89,7 @@ Camera::click(Scene* pScene, Image* pImage)
         if (firstRayTrace)
         {
             pImage->clear(bgColor());
-            pScene->pathtraceImage(this, g_image);
+            pScene->biditraceImage(this, g_image);
             firstRayTrace = false;
         }
 

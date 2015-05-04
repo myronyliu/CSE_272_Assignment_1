@@ -3,15 +3,16 @@
 
 #include "Ray.h"
 #include <vector>
-using namespace std;
 
 class RayPath
 {
 public:
-    Ray rayInit;
-    vector<Ray> rays;
-    vector<HitInfo> hits;
-    vector<float> probs;
+    RayPath(Ray rayInit) : m_rayInit(rayInit) { };
+
+    Ray m_rayInit;
+    std::vector<Ray> m_rays;
+    std::vector<HitInfo> m_hits;
+    std::vector<float> m_probs;
 };
 
 #endif // CSE168_RAYPATH_H_INCLUDED
