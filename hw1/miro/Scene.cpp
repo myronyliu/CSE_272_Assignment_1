@@ -153,21 +153,20 @@ void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPD
     // The following is for the initial emission (to make the light visible)
     rayToEye.o = rayOut.o;
     rayToEye.d = (cam->eye() - rayToEye.o).normalize();
-    //float cos = 1;
-    //printf("%f, %f, %f\n", light.normal(rayOut.o)[0], light.normal(rayOut.o)[1], light.normal(rayOut.o)[2]);
-    /*if (!trace(tryHitEye, rayToEye) && dot(rayToEye.d, light.normal(rayToEye.o)) > 0) { // check if anything is occluding the eye from current hitpoint
+    // Add direct light to pixel
+    if (!trace(tryHitEye, rayToEye) && dot(rayToEye.d, light->normal(rayToEye.o)) > 0) { // check if anything is occluding the eye from current hitpoint
         pix = cam->imgProject(rayToEye.o, w, h); // find the pixel the onto which the current hitpoint projects
         int x = round(pix[0]);
         int y = round(pix[1]);
         if (pix[2]>0 && x > -1 && x<w && y>-1 && y < h) { // check that the pixel is within the viewing window
-            Vector3 initValue = light.material()->radiance(light.normal(rayOut.o), rayToEye.d)*light.area();
-            initValue *= cos;
+            Vector3 initValue = light->material()->radiance(light->normal(rayToEye.o), rayToEye.d)*light->area();
+            initValue *= dot(rayToEye.d, light->normal(rayToEye.o));
             initValue *= cam->pixelCosine(pix[0], pix[1], w, h);
-            initValue /= light.material()->sum_L_cosTheta_dOmega();
-            initValue /= (rayOut.o - cam->eye()).length2();
-            img[x][y] += power*initValue;
+            initValue /= light->material()->sum_L_cosTheta_dOmega();
+            initValue /= (rayToEye.o - cam->eye()).length2();
+            img->setPixel(x, y, img->getPixel(x, y) + power*initValue);
         }
-    }*/
+    }
     // now for the bounces
     rayIn = rayOut;
     for (int bounces = 0; bounces < m_maxBounces; bounces++) {
@@ -302,15 +301,15 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 RayPath lightPath = randLightPath();
 
                 fluxSum += eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
-                //for (unsigned int i = 0; i < lightPath.m_hits.size(); i++)
-                for (unsigned int i = 0; i < 1; i++)
+                for (unsigned int i = 0; i < lightPath.m_hits.size(); i++)
+                //for (unsigned int i = 0; i < 1; i++)
                 {
                     for (unsigned int j = 1; j < eyePath.m_hits.size(); j++)
                     {
                         Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
                         float weight = 1.0;
-                        //if (i == 0 && j>1) weight = pow(W, j - 1);
-                        //else weight = pow(W, j - 1)*(1 - W);
+                        if (i == 0 && j>1) weight = pow(W, j - 1);
+                        else weight = pow(W, j - 1)*(1 - W);
 
                         fluxSum += weight * flux;
                     }
