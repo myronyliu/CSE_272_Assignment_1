@@ -223,7 +223,7 @@ Scene::photontraceImage(Camera *cam, Image *img)
             printf("Rendering Progress: %.3f%%\r", p / float(m_photonSamples)*100.0f);
             fflush(stdout);
         }
-        if (p>0 && p % (m_photonSamples / 3) == 0)
+        if (((float) p/m_photonSamples)<0.8 && p>0 && p % (m_photonSamples / 3) == 0)
         {
             img->draw();
         }

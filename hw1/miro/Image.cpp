@@ -106,10 +106,26 @@ void Image::writePPM(char *pcFile, float *data, int width, int height)
         fprintf(fp, "%d %d\n", width, height );
         fprintf(fp, "255\n" );
 
+        unsigned char * tmp_data = new unsigned char[height * width * 3];
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                if (Map(data[3 * (y*width + x) + 0]) > 0)
+                {
+                    std::cout << "sup" << std::endl;
+                }
+                tmp_data[3 * (y * width + x) + 0] = Map(data[3 * (y*width + x) + 0]);
+                tmp_data[3 * (y * width + x) + 1] = Map(data[3 * (y*width + x) + 1]);
+                tmp_data[3 * (y * width + x) + 2] = Map(data[3 * (y*width + x) + 2]);
+            }
+        }
+
         // invert image
         int stride = width*3;
         for (int i = height-1; i >= 0; i--)
             fwrite(&data[stride*i], stride, 1, fp);
+        delete[] tmp_data;
         fclose(fp);
     }
 }
