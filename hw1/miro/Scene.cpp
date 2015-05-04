@@ -339,6 +339,7 @@ RayPath Scene::randLightPath() {
     HitInfo first_hit(0.0f, rp.r.o, light->normal(rp.r.o));
     first_hit.material = light->material();
     raypath.m_hits.push_back(first_hit);
+    raypath.m_light = light;
     return generateRayPath(raypath);
 }
 
@@ -370,7 +371,7 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         Ray rayShadow(hit.P, (hit.P - lightPoint).normalize()); // visibility ray FROM eye point TO light
         float shadowLength2 = (hit.P - lightPoint).length2();
         if (!trace(h, rayShadow, 0.1, sqrt(shadowLength2)-0.1)) {
-            flux = 20 * mat->BRDF(rayShadow.d, hit.N, -rayEye.d) * // the BRDF
+            flux = lightPath.m_light->wattage() * mat->BRDF(rayShadow.d, hit.N, -rayEye.d) * // the BRDF
                 dot(lightPath.m_hits[0].N, -rayShadow.d)*dot(hit.N, rayShadow.d) / shadowLength2; // the form factor
         }
         //return Vector3(1.0, 0.0, 0.0);
