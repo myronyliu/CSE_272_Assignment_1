@@ -272,7 +272,7 @@ LightPDF Scene::randLightByWattage() {
 
 
 
-/*
+
 RayPath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {
     RayPath raypath;
     raypath.rayInit = cam->eyeRay(x, y, img->width(), img->height());
@@ -282,11 +282,12 @@ RayPath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {
     raypath.rays.push_back(raypath.rayInit); // this is redundant but oh well;
     raypath.hits.push_back(hit);
     for (int i = 1; i < m_maxBounces; i++){
-        RayPDF rp = raypath.hits[i - 1].material->randReflect(raypath.rays[i - 1], raypath.hits[i - 1]);
-        if (!trace(hit, rp.r)) return raypath;
-        raypath.rays.push_back(rp.r);
+        vec3pdf vp = raypath.hits[i - 1].material->randReflect(-raypath.rays[i - 1].d, raypath.hits[i - 1].N);
+        Ray newRay(raypath.hits[i - 1].P, vp.v);
+        if (!trace(hit, newRay)) return raypath;
+        raypath.rays.push_back(newRay);
         raypath.hits.push_back(hit);
-        raypath.probs.push_back(rp.p);
+        raypath.probs.push_back(vp.p);
     }
     return raypath;
 }
@@ -304,15 +305,16 @@ RayPath Scene::randLightPath() {
     raypath.rays.push_back(raypath.rayInit); // this is redundant but oh well;
     raypath.hits.push_back(hit);
     for (int i = 1; i < m_maxBounces; i++){
-        rp = raypath.hits[i - 1].material->randReflect(raypath.rays[i - 1], raypath.hits[i - 1]);
-        if (!trace(hit, rp.r)) return raypath;
-        raypath.rays.push_back(rp.r);
+        vec3pdf vp = raypath.hits[i - 1].material->randReflect(-raypath.rays[i - 1].d, raypath.hits[i - 1].N);
+        Ray newRay(raypath.hits[i - 1].P, vp.v);
+        if (!trace(hit, newRay)) return raypath;
+        raypath.rays.push_back(newRay);
         raypath.hits.push_back(hit);
-        raypath.probs.push_back(rp.p);
+        raypath.probs.push_back(vp.p);
     }
     return raypath;
 }
-
+/*
 Vector3 Scene::fixedLengthFlux(int pathLength, RayPath eyePath, RayPath lightPath) {
     if (pathLength == 0) {
         return eyePath[0].h.material->radiance(eyePath[0].h.N, -eyePath[0].r.d);
