@@ -7,7 +7,7 @@
 class RayPath
 {
 public:
-    RayPath(Ray rayInit) : m_rayInit(rayInit) { };
+    RayPath(Ray rayInit) : m_rayInit(rayInit) { m_rays.push_back(rayInit); };
 
     Ray m_rayInit;
     std::vector<Ray> m_rays;

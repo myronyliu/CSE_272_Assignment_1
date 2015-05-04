@@ -29,6 +29,7 @@ makeRoomScene(){
 
     g_scene->setSamplesPerPix(512);
     g_scene->setMaxBounces(10);
+    g_scene->setMaxPaths(3);
     g_scene->setPhotonSamples(100000);
 
     // create room geometry

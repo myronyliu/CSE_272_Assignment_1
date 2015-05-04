@@ -27,6 +27,8 @@ public:
     int photonSamples() { return m_photonSamples; }
     void setMaxBounces(int i) { m_maxBounces = fmax(0, i); }
     int maxBounces() { return m_maxBounces; }
+    void setMaxPaths(int i) { m_maxPaths = fmax(0, i); }
+    int maxPaths() { return m_maxPaths; }
     void addObject(Object* pObj) { m_objects.push_back(pObj); }
     const Objects* objects() const { return &m_objects; }
     void setSamplingHeuristic(float p) { m_samplingHeuristic = fmin(fmax(0, p), 1); }
@@ -63,6 +65,7 @@ public:
 
     RayPath randEyePath(float i, float j, Camera* cam, Image* img);
     RayPath randLightPath();
+    RayPath generateRayPath(RayPath &);
 
     Vector3 fixedLengthFlux(int pathLength, RayPath eyePath, RayPath lightPath);
 
@@ -72,6 +75,7 @@ protected:
     int m_samplesPerPix = 100;
     int m_photonSamples = 100000000;
     int m_maxBounces = 20;
+    int m_maxPaths = 3;
     Lights m_lights;
     PointLights m_pointLights;
     AreaLights m_areaLights;

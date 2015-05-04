@@ -89,6 +89,23 @@ Camera::click(Scene* pScene, Image* pImage)
         if (firstRayTrace)
         {
             pImage->clear(bgColor());
+            pScene->pathtraceImage(this, g_image);
+            firstRayTrace = false;
+        }
+
+        g_image->draw();
+    }
+    else if (m_renderer == RENDER_BIDITRACE)
+    {
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        glDrawBuffer(GL_FRONT);
+        if (firstRayTrace)
+        {
+            pImage->clear(bgColor());
             pScene->biditraceImage(this, g_image);
             firstRayTrace = false;
         }

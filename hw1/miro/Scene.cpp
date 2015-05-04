@@ -290,12 +290,24 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
 RayPath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {
     RayPath raypath(cam->eyeRay(x, y, img->width(), img->height()));
+    return generateRayPath(raypath);
+}
+
+RayPath Scene::randLightPath() {
+    LightPDF lp = randLightByWattage();
+    Light* light = lp.l;
+    RayPDF rp = light->randRay();
+    RayPath raypath(rp.r);
+    return generateRayPath(raypath);
+}
+
+RayPath Scene::generateRayPath(RayPath & raypath)
+{
     HitInfo hit;
     if (!trace(hit, raypath.m_rayInit)) return raypath;
     // otherwise something was hit
-    raypath.m_rays.push_back(raypath.m_rayInit); // this is redundant but oh well;
     raypath.m_hits.push_back(hit);
-    for (int i = 1; i < m_maxBounces; i++){
+    for (int i = 1; i < m_maxPaths; i++){
         vec3pdf vp = raypath.m_hits[i - 1].material->randReflect(-raypath.m_rays[i - 1].d, raypath.m_hits[i - 1].N);
         Ray newRay(raypath.m_hits[i - 1].P, vp.v);
         if (!trace(hit, newRay)) return raypath;
@@ -306,27 +318,6 @@ RayPath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {
     return raypath;
 }
 
-RayPath Scene::randLightPath() {
-    LightPDF lp = randLightByWattage();
-    Light* light = lp.l;
-    RayPDF rp = light->randRay();
-    ///////////////////////////////////////
-    RayPath raypath(rp.r);
-    HitInfo hit;
-    if (!trace(hit, raypath.m_rayInit)) return raypath;
-    // otherwise something was hit
-    raypath.m_rays.push_back(raypath.m_rayInit); // this is redundant but oh well;
-    raypath.m_hits.push_back(hit);
-    for (int i = 1; i < m_maxBounces; i++){
-        vec3pdf vp = raypath.m_hits[i - 1].material->randReflect(-raypath.m_rays[i - 1].d, raypath.m_hits[i - 1].N);
-        Ray newRay(raypath.m_hits[i - 1].P, vp.v);
-        if (!trace(hit, newRay)) return raypath;
-        raypath.m_rays.push_back(newRay);
-        raypath.m_hits.push_back(hit);
-        raypath.m_probs.push_back(vp.p);
-    }
-    return raypath;
-}
 /*
 Vector3 Scene::fixedLengthFlux(int pathLength, RayPath eyePath, RayPath lightPath) {
     if (pathLength == 0) {
