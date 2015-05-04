@@ -158,9 +158,9 @@ MiroWindow::keyboard(unsigned char key, int x, int y)
             sprintf(str, "miro_%d.ppm", time(0));
             if (g_camera->isOpenGL())
             {
-                unsigned char* buf = new unsigned char[g_image->width()*g_image->height()*3];
+                float* buf = new float[g_image->width()*g_image->height()*3];
                 glReadPixels(0, 0, g_image->width(), g_image->height(),
-                             GL_RGB, GL_UNSIGNED_BYTE, buf);
+                             GL_RGB, GL_FLOAT, buf);
                 g_image->writePPM(str, buf, g_image->width(), g_image->height());
             }
             else

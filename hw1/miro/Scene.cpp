@@ -153,7 +153,6 @@ void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPD
     // The following is for the initial emission (to make the light visible)
     rayToEye.o = rayOut.o;
     rayToEye.d = (cam->eye() - rayToEye.o).normalize();
-    float cos = dot(light->normal(rayOut.o), rayToEye.d);
     //float cos = 1;
     //printf("%f, %f, %f\n", light.normal(rayOut.o)[0], light.normal(rayOut.o)[1], light.normal(rayOut.o)[2]);
     /*if (!trace(tryHitEye, rayToEye) && dot(rayToEye.d, light.normal(rayToEye.o)) > 0) { // check if anything is occluding the eye from current hitpoint
@@ -177,30 +176,35 @@ void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPD
         }
         double rn = (double)rand() / RAND_MAX;
         double em = hit.material->emittance();
-        if (em == 1.0 || rn < 0.2) {
-            return; // photon was absorbed
-        } // otherwise photon will be reflected
         rayToEye.o = hit.P;
         rayToEye.d = (cam->eye() - hit.P).normalize();
+        float brdf = hit.material->BRDF(-rayIn.d, hit.N, rayToEye.d); // BRDF between eye-ray and incoming-ray
         if (!trace(tryHitEye, rayToEye)) { // check if anything is occluding the eye from current hitpoint
             pix = cam->imgProject(hit.P, w, h); // find the pixel the onto which the current hitpoint projects
             int x = round(pix[0]);
             int y = round(pix[1]);
-            if (pix[2]>0 && x > -1 && x<w && y>-1 && y < h) { // check that the pixel is within the viewing window
-                //float cos0 = dot(hit.N, rayToEye.d);
-                float brdf = hit.material->BRDF(-rayIn.d, hit.N, rayToEye.d); // BRDF between eye-ray and incoming-ray
+            //img->setPixel(x, y, Vector3(1.0, 0.0, 0.0)); return;
+            if (dot(Vector3(0, 0, -1), hit.N) != 0) {  }
+            if (pix[2]>0 && x >= 0 && x<w && y>=0 && y < h) { // check that the pixel is within the viewing window
+                float cos0 = dot(hit.N, rayToEye.d);
                 float lengthSqr = (cam->eye() - hit.P).length2();
                 float cosAlpha = cam->pixelCosine(pix[0], pix[1], w, h);
-                img->setPixel(x, y, img->getPixel(x, y) + power/m_photonSamples*brdf*cos*cosAlpha / lengthSqr);
+                if (em == 1.0 || rn < 0.2) {
+                    img->setPixel(x, y, img->getPixel(x, y) + (1 /0.2) * power*brdf*cos0*cosAlpha / lengthSqr);
+                    return; // photon was absorbed
+                } // otherwise photon will be reflected
+                else
+                {
+                    img->setPixel(x, y, img->getPixel(x, y) + (1/ 0.8) * power*brdf*cos0*cosAlpha / lengthSqr);
+                }
             }
         }
         vec3pdf vp = hit.material->randReflect(-rayIn.d, hit.N); // pick BRDF.cos weighted random direction
         Vector3 dirOut = vp.v;
-        //printf("%f,%f,%f    %f \n",vp.v[0],vp.v[1],vp.v[2], vp.p);
         rayOut.o = hit.P;
         rayOut.d = dirOut;
         rayIn = rayOut;
-        power /= vp.p; // Monte Carlo
+        power = power * brdf / vp.p;
     }
 }
 
@@ -224,18 +228,16 @@ Scene::photontraceImage(Camera *cam, Image *img)
             img->draw();
         }
     }
-    printf("Rendering Progress: 100.000%\n");
-    debug("done Photontracing!\n");
     for (int i = 0; i < w; i++){
         for (int j = 0; j < h; j++){
             Vector3 pix = img->getPixel(i, j);
             img->setPixel(i, j,
-                pix / (cam->pixelCosine(i, j, w, h)*cam->pixelSolidAngle(i, j, w, h)));
+                pix / (cam->pixelCosine(i, j, w, h)*cam->pixelSolidAngle(i, j, w, h))/m_photonSamples);
         }
     }
     img->draw();
     printf("Rendering Progress: 100.000%\n");
-    debug("done Raytracing!\n");
+    debug("done Photontracing!\n");
     glFinish();
 }
 

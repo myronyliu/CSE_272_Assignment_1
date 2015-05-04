@@ -8,10 +8,10 @@ class Image
 public:
     struct Pixel
     {
-        unsigned char r, g, b;
-        Pixel(unsigned char ir, unsigned char ig, unsigned char ib) {set(ir, ig, ib);}
+        float r, g, b;
+        Pixel(float ir, float ig, float ib) {set(ir, ig, ib);}
         Pixel() : r(0), g(0), b(0) {}
-        void set(unsigned char ir, unsigned char ig, unsigned char ib) {r = ir; g = ig; b = ib;}
+        void set(float ir, float ig, float ib) {r = ir; g = ig; b = ib;}
     };
 
     Image();
@@ -27,9 +27,9 @@ public:
     void drawScanline(int y);
     void clear(const Vector3& c);
     void writePPM(char* pcFile); // write data to a ppm image file
-    void writePPM(char *pcName, unsigned char *data, int width, int height);
+    void writePPM(char *pcName, float *data, int width, int height);
 
-    unsigned char* getCharPixels()  {return (unsigned char*)m_pixels;}
+    float* getCharPixels()  {return (float*)m_pixels;}
     int width() const               {return m_width;}
     int height() const              {return m_height;}
 

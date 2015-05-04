@@ -256,23 +256,6 @@ Camera::pixelSolidAngle(float x, float y, int imageWidth, int imageHeight) {
     const float u = left + (right - left)*((x + 0.5f) / (float)imageWidth);
     const float v = bottom + (top - bottom)*((y + 0.5f) / (float)imageHeight);
 
-    return atan(
-        (2 * u - 1)*(2 * v - 1) /
-        (2 * sqrt(2 + 4 * u*(u - 1) + 4 * v*(v - 1) + 4))
-        )-
-        atan(
-        (2 * u + 1)*(2 * v - 1) /
-        (2 * sqrt(2 + 4 * u*(u + 1) + 4 * v* (v - 1) + 4))
-        )-
-        atan(
-        (2 * u - 1)*(2 * v + 1) /
-        (2 * sqrt(2 + 4 * u*(u - 1) + 4 * v*(v + 1) + 4))
-        )+
-        atan(
-        (2 * u + 1)*(2 * v + 1) /
-        (2 * sqrt(2 + 4 * u*(u + 1) + 4 * v*(v + 1) + 4))
-        );
-    
     float area = (right - left) / (float)imageWidth;
     area *= (top - bottom) / (float)imageHeight;
 

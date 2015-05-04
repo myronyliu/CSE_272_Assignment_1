@@ -75,27 +75,27 @@ Vector3 Image::getPixel(int x, int y) const
 {
     if (x >= 0 && x < m_width && y < m_height && y >= 0)
     {
-        return Vector3(m_pixels[y*m_width + x].r / 255.0f, m_pixels[y*m_width + x].g / 255.0f, m_pixels[y*m_width + x].b / 255.0f);
+        return Vector3(m_pixels[y*m_width + x].r, m_pixels[y*m_width + x].g, m_pixels[y*m_width + x].b);
     }
 }
 
 void Image::drawScanline(int y)
 {
     glRasterPos2f(-1, -1 + 2*y / (float)m_height);
-    glDrawPixels(m_width, 1, GL_RGB, GL_UNSIGNED_BYTE, &m_pixels[y*m_width]);
+    glDrawPixels(m_width, 1, GL_RGB, GL_FLOAT, &m_pixels[y*m_width]);
 }
 
 void Image::draw()
 {
-    glDrawPixels(m_width, m_height, GL_RGB, GL_UNSIGNED_BYTE, &m_pixels[0]);
+    glDrawPixels(m_width, m_height, GL_RGB, GL_FLOAT, &m_pixels[0]);
 }
 
 void Image::writePPM(char* pcFile)
 {
-    writePPM(pcFile, (unsigned char*)m_pixels, m_width, m_height);
+    writePPM(pcFile, (float*)m_pixels, m_width, m_height);
 }
 
-void Image::writePPM(char *pcFile, unsigned char *data, int width, int height)
+void Image::writePPM(char *pcFile, float *data, int width, int height)
 {
     FILE *fp = fopen(pcFile, "wb");
     if (!fp)
