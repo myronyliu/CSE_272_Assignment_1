@@ -223,7 +223,7 @@ Scene::photontraceImage(Camera *cam, Image *img)
             printf("Rendering Progress: %.3f%%\r", p / float(m_photonSamples)*100.0f);
             fflush(stdout);
         }
-        if (p>0 && p % (m_photonSamples / 3) == 0)
+        if (((float) p/m_photonSamples)<0.8 && p>0 && p % (m_photonSamples / 3) == 0)
         {
             img->draw();
         }
@@ -271,46 +271,49 @@ LightPDF Scene::randLightByWattage() {
 }
 
 
+void
+Scene::biditraceImage(Camera *cam, Image *img)
+{
+    int w = img->width();
+    int h = img->height();
 
+    for (int y = 0; y < h; y++)
+    {
+        for (int x = 0; x < w; x++)
+        {
+            RayPath eyePath = randEyePath(x, y, cam, img);
+            RayPath lightPath = randLightPath();
+        }
+    }
+
+}
 
 RayPath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {
-    RayPath raypath;
-    raypath.rayInit = cam->eyeRay(x, y, img->width(), img->height());
-    HitInfo hit;
-    if (!trace(hit, raypath.rayInit)) return raypath;
-    // otherwise something was hit
-    raypath.rays.push_back(raypath.rayInit); // this is redundant but oh well;
-    raypath.hits.push_back(hit);
-    for (int i = 1; i < m_maxBounces; i++){
-        vec3pdf vp = raypath.hits[i - 1].material->randReflect(-raypath.rays[i - 1].d, raypath.hits[i - 1].N);
-        Ray newRay(raypath.hits[i - 1].P, vp.v);
-        if (!trace(hit, newRay)) return raypath;
-        raypath.rays.push_back(newRay);
-        raypath.hits.push_back(hit);
-        raypath.probs.push_back(vp.p);
+    RayPath raypath(cam->eyeRay(x, y, img->width(), img->height()));
+    return generateRayPath(raypath);
     }
-    return raypath;
-}
 
 RayPath Scene::randLightPath() {
     LightPDF lp = randLightByWattage();
     Light* light = lp.l;
     RayPDF rp = light->randRay();
-    ///////////////////////////////////////
-    RayPath raypath;
-    raypath.rayInit = rp.r;
+    RayPath raypath(rp.r);
+    return generateRayPath(raypath);
+}
+
+RayPath Scene::generateRayPath(RayPath & raypath)
+{
     HitInfo hit;
-    if (!trace(hit, raypath.rayInit)) return raypath;
+    if (!trace(hit, raypath.m_rayInit)) return raypath;
     // otherwise something was hit
-    raypath.rays.push_back(raypath.rayInit); // this is redundant but oh well;
-    raypath.hits.push_back(hit);
-    for (int i = 1; i < m_maxBounces; i++){
-        vec3pdf vp = raypath.hits[i - 1].material->randReflect(-raypath.rays[i - 1].d, raypath.hits[i - 1].N);
-        Ray newRay(raypath.hits[i - 1].P, vp.v);
+    raypath.m_hits.push_back(hit);
+    for (int i = 1; i < m_maxPaths; i++){
+        vec3pdf vp = raypath.m_hits[i - 1].material->randReflect(-raypath.m_rays[i - 1].d, raypath.m_hits[i - 1].N);
+        Ray newRay(raypath.m_hits[i - 1].P, vp.v);
         if (!trace(hit, newRay)) return raypath;
-        raypath.rays.push_back(newRay);
-        raypath.hits.push_back(hit);
-        raypath.probs.push_back(vp.p);
+        raypath.m_rays.push_back(newRay);
+        raypath.m_hits.push_back(hit);
+        raypath.m_probs.push_back(vp.p);
     }
     return raypath;
 }
