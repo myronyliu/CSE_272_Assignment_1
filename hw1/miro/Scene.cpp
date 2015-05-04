@@ -300,23 +300,23 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 }
                 RayPath lightPath = randLightPath();
 
-                fluxSum += eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
-                //for (unsigned int i = 0; i <= lightPath.m_hits.size(); i++)
-                for (unsigned int i = 0; i < 1; i++)
-                {
-                    for (unsigned int j = 1; j <= eyePath.m_hits.size(); j++)
-                    {
-                        Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
-                        float weight = 1.0;
-                        if (i == 0 && j>1) weight = pow(W, j - 1);
-                        else weight = pow(W, j - 1)*(1 - W);
+                int dj = eyePath.m_hits.size();
+                int di = lightPath.m_hits.size();
+                vector<Vector3> fixedLengthFlux(di + dj - 1, Vector3(0, 0, 0));
+                vector<float> count(di + dj - 1, 0);
 
-                        fluxSum += weight * flux;
+                fixedLengthFlux[0] = eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
+                count[0] = 1;
+                for (unsigned int i = 0; i < di; i++){
+                    for (unsigned int j = 1; j < dj; j++) {
+                        fixedLengthFlux[i + j] += estimateFlux(i, j, eyePath, lightPath);
+                        count[i + j] += 1;
                     }
                 }
+                for (int i = 0; i < di + dj - 1; i++) fluxSum += fixedLengthFlux[i] / count[i];
             }
             float cosSA = cam->pixelCosine(x, y, img->width(), img->height())*cam->pixelSolidAngle(x, y, img->width(), img->height());
-            img->setPixel(x, y, fluxSum / bidiSamplesPerPix());
+            img->setPixel(x, y, fluxSum / bidiSamplesPerPix()/cosSA);
         }
         img->drawScanline(y);
         glFinish();
@@ -391,12 +391,9 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         Ray rayShadow(lightPoint, (hit.P - lightPoint).normalize()); // visibility ray FROM eye point TO light
         float shadowLength2 = (hit.P - lightPoint).length2();
         if (trace(h, rayShadow, 0.00001, sqrt(shadowLength2) - 0.00001)) { // plus epsilon because we want to intersect cover
-            //cout << "light not visible" << endl;
             return flux;
         }
         if (dot(lightPath.m_hits[0].N, rayShadow.d) <= 0) {
-            //cout << rayShadow.d << endl;
-            //cout << "light facing away" << endl;
             return flux; // hits backside of light
         }
         //float brdfChain = pow(mat->BRDF(rayShadow.d, hit.N, -rayEye.d), j-1);
@@ -406,8 +403,6 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         if (j > 1){
             flux *= eyePath.m_fluxDecay[j - 2];
         }
-        
-        //if (flux == Vector3(0, 0, 0)) cout << "why ";
     }
     else
     {

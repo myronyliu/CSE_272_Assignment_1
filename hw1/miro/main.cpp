@@ -29,8 +29,8 @@ makeRoomScene(){
 
     g_scene->setSamplesPerPix(512);
     g_scene->setBidiSamplesPerPix(16);
-    g_scene->setMaxBounces(1);
-    g_scene->setMaxPaths(1);
+    g_scene->setMaxBounces(20);
+    g_scene->setMaxPaths(5);
     g_scene->setPhotonSamples(10000000);
 
     // create room geometry
@@ -57,7 +57,7 @@ makeRoomScene(){
     wall_F->setMaterial(mat);
     cover->setMaterial(coverMat);
 
-    light->flip(); cover->flip(); light->setWattage(5);
+    //light->flip(); cover->flip(); light->setWattage(5);
 
     // add objects to scene
     g_scene->addObject(wall_B);
