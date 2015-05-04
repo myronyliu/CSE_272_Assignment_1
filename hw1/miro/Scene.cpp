@@ -301,8 +301,8 @@ Scene::biditraceImage(Camera *cam, Image *img)
                     continue;
                 }
                 RayPath lightPath = randLightPath();
-
-                fluxSum += eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
+                
+                /*fluxSum += eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
                 for (unsigned int i = 0; i < lightPath.m_hits.size(); i++)
                 {
                     for (unsigned int j = 1; j < eyePath.m_hits.size(); j++)
@@ -313,7 +313,28 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
                         fluxSum += weight * estimateFlux(i, j, eyePath, lightPath);
                     }
+                }*/
+
+                ///// - MULTIPLE IMORTANCE SAMPLING -  /////
+                int dj = eyePath.m_hits.size();
+                int di = lightPath.m_hits.size();
+                vector<Vector3> fixedLengthFlux(di + dj - 1, Vector3(0, 0, 0));
+                vector<float> fixedLengthPDF(di + dj - 1, 0);
+                fixedLengthFlux[0] = eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
+                fixedLengthPDF[0] = 1;
+                fluxSum += fixedLengthFlux[0];
+                for (unsigned int i = 0; i < di; i++){
+                    for (unsigned int j = 1; j < dj; j++) {
+                        Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
+                        float pathPDF = lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
+                        fixedLengthPDF[i + j] += pathPDF;
+                        fixedLengthFlux[i + j] += pathPDF*flux;
+                    }
                 }
+                for (int i = 0; i < di + dj - 1; i++){
+                    if (fixedLengthPDF[i]>0) fluxSum += fixedLengthFlux[i] / fixedLengthPDF[i];
+                }
+                ///// ^ MULTIPLE IMPORTANCE SAMPLING ^ /////
             }
             img->setPixel(x, y, fluxSum / bidiSamplesPerPix()/ M_PI / 0.04);
         }
@@ -419,5 +440,6 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
             flux *= lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
         }
     }
+    if (flux[0] < 0 || flux[1] < 0 || flux[2] < 0) printf("negative flux\n");
     return flux;
 }
