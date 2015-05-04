@@ -153,21 +153,20 @@ void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPD
     // The following is for the initial emission (to make the light visible)
     rayToEye.o = rayOut.o;
     rayToEye.d = (cam->eye() - rayToEye.o).normalize();
-    //float cos = 1;
-    //printf("%f, %f, %f\n", light.normal(rayOut.o)[0], light.normal(rayOut.o)[1], light.normal(rayOut.o)[2]);
-    /*if (!trace(tryHitEye, rayToEye) && dot(rayToEye.d, light.normal(rayToEye.o)) > 0) { // check if anything is occluding the eye from current hitpoint
+    // Add direct light to pixel
+    if (!trace(tryHitEye, rayToEye) && dot(rayToEye.d, light->normal(rayToEye.o)) > 0) { // check if anything is occluding the eye from current hitpoint
         pix = cam->imgProject(rayToEye.o, w, h); // find the pixel the onto which the current hitpoint projects
         int x = round(pix[0]);
         int y = round(pix[1]);
         if (pix[2]>0 && x > -1 && x<w && y>-1 && y < h) { // check that the pixel is within the viewing window
-            Vector3 initValue = light.material()->radiance(light.normal(rayOut.o), rayToEye.d)*light.area();
-            initValue *= cos;
+            Vector3 initValue = light->material()->radiance(light->normal(rayToEye.o), rayToEye.d)*light->area();
+            initValue *= dot(rayToEye.d, light->normal(rayToEye.o));
             initValue *= cam->pixelCosine(pix[0], pix[1], w, h);
-            initValue /= light.material()->sum_L_cosTheta_dOmega();
-            initValue /= (rayOut.o - cam->eye()).length2();
-            img[x][y] += power*initValue;
+            initValue /= light->material()->sum_L_cosTheta_dOmega();
+            initValue /= (rayToEye.o - cam->eye()).length2();
+            img->setPixel(x, y, img->getPixel(x, y) + power*initValue);
         }
-    }*/
+    }
     // now for the bounces
     rayIn = rayOut;
     for (int bounces = 0; bounces < m_maxBounces; bounces++) {
@@ -350,14 +349,16 @@ RayPath Scene::randLightPath() {
 
 RayPath Scene::generateRayPath(RayPath & raypath) {
     HitInfo hit;
-    raypath.m_probs.push_back(1.0);
     for (int i = 1; i < m_maxPaths; i++){
         vec3pdf vp = raypath.m_hits[i - 1].material->randReflect(-raypath.m_rays[i - 1].d, raypath.m_hits[i - 1].N);
         Ray newRay(raypath.m_hits[i - 1].P, vp.v);
         if (!trace(hit, newRay)) return raypath;
+        float brdf = raypath.m_hits[i - 1].material->BRDF(-raypath.m_rays[i - 1].d, raypath.m_hits[i - 1].N, vp.v);
+        float cos = dot(raypath.m_hits[i - 1].N, newRay.d);
         raypath.m_rays.push_back(newRay);
         raypath.m_hits.push_back(hit);
         raypath.m_probs.push_back(raypath.m_probs[i-1] * vp.p);
+        raypath.m_fluxDecay.push_back(brdf*cos*raypath.m_fluxDecay[i-1]);
     }
     return raypath;
 }
@@ -373,11 +374,12 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         const Material* mat = hit.material;
         Ray rayShadow(hit.P, (hit.P - lightPoint).normalize()); // visibility ray FROM eye point TO light
         float shadowLength2 = (hit.P - lightPoint).length2();
-        if (!trace(h, rayShadow, 0.1, sqrt(shadowLength2)-0.1)) {
-            float brdfChain = pow(mat->BRDF(rayShadow.d, hit.N, -rayEye.d), j-1);
+        if (!trace(h, rayShadow, 0.000001, sqrt(shadowLength2)-0.000001)) {
+            //float brdfChain = pow(mat->BRDF(rayShadow.d, hit.N, -rayEye.d), j-1);
             float brdf = mat->BRDF(rayShadow.d, hit.N, -rayEye.d);
             float form = dot(lightPath.m_hits[0].N, -rayShadow.d)*dot(hit.N, rayShadow.d) / shadowLength2;
-            flux = lightPath.m_light->wattage() * brdfChain * brdf *  form;
+            flux = lightPath.m_light->wattage() * brdf *  form;
+            flux *= eyePath.m_fluxDecay[j - 1];
         }
     }
     else
@@ -388,12 +390,13 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         const Material* matj = hitj.material;
         Ray rayShadow(hitj.P, (hiti.P - hitj.P).normalize());
         float shadowLength2 = (hiti.P - hitj.P).length2();
-        if (!trace(h, rayShadow, 0.1, sqrt(shadowLength2) - 0.1)) {
-            float brdfChain = pow(mati->BRDF(-rayShadow.d, hiti.N, -lightPath.m_rays[i - 1].d), i + j - 2);
+        if (!trace(h, rayShadow, 0.000001, sqrt(shadowLength2) - 0.000001)) {
+            //float brdfChain = pow(mati->BRDF(-rayShadow.d, hiti.N, -lightPath.m_rays[i - 1].d), i + j - 2);
             float brdfi = mati->BRDF(-rayShadow.d, hiti.N, -lightPath.m_rays[i - 1].d);
             float brdfj = matj->BRDF(rayShadow.d, hitj.N, -eyePath.m_rays[j - 1].d);
             float form = dot(-rayShadow.d, hiti.N)*dot(rayShadow.d, hitj.N) / shadowLength2;
-            flux = lightPath.m_light->wattage() * brdfChain *brdfi * brdfj * form;
+            flux = lightPath.m_light->wattage() * brdfi * brdfj * form;
+            flux *= lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
         }
     }
     return flux;
