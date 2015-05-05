@@ -79,15 +79,33 @@ Vector3 Image::getPixel(int x, int y) const
     }
 }
 
+void Image::gammaPixels(float * gammaData)
+{
+    for (int y = 0; y < m_width; y++)
+    {
+        for (int x = 0; x < m_width; x++)
+        {
+            gammaData[3*(m_width*y+x)+0] = pow(m_pixels[y*m_width+x].r,1/2.2);
+            gammaData[3*(m_width*y+x)+1] = pow(m_pixels[y*m_width+x].g,1/2.2);
+            gammaData[3*(m_width*y+x)+2] = pow(m_pixels[y*m_width+x].b,1/2.2);
+        }
+    }
+}
+
+void Image::gammaPixels(float * gammaData, int y)
+{
+    for (int x = 0; x < m_width; x++)
+    {
+        gammaData[3*(m_width*y+x)+0] = pow(m_pixels[y*m_width+x].r,1/2.2);
+        gammaData[3*(m_width*y+x)+1] = pow(m_pixels[y*m_width+x].g,1/2.2);
+        gammaData[3*(m_width*y+x)+2] = pow(m_pixels[y*m_width+x].b,1/2.2);
+    }
+}
+
 void Image::drawScanline(int y)
 {
     float * gamma_image = new float[3 * m_width * m_height];
-    for (int x = 0; x < m_width; x++)
-    {
-        gamma_image[3*(m_width*y+x)+0] = pow(m_pixels[y*m_width+x].r,1/2.2);
-        gamma_image[3*(m_width*y+x)+1] = pow(m_pixels[y*m_width+x].g,1/2.2);
-        gamma_image[3*(m_width*y+x)+2] = pow(m_pixels[y*m_width+x].b,1/2.2);
-    }
+    gammaPixels(gamma_image, y);
     glRasterPos2f(-1, -1 + 2*y / (float)m_height);
     glDrawPixels(m_width, 1, GL_RGB, GL_FLOAT, &gamma_image[3*y*m_width]);
     delete[] gamma_image;
@@ -96,15 +114,7 @@ void Image::drawScanline(int y)
 void Image::draw()
 {
     float * gamma_image = new float[3 * m_width * m_height];
-    for (int y = 0; y < m_width; y++)
-    {
-        for (int x = 0; x < m_width; x++)
-        {
-            gamma_image[3*(m_width*y+x)+0] = pow(m_pixels[y*m_width+x].r,1/2.2);
-            gamma_image[3*(m_width*y+x)+1] = pow(m_pixels[y*m_width+x].g,1/2.2);
-            gamma_image[3*(m_width*y+x)+2] = pow(m_pixels[y*m_width+x].b,1/2.2);
-        }
-    }
+    gammaPixels(gamma_image);
     glDrawPixels(m_width, m_height, GL_RGB, GL_FLOAT, &gamma_image[0]);
     delete[] gamma_image;
 }
@@ -126,24 +136,23 @@ void Image::writePPM(char *pcFile, float *data, int width, int height)
         fprintf(fp, "255\n" );
 
         unsigned char * tmp_data = new unsigned char[height * width * 3];
+        float * gamma_image = new float[3 * m_width * m_height];
+        gammaPixels(gamma_image);
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
             {
-                if (Map(data[3 * (y*width + x) + 0]) > 0)
-                {
-                    std::cout << "sup" << std::endl;
-                }
-                tmp_data[3 * (y * width + x) + 0] = Map(data[3 * (y*width + x) + 0]);
-                tmp_data[3 * (y * width + x) + 1] = Map(data[3 * (y*width + x) + 1]);
-                tmp_data[3 * (y * width + x) + 2] = Map(data[3 * (y*width + x) + 2]);
+                tmp_data[3 * (y * width + x) + 0] = Map(gamma_image[3*(y*width + x)+0]);
+                tmp_data[3 * (y * width + x) + 1] = Map(gamma_image[3*(y*width + x)+1]);
+                tmp_data[3 * (y * width + x) + 2] = Map(gamma_image[3*(y*width + x)+2]);
             }
         }
+        delete[] gamma_image;
 
         // invert image
         int stride = width*3;
         for (int i = height-1; i >= 0; i--)
-            fwrite(&data[stride*i], stride, 1, fp);
+            fwrite(&tmp_data[stride*i], stride, 1, fp);
         delete[] tmp_data;
         fclose(fp);
     }
