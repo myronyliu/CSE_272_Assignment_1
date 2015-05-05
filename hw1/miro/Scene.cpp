@@ -254,7 +254,7 @@ Scene::photontraceImage(Camera *cam, Image *img)
             img->draw();
         }
         if (p % 1000000 == 0) {
-            plotfile << img->getPixel(w/2, h/2)[0] *m_photonSamples/(p+1) << std::endl;
+            plotfile << img->getPixel(w/2, h/2)[0] *m_photonSamples << std::endl;
     }
     }
     for (int i = 0; i < w; i++){
