@@ -19,7 +19,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(512, 512);
+    g_image->resize(256, 256);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
@@ -27,11 +27,11 @@ makeRoomScene(){
     g_camera->setUp(Vector3(0, 0, 1));
     g_camera->setFOV(40);
 
-    g_scene->setSamplesPerPix(1024);
-    g_scene->setBidiSamplesPerPix(4);
-    g_scene->setMaxBounces(20);
+    g_scene->setSamplesPerPix(512);
+    g_scene->setBidiSamplesPerPix(64);
+    g_scene->setMaxBounces(16);
     g_scene->setMaxPaths(10);
-    g_scene->setPhotonSamples(10000000);
+    g_scene->setPhotonSamples(1000000);
 
     // create room geometry
 
@@ -57,7 +57,7 @@ makeRoomScene(){
     wall_F->setMaterial(mat);
     cover->setMaterial(coverMat);
 
-    //light->flip(); cover->flip(); light->setWattage(2);
+    light->flip(); cover->flip(); light->setWattage(50);
 
     // add objects to scene
     g_scene->addObject(wall_B);
@@ -77,15 +77,12 @@ main(int argc, char*argv[])
 {
     // create a scene
     makeRoomScene();
-    /* Float debugging flags */
-    /*
-    unsigned int cw;
-    _controlfp_s(&cw, 0, 0);
-    cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|
-            EM_DENORMAL|EM_INVALID);
-    unsigned int cwOriginal;
-    _controlfp_s(&cwOriginal,cw, _MCW_EM);
-    */
+    //unsigned int cw;
+    //_controlfp_s(&cw, 0, 0);
+    //cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|
+    //        EM_DENORMAL|EM_INVALID);
+    //unsigned int cwOriginal;
+    //_controlfp_s(&cwOriginal,cw, _MCW_EM);
     MiroWindow miro(&argc, argv);
     miro.mainLoop();
 
