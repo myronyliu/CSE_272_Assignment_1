@@ -4,6 +4,8 @@
 #include "Camera.h"
 #include "Image.h"
 #include "Console.h"
+#include <iostream>
+#include <fstream>
 
 #include <algorithm>
 
@@ -112,7 +114,11 @@ void
 Scene::pathtraceImage(Camera *cam, Image *img)
 {
     HitInfo hitInfo;
-    
+
+    std::ofstream plotfile;
+    plotfile.open("pathtraceplot.txt");
+
+    int integrationStart = glutGet(GLUT_ELAPSED_TIME);
     // loop over all pixels in the image
     for (int j = 0; j < img->height(); ++j){
         for (int i = 0; i < img->width(); ++i){
@@ -130,17 +136,27 @@ Scene::pathtraceImage(Camera *cam, Image *img)
                 if (!trace(hitInfo, ray)) continue;
                 //if (dot(hitInfo.N, Vector3(0, 0, -1)) > 0) { pixSum += Vector3(1.0, 0.0, 0.0);  }
                 pixSum += recursiveTrace_fromEye(ray, 0, m_maxBounces) / (double)m_samplesPerPix;
+                if (j == img->width() / 2 && i == img->height() / 2){
+                    plotfile << pixSum[0] / (k + 1) * m_samplesPerPix << std::endl;
+                }
             }
             img->setPixel(i, j, pixSum);
         }
-        img->drawScanline(j);
+        //img->drawScanline(j);
         glFinish();
         printf("Rendering Progress: %.3f%%\r", j / float(img->height())*100.0f);
         fflush(stdout);
     }
+    img->draw();
+    glFinish();
 
     printf("Rendering Progress: 100.000%\n");
     debug("done Raytracing!\n");
+    int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
+    std::cout << "Rendering took " << ((integrationEnd - integrationStart) / 1000.0f) << "s" << std::endl;
+
+    debug("done Raytracing!\n");
+    plotfile.close();
 }
 
 void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPDF& rp) {
@@ -216,6 +232,10 @@ Scene::photontraceImage(Camera *cam, Image *img)
 {
     int w = img->width();
     int h = img->height();
+    std::ofstream plotfile;
+    plotfile.open("photontraceplot.txt");
+
+    int integrationStart = glutGet(GLUT_ELAPSED_TIME);
     for (int p = 0; p < m_photonSamples; p++) { // shoot a photon...
         LightPDF lp = randLightByWattage(); // ... off of a random light (I don't think we need the PDF here)
         Light* light = lp.l;
@@ -229,6 +249,9 @@ Scene::photontraceImage(Camera *cam, Image *img)
         {
             img->draw();
         }
+        if (p % 1000000 == 0) {
+            plotfile << img->getPixel(w / 2, h / 2)[0] * m_photonSamples / (p + 1) << std::endl;
+        }
     }
     for (int i = 0; i < w; i++){
         for (int j = 0; j < h; j++){
@@ -238,9 +261,14 @@ Scene::photontraceImage(Camera *cam, Image *img)
         }
     }
     img->draw();
-    printf("Rendering Progress: 100.000%\n");
-    debug("done Photontracing!\n");
     glFinish();
+    printf("Rendering Progress: 100.000%\n");
+
+    int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
+    std::cout << "Rendering took " << ((integrationEnd - integrationStart) / 1000.0f) << "s" << std::endl;
+
+    debug("done Photontracing!\n");
+    plotfile.close();
 }
 
 bool
@@ -279,6 +307,11 @@ Scene::biditraceImage(Camera *cam, Image *img)
     int w = img->width();
     int h = img->height();
     HitInfo hitInfo;
+
+    std::ofstream plotfile;
+    plotfile.open("biditraceplot.txt");
+
+    int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
     float W = 0.5;
 
@@ -340,14 +373,21 @@ Scene::biditraceImage(Camera *cam, Image *img)
             }
             img->setPixel(x, y, fluxSum / bidiSamplesPerPix()/ M_PI / 0.04);
         }
-        img->drawScanline(y);
+        //img->drawScanline(y);
         glFinish();
         printf("Rendering Progress: %.3f%%\r", y / float(img->height())*100.0f);
         fflush(stdout);
     }
+    img->draw();
+    glFinish();
 
     printf("Rendering Progress: 100.000%\n");
+
+    int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
+    std::cout << "Rendering took " << ((integrationEnd - integrationStart) / 1000.0f) << "s" << std::endl;
+
     debug("Done Bidi Pathtracing!\n");
+    plotfile.close();
 
 }
 
@@ -442,5 +482,6 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
             flux *= lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
         }
     }
+    if (flux[0] < 0 || flux[1] < 0 || flux[2] < 0) printf("negative flux\n");
     return flux;
 }
