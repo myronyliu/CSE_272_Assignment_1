@@ -145,11 +145,13 @@ Scene::pathtraceImage(Camera *cam, Image *img)
             }
             img->setPixel(i, j, pixSum);
         }
-        img->drawScanline(j);
+        //img->drawScanline(j);
         glFinish();
         printf("Rendering Progress: %.3f%%\r", j / float(img->height())*100.0f);
         fflush(stdout);
     }
+    img->draw();
+    glFinish();
 
     printf("Rendering Progress: 100.000%\n");
 
@@ -377,11 +379,13 @@ Scene::biditraceImage(Camera *cam, Image *img)
             }
             img->setPixel(x, y, fluxSum / bidiSamplesPerPix() / M_PI / 0.04);
         }
-        img->drawScanline(y);
+        //img->drawScanline(y);
         glFinish();
         printf("Rendering Progress: %.3f%%\r", y / float(img->height())*100.0f);
         fflush(stdout);
     }
+    img->draw();
+    glFinish();
 
     printf("Rendering Progress: 100.000%\n");
 
