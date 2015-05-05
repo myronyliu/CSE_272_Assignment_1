@@ -23,6 +23,9 @@ public:
 
     Vector3 getPixel(int x, int y) const;
 
+
+    void Image::gammaPixels(float * gammaData);
+    void Image::gammaPixels(float * gammaData, int y);
     void draw();
     void drawScanline(int y);
     void clear(const Vector3& c);
