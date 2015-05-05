@@ -4,15 +4,14 @@
 #include "Camera.h"
 #include "Image.h"
 #include "Console.h"
-
-#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
 #include <ppl.h>
 
-using namespace std;
+#include <algorithm>
 
+using namespace std;
 Scene * g_scene = 0;
 
 void
@@ -55,7 +54,6 @@ Scene::raytraceImage(Camera *cam, Image *img)
     HitInfo hitInfo;
     Vector3 shadeResult;
 
-
     // loop over all pixels in the image
     for (int j = 0; j < img->height(); ++j)
     {
@@ -73,7 +71,6 @@ Scene::raytraceImage(Camera *cam, Image *img)
     }
     printf("Rendering Progress: 100.000%\n");
     debug("done Raytracing!\n");
-
 }
 
 Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounces) {
@@ -101,7 +98,7 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
         vp = randAL->randPt();
         Vector3 lightPt = vp.v;
         vp.v -= hit.P;
-        vp.p *= vp.v.length2() / fabs(dot(vp.v.normalized(), randAL->normal(lightPt))); // convert PDF from 1/A to 1/SA
+        vp.p *= vp.v.length2() / fabs(dot(vp.v.normalized(),randAL->normal(lightPt))); // convert PDF from 1/A to 1/SA
     }
     Vector3 newDir = vp.v;
     Ray newRay;
@@ -111,7 +108,7 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     float cos = std::max(0.0f, dot(hit.N, newDir));
     Vector3 gather = hit.material->shade(ray, hit, *this); // gathered direct lighting
     return
-        gather + (1.0 / (1.0 - em)) / vp.p*brdf*cos*
+            gather + (1.0 / (1.0 - em))/vp.p*brdf*cos*
         recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
 }
 
@@ -139,10 +136,10 @@ Scene::pathtraceImage(Camera *cam, Image *img)
             for (int k = 0; k < m_samplesPerPix; k++){
                 Ray ray = cam->eyeRayJittered(i, j, img->width(), img->height());
                 if (!trace(hitInfo, ray)) continue;
+                //if (dot(hitInfo.N, Vector3(0, 0, -1)) > 0) { pixSum += Vector3(1.0, 0.0, 0.0);  }
                 pixSum += recursiveTrace_fromEye(ray, 0, m_maxBounces) / (double)m_samplesPerPix;
-
-                if (j == img->width()/2 && i == img->height()/2){
-                    plotfile << pixSum[0] / (k+1) * m_samplesPerPix << std::endl;
+                if (j == img->width() / 2 && i == img->height() / 2){
+                    plotfile << pixSum[0] / (k + 1) * m_samplesPerPix << std::endl;
                 }
             }
             img->setPixel(i, j, pixSum);
@@ -156,7 +153,7 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     glFinish();
 
     printf("Rendering Progress: 100.000%\n");
-
+    debug("done Raytracing!\n");
     int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
     std::cout << "Rendering took " << ((integrationEnd - integrationStart) / 1000.0f) << "s" << std::endl;
 
@@ -207,18 +204,18 @@ void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPD
             int x = round(pix[0]);
             int y = round(pix[1]);
             //img->setPixel(x, y, Vector3(1.0, 0.0, 0.0)); return;
-            if (dot(Vector3(0, 0, -1), hit.N) != 0) {}
-            if (pix[2]>0 && x >= 0 && x<w && y >= 0 && y < h) { // check that the pixel is within the viewing window
+            if (dot(Vector3(0, 0, -1), hit.N) != 0) {  }
+            if (pix[2]>0 && x >= 0 && x<w && y>=0 && y < h) { // check that the pixel is within the viewing window
                 float cos0 = dot(hit.N, rayToEye.d);
                 float lengthSqr = (cam->eye() - hit.P).length2();
                 float cosAlpha = cam->pixelCosine(pix[0], pix[1], w, h);
                 if (em == 1.0 || rn < 0.2) {
-                    img->setPixel(x, y, img->getPixel(x, y) + (1 / 0.2) * power*brdf*cos0*cosAlpha / lengthSqr);
+                    img->setPixel(x, y, img->getPixel(x, y) + (1 /0.2) * power*brdf*cos0*cosAlpha / lengthSqr);
                     return; // photon was absorbed
                 } // otherwise photon will be reflected
                 else
                 {
-                    img->setPixel(x, y, img->getPixel(x, y) + (1 / 0.8) * power*brdf*cos0*cosAlpha / lengthSqr);
+                    img->setPixel(x, y, img->getPixel(x, y) + (1/ 0.8) * power*brdf*cos0*cosAlpha / lengthSqr);
                 }
             }
         }
@@ -237,7 +234,6 @@ Scene::photontraceImage(Camera *cam, Image *img)
 {
     int w = img->width();
     int h = img->height();
-
     std::ofstream plotfile;
     plotfile.open("photontraceplot.txt");
     
@@ -251,12 +247,12 @@ Scene::photontraceImage(Camera *cam, Image *img)
             printf("Rendering Progress: %.3f%%\r", p / float(m_photonSamples)*100.0f);
             fflush(stdout);
         }
-        if (((float)p / m_photonSamples)<0.8 && p>0 && p % (m_photonSamples / 3) == 0)
+        if (((float) p/m_photonSamples)<0.8 && p>0 && p % (m_photonSamples / 3) == 0)
         {
             img->draw();
         }
         if (p % 1000000 == 0) {
-            plotfile << img->getPixel(w/2, h/2)[0] *m_photonSamples/(p+1) << std::endl;
+            plotfile << img->getPixel(w / 2, h / 2)[0] * m_photonSamples / (p + 1) << std::endl;
     }
     }
     for (int i = 0; i < w; i++){
@@ -321,8 +317,7 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
     float W = 0.5;
 
-    //for (int y = 0; y < h; y++)
-    for (int y = h-1; y >= 0; y--)
+    for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
         {
@@ -335,81 +330,39 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 !trace(hitInfo, ray10) &&
                 !trace(hitInfo, ray11)) continue;
             Vector3 fluxSum(0, 0, 0);
-            //for (int k = 0; k < bidiSamplesPerPix(); k++){
-            //    RayPath eyePath = randEyePath(x, y, cam, img);
-            //    if (eyePath.m_hits.size() == 0) {
-            //        continue;
-            //    }
-            //    RayPath lightPath = randLightPath();
-
-            //    int dj = eyePath.m_hits.size();
-            //    int di = lightPath.m_hits.size();
-            //    vector<Vector3> fixedLengthFlux(di + dj - 1, Vector3(0, 0, 0));
-            //    vector<float> fixedLengthPDF(di + dj - 1, 0);
-            //    fixedLengthFlux[0] = eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
-            //    fixedLengthPDF[0] = 1;
-            //    fluxSum += fixedLengthFlux[0];
-            //    for (unsigned int i = 0; i < di; i++){
-            //        for (unsigned int j = 1; j < dj; j++) {
-            //            Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
-            //            float pathPDF = lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
-            //            fixedLengthPDF[i + j] += pathPDF;
-            //            fixedLengthFlux[i + j] += pathPDF*flux;
-            //        }
-            //    }
-            //    for (int i = 0; i < di + dj - 1; i++){
-            //        if (fixedLengthPDF[i]>0) fluxSum += fixedLengthFlux[i] / fixedLengthPDF[i];
-            //    }
-
-            //    if (y == h/2 && x == w/2){
-            //        plotfile << fluxSum[0] / (k+1) / M_PI << std::endl;
-            //    }
-            //}
+   
             Concurrency::parallel_for (0, bidiSamplesPerPix(), [&](int k){
                 RayPath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hits.size() == 0) {
                     return;
                 }
                 RayPath lightPath = randLightPath();
-
-                fluxSum += eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
-                for (unsigned int i = 0; i < lightPath.m_hits.size(); i++)
-                {
-                    for (unsigned int j = 1; j < eyePath.m_hits.size(); j++)
-                    {
-                        float weight = 1.0;
-                        if (i == 0 && j>1) weight = pow(W, j - 1);
-                        else weight = pow(W, j - 1)*(1 - W);
-
-                        fluxSum += weight * estimateFlux(i, j, eyePath, lightPath);
+               
+                int dj = eyePath.m_hits.size();
+                int di = lightPath.m_hits.size();
+                vector<Vector3> fixedLengthFlux(di + dj - 1, Vector3(0, 0, 0));
+                vector<float> fixedLengthPDF(di + dj - 1, 0);
+                fixedLengthFlux[0] = eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
+                fixedLengthPDF[0] = 1;
+                fluxSum += fixedLengthFlux[0];
+                for (unsigned int i = 0; i < di; i++){
+                    for (unsigned int j = 1; j < dj; j++) {
+                        Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
+                        float pathPDF = lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
+                        fixedLengthPDF[i + j] += pathPDF;
+                        fixedLengthFlux[i + j] += pathPDF*flux;
                     }
                 }
-
-                //int di = lightPath.m_hits.size();
-                //di = 1;
-                //int dj = eyePath.m_hits.size();
-                //vector<Vector3> fixedLengthFlux(di + dj - 1, Vector3(0, 0, 0));
-                //vector<float> fixedLengthPDF(di + dj - 1, 0);
-                //fixedLengthFlux[0] = eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
-                //fixedLengthPDF[0] = 1;
-                //fluxSum += fixedLengthFlux[0];
-                //for (int i = 0; i < di; i++){
-                //    for (int j = 1; j < dj; j++) {
-                //        Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
-                //        float pathPDF = lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
-                //        fixedLengthPDF[i + j] += pathPDF;
-                //        fixedLengthFlux[i + j] += pathPDF*flux;
-                //    }
-                //}
-                //for (int i = 0; i < di + dj - 1; i++){
-                //    if (fixedLengthPDF[i]>0) fluxSum += fixedLengthFlux[i] / fixedLengthPDF[i];
-                //}
+                for (int i = 0; i < di + dj - 1; i++){
+                    if (fixedLengthPDF[i]>0) fluxSum += fixedLengthFlux[i] / fixedLengthPDF[i];
+                }
 
                 if (y == h/2 && x == w/2){
-                    plotfile << fluxSum[0] / (k+1) / M_PI << std::endl;
+                    plotfile << fluxSum[0] / (k+1) / M_PI / 0.04 << std::endl;
                 }
+
             });
-            img->setPixel(x, y, fluxSum / bidiSamplesPerPix() / M_PI /0.04);
+            img->setPixel(x, y, fluxSum / bidiSamplesPerPix()/ M_PI / 0.04);
         }
         //img->drawScanline(y);
         glFinish();
@@ -426,6 +379,7 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
     debug("Done Bidi Pathtracing!\n");
     plotfile.close();
+
 }
 
 RayPath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {
@@ -485,19 +439,20 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
     
     if (i == 0) {
         Vector3 lightPoint = lightPath.m_hits[0].P;
-        Ray rayEye = eyePath.m_rays[j - 1];
-        HitInfo hit = eyePath.m_hits[j - 1];
+        Ray rayEye = eyePath.m_rays[j-1];
+        HitInfo hit = eyePath.m_hits[j-1];
         const Material* mat = hit.material;
         Ray rayShadow(lightPoint, (hit.P - lightPoint).normalize());
         float shadowLength2 = (hit.P - lightPoint).length2();
-        if (trace(h, rayShadow, 0.00001, sqrt(shadowLength2) - 0.00001)) {
-            return flux;
-        }
+        HitInfo h;
         if (!lightPath.m_light->intersect(h, Ray(hit.P, (lightPoint - hit.P).normalize()))) {
             return flux;
         }
+        if (trace(h, rayShadow, intersectEpsilon, sqrt(shadowLength2) - intersectEpsilon)) {
+            return flux;
+        }
         float brdf = mat->BRDF(rayShadow.d, hit.N, -rayEye.d);
-        float form = std::max(0.0f, dot(lightPath.m_hits[0].N, rayShadow.d))*std::max(0.0f, dot(hit.N, -rayShadow.d)) / shadowLength2;
+        float form = std::max(0.0f, dot(lightPath.m_hits[0].N, -rayShadow.d))*std::max(0.0f, dot(hit.N, rayShadow.d)) / shadowLength2;
         flux = lightPath.m_light->wattage() * brdf *  form;
         if (j > 1){
             flux *= eyePath.m_fluxDecay[j - 2];
@@ -513,7 +468,7 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         if (!trace(h, rayShadow, intersectEpsilon, sqrt(shadowLength2) - intersectEpsilon)) {
             float brdfi = mati->BRDF(-rayShadow.d, hiti.N, -lightPath.m_rays[i - 1].d);
             float brdfj = matj->BRDF(rayShadow.d, hitj.N, -eyePath.m_rays[j - 1].d);
-            float form = std::max(0.0f, dot(-rayShadow.d, hiti.N))*std::max(0.0f, dot(rayShadow.d, hitj.N)) / shadowLength2;
+            float form = std::max(0.0f, dot(-rayShadow.d, hiti.N))*std::max(0.0f,dot(rayShadow.d, hitj.N)) / shadowLength2;
             flux = lightPath.m_light->wattage() * brdfi * brdfj * form;
             flux *= lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
         }
