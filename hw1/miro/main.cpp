@@ -19,7 +19,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(512, 512);
+    g_image->resize(256,256);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
@@ -28,7 +28,7 @@ makeRoomScene(){
     g_camera->setFOV(40);
 
     g_scene->setSamplesPerPix(1024);
-    g_scene->setBidiSamplesPerPix(1024);
+    g_scene->setBidiSamplesPerPix(8);
     g_scene->setMaxBounces(20);
     g_scene->setMaxPaths(5);
     g_scene->setPhotonSamples(10000000);

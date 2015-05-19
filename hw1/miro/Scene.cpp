@@ -329,7 +329,8 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 !trace(hitInfo, ray01) &&
                 !trace(hitInfo, ray10) &&
                 !trace(hitInfo, ray11)) continue;
-            Vector3 fluxSum(0, 0, 0);
+            vector<Vector3> fluxSums;
+            Vector3 fluxSum(0,0,0);
    
             Concurrency::parallel_for (0, bidiSamplesPerPix(), [&](int k){
                 RayPath eyePath = randEyePath(x, y, cam, img);
@@ -345,10 +346,16 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 fixedLengthFlux[0] = eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
                 fixedLengthPDF[0] = 1;
                 fluxSum += fixedLengthFlux[0];
-                for (unsigned int i = 0; i < di; i++){
-                    for (unsigned int j = 1; j < dj; j++) {
+                for (int i = 0; i < di; i++){
+                    for (int j = 1; j < dj; j++) {
                         Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
-                        float pathPDF = lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
+                        float pathPDF;
+                        if (i == 0) {
+                            pathPDF = eyePath.m_fluxDecay[j - 1];
+                        }
+                        else {
+                            pathPDF = lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
+                        }
                         fixedLengthPDF[i + j] += pathPDF;
                         fixedLengthFlux[i + j] += pathPDF*flux;
                     }
@@ -360,8 +367,8 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 if (y == h/2 && x == w/2){
                     plotfile << fluxSum[0] / (k+1) / M_PI / 0.04 << std::endl;
                 }
-
             });
+
             img->setPixel(x, y, fluxSum / bidiSamplesPerPix()/ M_PI / 0.04);
         }
         //img->drawScanline(y);
@@ -435,7 +442,7 @@ RayPath Scene::generateRayPath(RayPath & raypath) {
 Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
     Vector3 flux = Vector3(0, 0, 0);
     HitInfo h;
-    float intersectEpsilon = 0.000001;
+    float intersectEpsilon = 0.00001;
     
     if (i == 0) {
         Vector3 lightPoint = lightPath.m_hits[0].P;
@@ -445,11 +452,15 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         Ray rayShadow(lightPoint, (hit.P - lightPoint).normalize());
         float shadowLength2 = (hit.P - lightPoint).length2();
         HitInfo h;
+        if (trace(h, rayShadow, intersectEpsilon, sqrt(shadowLength2) - intersectEpsilon)) {
+            return flux;
+        }
         if (!lightPath.m_light->intersect(h, Ray(hit.P, (lightPoint - hit.P).normalize()))) {
             return flux;
         }
-        if (trace(h, rayShadow, intersectEpsilon, sqrt(shadowLength2) - intersectEpsilon)) {
-            return flux;
+        //TODO maybe unnecessary
+        if (dot(lightPath.m_hits[0].N, rayShadow.d) <= 0) {
+            return flux; // hits backside of light
         }
         float brdf = mat->BRDF(rayShadow.d, hit.N, -rayEye.d);
         float form = std::max(0.0f, dot(lightPath.m_hits[0].N, -rayShadow.d))*std::max(0.0f, dot(hit.N, rayShadow.d)) / shadowLength2;
