@@ -144,12 +144,18 @@ Scene::pathtraceImage(Camera *cam, Image *img)
             }
             img->setPixel(i, j, pixSum);
         }
-        //img->drawScanline(j);
+        if (preview())
+        {
+            img->drawScanline(j);
+        }
         glFinish();
         printf("Rendering Progress: %.3f%%\r", j / float(img->height())*100.0f);
         fflush(stdout);
     }
-    img->draw();
+    if (!preview())
+    {
+        img->draw();
+    }
     glFinish();
 
     printf("Rendering Progress: 100.000%\n");
@@ -349,13 +355,6 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 for (int i = 0; i < di; i++){
                     for (int j = 1; j < dj; j++) {
                         Vector3 flux = estimateFlux(i, j, eyePath, lightPath);
-                        float pathPDF;
-                        if (i == 0) {
-                            pathPDF = eyePath.m_fluxDecay[j - 1];
-                        }
-                        else {
-                            pathPDF = lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
-                        }
                         float pathPDF = 0;
                         if (i<1) pathPDF = eyePath.m_probs[j - 1];
                         else pathPDF = lightPath.m_probs[i - 1] * eyePath.m_probs[j - 1];
@@ -367,17 +366,24 @@ Scene::biditraceImage(Camera *cam, Image *img)
                     if (fixedLengthPDF[i]>0) fluxSum += fixedLengthFlux[i] / fixedLengthPDF[i];
                 }
 
-                if (y == h/2 && x == w/2){
-                    plotfile << fluxSum[0] / (k+1) / M_PI / 0.04 << std::endl;
-            }
+                if (y == h / 2 && x == w / 2){
+                    plotfile << fluxSum[0] / (k + 1) / M_PI / 0.04 << std::endl;
+                }
+            });
             img->setPixel(x, y, fluxSum / bidiSamplesPerPix());
         }
-        img->drawScanline(y);
+        if (preview())
+        {
+            img->drawScanline(y);
+        }
         glFinish();
         printf("Rendering Progress: %.3f%%\r", y / float(img->height())*100.0f);
         fflush(stdout);
     }
-    img->draw();
+    if (!preview())
+    {
+        img->draw();
+    }
     glFinish();
 
     printf("Rendering Progress: 100.000%\n");
