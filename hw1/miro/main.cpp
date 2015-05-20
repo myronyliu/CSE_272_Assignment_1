@@ -12,6 +12,7 @@
 #include "TriangleMesh.h"
 #include "Triangle.h"
 #include "Lambert.h"
+#include "Mirror.h"
 #include "MiroWindow.h"
 
 void
@@ -38,6 +39,8 @@ makeRoomScene(){
 
     Lambert* mat = new Lambert(Vector3(1.0f, 1.0f, 1.0f));
     mat->setKd(0.8f);
+    Mirror* mir = new Mirror(Vector3(1.0f, 1.0f, 1.0f));
+    mir->setKs(0.8f);
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
     coverMat->setKd(0.0f);
     
@@ -55,10 +58,10 @@ makeRoomScene(){
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
-    wall_F->setMaterial(mat);
+    wall_F->setMaterial(mir);
     cover->setMaterial(coverMat);
 
-    //light->flip(); cover->flip(); light->setWattage(5);
+    light->flip(); cover->flip(); light->setWattage(5);
 
     // add objects to scene
     g_scene->addObject(wall_B);

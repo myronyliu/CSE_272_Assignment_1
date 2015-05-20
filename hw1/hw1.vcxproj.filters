@@ -78,6 +78,9 @@
     <ClCompile Include="miro\RayPath.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="miro\Mirror.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="miro\BLPatch.h">
@@ -153,6 +156,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="miro\RayPath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="miro\Mirror.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
