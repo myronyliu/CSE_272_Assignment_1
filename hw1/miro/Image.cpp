@@ -77,6 +77,7 @@ Vector3 Image::getPixel(int x, int y) const
     {
         return Vector3(m_pixels[y*m_width + x].r, m_pixels[y*m_width + x].g, m_pixels[y*m_width + x].b);
     }
+    return Vector3(0.0, 0.0, 0.0);
 }
 
 void Image::gammaPixels(float * gammaData)

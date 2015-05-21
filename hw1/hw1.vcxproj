@@ -77,6 +77,7 @@
     <ClCompile Include="miro\main.cpp" />
     <ClCompile Include="miro\Material.cpp" />
     <ClCompile Include="miro\MiroWindow.cpp" />
+    <ClCompile Include="miro\Mirror.cpp" />
     <ClCompile Include="miro\Parallellogram.cpp" />
     <ClCompile Include="miro\ParallelogramLight.cpp" />
     <ClCompile Include="miro\PointLight.cpp" />
@@ -91,6 +92,7 @@
   <ItemGroup>
     <ClInclude Include="miro\AreaLight.h" />
     <ClInclude Include="miro\Light.h" />
+    <ClInclude Include="miro\Mirror.h" />
     <ClInclude Include="miro\ParallelogramLight.h" />
     <ClInclude Include="miro\BLPatch.h" />
     <ClInclude Include="miro\BVH.h" />

@@ -12,6 +12,7 @@
 #include "TriangleMesh.h"
 #include "Triangle.h"
 #include "Lambert.h"
+#include "Mirror.h"
 #include "MiroWindow.h"
 
 void
@@ -19,7 +20,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(512, 512);
+    g_image->resize(256,256);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
@@ -27,6 +28,7 @@ makeRoomScene(){
     g_camera->setUp(Vector3(0, 0, 1));
     g_camera->setFOV(40);
 
+    g_scene->setPreview(true);
     g_scene->setSamplesPerPix(512);
     g_scene->setBidiSamplesPerPix(4);
     g_scene->setMaxBounces(20);
@@ -37,6 +39,8 @@ makeRoomScene(){
 
     Lambert* mat = new Lambert(Vector3(1.0f, 1.0f, 1.0f));
     mat->setKd(0.8f);
+    Mirror* mir = new Mirror(Vector3(1.0f, 1.0f, 1.0f));
+    mir->setKs(0.8f);
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
     coverMat->setKd(0.0f);
     
@@ -54,10 +58,10 @@ makeRoomScene(){
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
-    wall_F->setMaterial(mat);
+    wall_F->setMaterial(mir);
     cover->setMaterial(coverMat);
 
-    //light->flip(); cover->flip(); light->setWattage(5);
+    light->flip(); cover->flip(); light->setWattage(5);
 
     // add objects to scene
     g_scene->addObject(wall_B);

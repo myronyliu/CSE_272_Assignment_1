@@ -35,6 +35,9 @@ public:
     void setSamplingHeuristic(float p) { m_samplingHeuristic = fmin(fmax(0, p), 1); }
     float samplingHeuristic() { return m_samplingHeuristic; }
 
+    void setPreview(bool preview) { m_preview = preview;  }
+    bool preview(){ return m_preview; }
+
     void addPointLight(PointLight* pObj) {
         m_lights.push_back(pObj);
         m_pointLights.push_back(pObj);}
@@ -82,6 +85,8 @@ protected:
     PointLights m_pointLights;
     AreaLights m_areaLights;
     float m_samplingHeuristic = 0.5; // probability of sampling BRDF. Complement is for sampling light
+
+    bool m_preview = false;
 };
 
 extern Scene * g_scene;
