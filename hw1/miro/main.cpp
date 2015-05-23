@@ -20,7 +20,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(256,256);
+    g_image->resize(128,128);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
@@ -53,15 +53,15 @@ makeRoomScene(){
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     cover->disableBack();
-
+    
     wall_T->setMaterial(mat);
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
-    wall_F->setMaterial(mir);
+    wall_F->setMaterial(mat);
     cover->setMaterial(coverMat);
 
-    light->flip(); cover->flip(); light->setWattage(5);
+    //light->flip(); cover->flip(); light->setWattage(5);
 
     // add objects to scene
     g_scene->addObject(wall_B);
