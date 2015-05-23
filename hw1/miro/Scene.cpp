@@ -637,4 +637,5 @@ PhotonMap Scene::generatePhotonMap() {
             }
         }
     }
+    return map;
 }

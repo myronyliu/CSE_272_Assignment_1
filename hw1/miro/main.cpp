@@ -20,7 +20,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(128,128);
+    g_image->resize(256,256);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
@@ -50,8 +50,8 @@ makeRoomScene(){
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
     Parallelogram * wall_B = new Parallelogram(Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1); // bottom
 
-    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
-    Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
+    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.9), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
+    Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.9), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     cover->disableBack();
     
     wall_T->setMaterial(mat);
@@ -70,10 +70,18 @@ makeRoomScene(){
     g_scene->addObject(wall_R);
     g_scene->addObject(wall_T);
     g_scene->addObject(cover);
-    g_scene->addAreaLight(light);
+    g_scene->addAreaLight(light, 10000);
 
     // let objects do pre-calculations if needed
     g_scene->preCalc();
+
+    PhotonMap map = g_scene->generatePhotonMap();
+    for (int i = 0; i < map.size(); i++) {
+        Sphere* sphere = new Sphere();
+        sphere->setCenter(map[i].m_location);
+        sphere->setRadius(0.001);
+        g_scene->addObject(sphere);
+    }
 }
 
 int
