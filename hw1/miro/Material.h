@@ -27,6 +27,7 @@ public:
     virtual vec3pdf randReflect(const Vector3& ray, const Vector3& hit) const;
     virtual float BRDF(const Vector3& in, const Vector3& normal, const Vector3& out) const { return 0; }
 
+    virtual Vector3 reflectance() const { return Vector3(0,0,0); }
     float emittance() const { return m_emittance; }
     Vector3 powerPerArea() const { return m_powerPerArea; }
     void setEmittance(const float& e) { m_emittance = e; }
@@ -37,7 +38,7 @@ public:
 
 protected:
     Vector3 m_powerPerArea = Vector3(0, 0, 0); // emitted power per unit dx.dy patch area
-    float m_emittance = 0; // probability of reflecting light
+    float m_emittance = 0; // probability of emitting light
 };
 
 #endif // CSE168_MATERIAL_H_INCLUDED

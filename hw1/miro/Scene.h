@@ -8,6 +8,7 @@
 #include "Light.h"
 #include "BVH.h"
 #include "RayPath.h"
+#include "PhotonMap.h"
 
 class Camera;
 class Image;
@@ -20,6 +21,7 @@ struct LightPDF {
 class Scene
 {
 public:
+    void setEmittedPhotonsPerLight(std::vector<int> s) { m_emittedPhotonsPerLight = s; }
     void setSamplesPerPix(int i) { m_samplesPerPix = fmax(0, i); }
     void setBidiSamplesPerPix(int i) { m_bidiSamplesPerPix = fmax(0, i); }
     int samplesPerPix() { return m_samplesPerPix; }
@@ -38,14 +40,17 @@ public:
     void setPreview(bool preview) { m_preview = preview;  }
     bool preview(){ return m_preview; }
 
-    void addPointLight(PointLight* pObj) {
+    void addPointLight(PointLight* pObj, int s = 1024) {
         m_lights.push_back(pObj);
-        m_pointLights.push_back(pObj);}
+        m_pointLights.push_back(pObj);
+        m_emittedPhotonsPerLight.push_back(s);
+    }
     const PointLights* pointLights() const {return &m_pointLights;}
-    void addAreaLight(AreaLight* pObj) {
+    void addAreaLight(AreaLight* pObj, int s = 1024) {
         m_lights.push_back(pObj);
         m_objects.push_back(pObj);
         m_areaLights.push_back(pObj);
+        m_emittedPhotonsPerLight.push_back(s);
     }
     const AreaLights* areaLights() const        { return &m_areaLights; }
 
@@ -73,6 +78,8 @@ public:
 
     Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath);
 
+    PhotonMap generatePhotonMap();
+
 protected:
     Objects m_objects;
     BVH m_bvh;
@@ -81,6 +88,7 @@ protected:
     int m_photonSamples = 100000000;
     int m_maxBounces = 20;
     int m_maxPaths = 3;
+    std::vector<int> m_emittedPhotonsPerLight;
     Lights m_lights;
     PointLights m_pointLights;
     AreaLights m_areaLights;

@@ -30,6 +30,7 @@ public:
     virtual Vector3 radiance(const Vector3& normal, const Vector3& direction) const;
     virtual Vector3 sum_L_cosTheta_dOmega() const;
 
+    virtual Vector3 reflectance() const { return m_kd; }
 protected:
     Vector3 m_kd;
     Vector3 m_ka;

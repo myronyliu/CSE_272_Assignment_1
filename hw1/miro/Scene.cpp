@@ -598,3 +598,43 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
     if (fluxSum[0] == INFINITY || fluxSum[1] == INFINITY || fluxSum[2] == INFINITY) printf("positive infinite flux\n");
     return fluxSum;
 }
+
+PhotonMap Scene::generatePhotonMap() {
+    HitInfo hit;
+    PhotonMap map;
+    for (int i = 0; i < m_lights.size(); i++) {
+        Light* light = m_lights[i];
+        int nPhotons = m_emittedPhotonsPerLight[i];
+        Vector3 photonPower = light->wattage() / nPhotons;
+        for (int j = 0; j < nPhotons; j++) {
+            Ray ray = light->randRay().r;
+            PhotonDeposit photon(photonPower, ray.o);
+            map.push_back(photon);
+            while (true) {
+                if (!trace(hit, ray)) break;
+                ray.o = hit.P;
+                ray.d = hit.material->randReflect(-ray.d, hit.N).v;
+                photon.m_location = hit.P;
+                Vector3 reflectance = hit.material->reflectance();
+                // Surface is same color as incident photon
+                if (reflectance[0] / reflectance[1] == photon.m_power[0] / photon.m_power[1] &&
+                    reflectance[1] / reflectance[2] == photon.m_power[1] / photon.m_power[2]) {
+                    float rn = (float)rand() / RAND_MAX;
+                    if (reflectance[0] == 1 || rn < reflectance[0]) map.push_back(photon);
+                    else break;
+                }
+                else {
+                    float rn0 = (float)rand() / RAND_MAX;
+                    float rn1 = (float)rand() / RAND_MAX;
+                    float rn2 = (float)rand() / RAND_MAX;
+                    if (!(reflectance[0] == 1 || rn0 < reflectance[0])) photon.m_power[0] = 0;
+                    if (!(reflectance[1] == 1 || rn1 < reflectance[1])) photon.m_power[1] = 0;
+                    if (!(reflectance[2] == 1 || rn2 < reflectance[2])) photon.m_power[2] = 0;
+                    if (photon.m_power[0] > 0 || photon.m_power[1] > 0 || photon.m_power[2] > 0) map.push_back(photon);
+                    else break;
+                }
+                // TODO: handle cases where two of the channels match, so we don't get rainbow colors all over the place
+            }
+        }
+    }
+}
