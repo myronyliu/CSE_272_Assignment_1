@@ -147,6 +147,7 @@ MiroWindow::keyboard(unsigned char key, int x, int y)
 {
     switch (key)
     {
+        /* ESC */
         case 27:
             exit(0);
         break;
