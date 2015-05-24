@@ -20,7 +20,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(512,512);
+    g_image->resize(218,218);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
