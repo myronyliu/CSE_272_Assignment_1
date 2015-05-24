@@ -56,6 +56,8 @@ public:
     void pathtraceImage(Camera *cam, Image *img);
     void photontraceImage(Camera *cam, Image *img);
     void biditraceImage(Camera *cam, Image *img);
+    void unifiedpathtraceImage(Camera *cam, Image *img);
+
     bool trace(HitInfo& minHit, const Ray& ray,
         float tMin = 0.0f, float tMax = MIRO_TMAX) const;
     bool trace(HitInfo& minHit, const Ray& ray, const Object* skip,
@@ -70,8 +72,8 @@ public:
     RayPath randEyePath(float i, float j, Camera* cam, Image* img);
     RayPath randLightPath();
     RayPath generateRayPath(RayPath &);
-
     Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath);
+
 
 protected:
     Objects m_objects;

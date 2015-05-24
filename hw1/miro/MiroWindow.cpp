@@ -234,6 +234,11 @@ MiroWindow::keyboard(unsigned char key, int x, int y)
             g_camera->setRenderer(Camera::RENDER_BIDITRACE);
         break;
 
+        case 'u':
+        case 'U':
+            g_camera->setRenderer(Camera::RENDER_UNIFIEDPATH);
+        break;
+
         case 'g':
         case 'G':
             g_camera->setRenderer(Camera::RENDER_OPENGL);

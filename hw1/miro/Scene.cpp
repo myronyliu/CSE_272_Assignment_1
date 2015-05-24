@@ -501,3 +501,8 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
     if (flux[0] < 0 || flux[1] < 0 || flux[2] < 0) printf("negative flux\n");
     return flux;
 }
+
+void
+Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
+
+}
