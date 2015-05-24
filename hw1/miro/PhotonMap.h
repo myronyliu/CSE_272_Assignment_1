@@ -16,8 +16,10 @@ struct PhotonDeposit {
 
 struct RadiusDensityPhotons {
     float m_radius;
-    Vector3 m_density = 0;
+    Vector3 m_density;
     std::vector<PhotonDeposit> m_photons;
+
+    RadiusDensityPhotons() : m_radius(0), m_density(0), m_photons(std::vector<PhotonDeposit>(0)) {}
 };
 
 

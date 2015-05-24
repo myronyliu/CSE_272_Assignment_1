@@ -571,14 +571,15 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, Ph
     if (i == 0) {
         if (!lightPath.m_light->intersect(h, Ray(hitPointE_perturbed,-LshadowE.d))) return flux;
         float f = matE->BRDF(-LshadowE.d, hitE.N, -perturbedDirection) * matE->BRDF(perturbedDirection, hitE.N, -rayE.d);
-        flux = lightPath.m_light->wattage()*lightPath.m_light->rayPDF(LshadowE)*f*eyePath.m_fluxDecay[j - 1];
+        flux = lightPath.m_light->wattage()*lightPath.m_light->rayPDF(LshadowE)*density*f*eyePath.m_fluxDecay[j - 1];
     }
     else {
         float f = matE->BRDF(-LshadowE.d, hitE.N, -perturbedDirection) * matE->BRDF(perturbedDirection, hitE.N, -rayE.d);
-        float brdfL = matL->BRDF(LshadowE.d, hitL.N, perturbedDirection.normalized());
-        flux = lightPath.m_light->wattage()*lightPath.m_fluxDecay[i - 1] * f* brdfL*eyePath.m_fluxDecay[j - 1];
+        float brdfL = matL->BRDF(LshadowE.d, hitL.N, -lightPath.m_rays[i - 1].d);
+        float cosL = std::max(0.0f, dot(LshadowE.d, hitL.N));
+        flux = lightPath.m_light->wattage()*lightPath.m_fluxDecay[i - 1] * density*f* brdfL*cosL*eyePath.m_fluxDecay[j - 1];
     }
-    return flux*density;
+    return flux;
 }
 
 void
