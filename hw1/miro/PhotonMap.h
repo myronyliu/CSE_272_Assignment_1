@@ -6,12 +6,20 @@
 #include <algorithm>
 #include "Vector3.h"
 
+
 struct PhotonDeposit {
     PhotonDeposit() : m_power(0), m_location(Vector3(0, 0, 0)) {}
     PhotonDeposit(const Vector3& power, const Vector3& location) : m_power(power), m_location(location) {}
     Vector3 m_power;
     Vector3 m_location;
 };
+
+struct RadiusDensityPhotons {
+    float m_radius;
+    Vector3 m_density = 0;
+    std::vector<PhotonDeposit> m_photons;
+};
+
 
 class PhotonMap {
 public:
@@ -25,7 +33,7 @@ public:
     PhotonDeposit operator[](int i) const { return m_photonDeposits[i]; }
     PhotonDeposit& operator[](int i) { return m_photonDeposits[i]; }
     Vector3 powerDensity(const Vector3& x, const float& r);
-    float radius(const Vector3& x, const int& n);
+    RadiusDensityPhotons radiusDensityPhotons(const Vector3& x, const int& n);
 protected:
     float m_xMin;
     float m_yMin;

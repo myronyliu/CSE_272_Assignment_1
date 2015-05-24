@@ -538,6 +538,7 @@ PhotonMap Scene::generatePhotonMap() {
             }
         }
     }
+    return map;
 }
 
 Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, PhotonMap photonMap) {
@@ -556,25 +557,28 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, Ph
     if (fabs(yDot) > fabs(xDot)) yAxis = Vector3(0, 1, 0).orthogonal(hitE.N).normalize();
     else yAxis = Vector3(1, 0, 0).orthogonal(hitE.N).normalize();
     Vector3 xAxis = cross(yAxis, hitE.N);
-    float r = sqrt(m_photonMapRadius*rand() / RAND_MAX);
-    float phi = 2.0f * PI*rand() / RAND_MAX;
-    Vector3 perturbation = r*cos(phi)*xAxis + r*sin(phi)*yAxis;
-    Vector3 hitPointE_perturbed = hitE.P + perturbation;
+    RadiusDensityPhotons rdp = photonMap.radiusDensityPhotons(hitE.P, 16);
+    float r = rdp.m_radius;
+    int randN = std::max(rdp.m_photons.size()-1,rdp.m_photons.size()*rand() / RAND_MAX);
+    PhotonDeposit photon = rdp.m_photons[randN];
+    Vector3 density = rdp.m_density;
+    Vector3 hitPointE_perturbed = photon.m_location;
+    Vector3 perturbedDirection = (photon.m_location - hitE.P).normalize();
     Ray LshadowE(hitL.P, (hitPointE_perturbed - hitL.P).normalize());
     float LshadowE_length2 = (hitPointE_perturbed - hitL.P).length2();
 
     if (trace(h, LshadowE, intersectEpsilon, sqrt(LshadowE_length2) - intersectEpsilon)) return flux;
     if (i == 0) {
-        if (!lightPath.m_light->intersect(h, Ray(hitE.P + perturbation,-LshadowE.d))) return flux;
-        float f = matE->BRDF(-LshadowE.d, hitE.N, -perturbation.normalized()) * matE->BRDF(perturbation.normalized(), hitE.N, -rayE.d);
+        if (!lightPath.m_light->intersect(h, Ray(hitPointE_perturbed,-LshadowE.d))) return flux;
+        float f = matE->BRDF(-LshadowE.d, hitE.N, -perturbedDirection) * matE->BRDF(perturbedDirection, hitE.N, -rayE.d);
         flux = lightPath.m_light->wattage()*lightPath.m_light->rayPDF(LshadowE)*f*eyePath.m_fluxDecay[j - 1];
     }
     else {
-        float f = matE->BRDF(-LshadowE.d, hitE.N, -perturbation.normalized()) * matE->BRDF(perturbation.normalized(), hitE.N, -rayE.d);
-        float brdfL = matL->BRDF(LshadowE.d, hitL.N, perturbation.normalized());
-        flux = lightPath.m_light->wattage()*lightPath.m_fluxDecay[i] * brdfL*eyePath.m_fluxDecay[j - 1];
+        float f = matE->BRDF(-LshadowE.d, hitE.N, -perturbedDirection) * matE->BRDF(perturbedDirection, hitE.N, -rayE.d);
+        float brdfL = matL->BRDF(LshadowE.d, hitL.N, perturbedDirection.normalized());
+        flux = lightPath.m_light->wattage()*lightPath.m_fluxDecay[i - 1] * f* brdfL*eyePath.m_fluxDecay[j - 1];
     }
-    return flux;
+    return flux*density;
 }
 
 void
