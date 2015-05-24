@@ -579,5 +579,89 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, Ph
 
 void
 Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
+    int w = img->width();
+    int h = img->height();
+    HitInfo hitInfo;
 
+    std::ofstream plotfile;
+    plotfile.open("unifiedpathtraceplot.txt");
+
+    int integrationStart = glutGet(GLUT_ELAPSED_TIME);
+
+    float W = 0.5;
+
+    PhotonMap pm = generatePhotonMap();
+
+    for (int y = 0; y < h; y++)
+    {
+        for (int x = 0; x < w; x++)
+        {
+            Ray ray00 = cam->eyeRay((float)x - 0.5, (float)y - 0.5, img->width(), img->height());
+            Ray ray01 = cam->eyeRay((float)x - 0.5, (float)y + 0.5, img->width(), img->height());
+            Ray ray10 = cam->eyeRay((float)x + 0.5, (float)y - 0.5, img->width(), img->height());
+            Ray ray11 = cam->eyeRay((float)x + 0.5, (float)y + 0.5, img->width(), img->height());
+            if (!trace(hitInfo, ray00) &&
+                !trace(hitInfo, ray01) &&
+                !trace(hitInfo, ray10) &&
+                !trace(hitInfo, ray11)) continue;
+            vector<Vector3> fluxSums;
+            Vector3 fluxSum(0, 0, 0);
+
+            Concurrency::parallel_for(0, bidiSamplesPerPix(), [&](int k){
+                RayPath eyePath = randEyePath(x, y, cam, img);
+                if (eyePath.m_hits.size() == 0) {
+                    return;
+                }
+                RayPath lightPath = randLightPath();
+
+                int dj = eyePath.m_hits.size();
+                int di = lightPath.m_hits.size();
+                vector<Vector3> fixedLengthFlux(di + dj - 1, Vector3(0, 0, 0));
+                vector<float> fixedLengthPDF(di + dj - 1, 0);
+                fixedLengthFlux[0] = eyePath.m_hits[0].material->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
+                fixedLengthPDF[0] = 1;
+                fluxSum += fixedLengthFlux[0];
+                for (int i = 0; i < di; i++){
+                    for (int j = 1; j < dj; j++) {
+                        Vector3 flux = estimateFlux(i, j, eyePath, lightPath, pm);
+                        float pathPDF = 0;
+                        if (i<1) pathPDF = eyePath.m_probs[j - 1];
+                        else pathPDF = lightPath.m_probs[i - 1] * eyePath.m_probs[j - 1];
+                        fixedLengthPDF[i + j] += pathPDF;
+                        fixedLengthFlux[i + j] += pathPDF*flux;
+                    }
+                }
+                for (int i = 0; i < di + dj - 1; i++){
+                    if (fixedLengthPDF[i]>0) fluxSum += fixedLengthFlux[i] / fixedLengthPDF[i];
+                }
+
+                if (y == h / 2 && x == w / 2){
+                    plotfile << fluxSum[0] / (k + 1) / M_PI / 0.04 << std::endl;
+                }
+            });
+            img->setPixel(x, y, fluxSum / bidiSamplesPerPix());
+        }
+        if (preview())
+        {
+            img->drawScanline(y);
+        }
+        glFinish();
+        printf("Rendering Progress: %.3f%%\r", y / float(img->height())*100.0f);
+        fflush(stdout);
+    }
+    if (!preview())
+    {
+        img->draw();
+    }
+    glFinish();
+
+    printf("Rendering Progress: 100.000%\n");
+
+    int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
+    std::cout << "Rendering took " << ((integrationEnd - integrationStart) / 1000.0f) << "s" << std::endl;
+
+    debug("Done Unified Pathtracing!\n");
+    plotfile.close();
+
+   
 }
