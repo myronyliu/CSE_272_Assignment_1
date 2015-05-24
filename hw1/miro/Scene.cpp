@@ -324,7 +324,7 @@ Scene::biditraceImage(Camera *cam, Image *img)
     float W = 0.5;
 
     for (int y = h - 1; y > -1; y--)
-        //for (int y = 0; y < h; y++)
+    //for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
         {
@@ -552,11 +552,11 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         if (u == j - 1) length2[k] = (eyePath.m_hits[u].P - eyePath.m_rays[u].o).length2();
         else length2[k] = (eyePath.m_rays[u + 1].o - eyePath.m_rays[u].o).length2();
         /*if (length2[k] == 0) {
-        printf("location 3\n");
-        printf("%i %i\n", u, j-1);
-        printf("%f %f %f\n", eyePath.m_hits[u].P[0], eyePath.m_hits[u].P[1], eyePath.m_hits[u].P[2]);
-        printf("%f %f %f\n", eyePath.m_rays[u].o[0], eyePath.m_rays[u].o[1], eyePath.m_rays[u].o[2]);
-        system("PAUSE");
+            printf("location 3\n");
+            printf("%i %i\n", u, j-1);
+            printf("%f %f %f\n", eyePath.m_hits[u].P[0], eyePath.m_hits[u].P[1], eyePath.m_hits[u].P[2]);
+            printf("%f %f %f\n", eyePath.m_rays[u].o[0], eyePath.m_rays[u].o[1], eyePath.m_rays[u].o[2]);
+            system("PAUSE");
         }*/
         decayF[k] = decayF[k - 1] * brdf[k] * cosF[k];
         probF[k] = probF[k - 1] * brdf[k] * cosF[k] * cosB[k] / length2[k];
@@ -673,4 +673,9 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, Ph
         flux = lightPath.m_light->wattage()*lightPath.m_fluxDecay[i] * brdfL*eyePath.m_fluxDecay[j - 1];
     }
     return flux;
+}
+
+void
+Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
+
 }

@@ -46,12 +46,7 @@ Camera::click(Scene* pScene, Image* pImage)
     }
     else if (m_renderer == RENDER_RAYTRACE)
     {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        glDrawBuffer(GL_FRONT);
+        renderPrep();
         if (firstRayTrace)
         {
             pImage->clear(bgColor());
@@ -63,12 +58,7 @@ Camera::click(Scene* pScene, Image* pImage)
     }
     else if (m_renderer == RENDER_PHOTONTRACE)
     {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        glDrawBuffer(GL_FRONT);
+        renderPrep();
         if (firstRayTrace)
         {
             pImage->clear(bgColor());
@@ -80,12 +70,7 @@ Camera::click(Scene* pScene, Image* pImage)
     }
     else if (m_renderer == RENDER_PATHTRACE)
     {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        glDrawBuffer(GL_FRONT);
+        renderPrep();
         if (firstRayTrace)
         {
             pImage->clear(bgColor());
@@ -97,12 +82,7 @@ Camera::click(Scene* pScene, Image* pImage)
     }
     else if (m_renderer == RENDER_BIDITRACE)
     {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        glDrawBuffer(GL_FRONT);
+        renderPrep();
         if (firstRayTrace)
         {
             pImage->clear(bgColor());
@@ -112,8 +92,30 @@ Camera::click(Scene* pScene, Image* pImage)
 
         g_image->draw();
     }
+    else if (m_renderer == RENDER_UNIFIEDPATH)
+    {
+        renderPrep();
+        if (firstRayTrace)
+        {
+            pImage->clear(bgColor());
+            pScene->unifiedpathtraceImage(this, g_image);
+            firstRayTrace = false;
+        }
+
+        g_image->draw();
+    }
 }
 
+void
+Camera::renderPrep()
+{
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        glDrawBuffer(GL_FRONT);
+}
 
 void
 Camera::calcLookAt()
