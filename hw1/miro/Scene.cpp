@@ -545,6 +545,7 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, Ph
     HitInfo h;
     float intersectEpsilon = 0.00001;
     Ray rayE = eyePath.m_rays[j - 1];
+
     HitInfo hitE = eyePath.m_hits[j - 1];
     HitInfo hitL = lightPath.m_hits[i];
     const Material* matE = hitE.material;
