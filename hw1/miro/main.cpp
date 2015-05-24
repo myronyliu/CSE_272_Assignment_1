@@ -28,7 +28,7 @@ makeRoomScene(){
     g_camera->setUp(Vector3(0, 0, 1));
     g_camera->setFOV(40);
 
-    //g_scene->setPreview(true);
+    g_scene->setPreview(true);
     g_scene->setSamplesPerPix(1024);
     g_scene->setBidiSamplesPerPix(4);
     g_scene->setMaxBounces(20);
