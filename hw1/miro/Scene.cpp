@@ -321,8 +321,6 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
-    float W = 0.5;
-
     for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
@@ -593,8 +591,6 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
-    float W = 0.5;
-
     PhotonMap pm = generatePhotonMap();
 
     for (int y = 0; y < h; y++)
@@ -667,6 +663,4 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     debug("Done Unified Pathtracing!\n");
     plotfile.close();
-
-   
 }
