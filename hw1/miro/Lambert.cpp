@@ -129,6 +129,11 @@ vec3pdf Lambert::randEmit(const Vector3& n) const {
     Vector3 x = cross(y, z).normalize();
     return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1-u)/M_PI);
 }
+float Lambert::emitPDF(const Vector3& n, const Vector3& v) const {
+    float z = dot(n, v);
+    if (z < 0) return 0;
+    else return z / M_PI;
+}
 
 Vector3 Lambert::radiance(const Vector3& normal, const Vector3& direction) const {
     if (dot(normal, direction) < 0) return Vector3(0, 0, 0);

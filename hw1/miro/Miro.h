@@ -32,6 +32,10 @@ class Camera;
 class Image;
 class Scene;
 class Material;
+class Lambert;
+class Mirror;
+class PhotonMap;
+class RayPath;
 
 extern void ParseFile(FILE* fp);
 extern void initOpenGL();

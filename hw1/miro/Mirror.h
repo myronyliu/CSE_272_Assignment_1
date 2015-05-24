@@ -23,6 +23,7 @@ public:
 
     // Returns a random direction for an emitted photon given a surface normal
     virtual vec3pdf randEmit(const Vector3& n) const;
+    virtual float emitPDF(const Vector3& n, const Vector3& v) const { if (dot(n, v) > 0.99999) return 1; else return 0; }
     // Generates a random ray in the upper hemisphere according the BRDF*cos
     virtual vec3pdf randReflect(const Vector3& in, const Vector3& normal) const;
     virtual float BRDF(const Vector3& in, const Vector3& normal, const Vector3& out) const;

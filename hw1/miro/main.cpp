@@ -61,7 +61,7 @@ makeRoomScene(){
     wall_F->setMaterial(mat);
     cover->setMaterial(coverMat);
 
-    //light->flip(); cover->flip(); light->setWattage(5);
+    light->flip(); cover->flip(); light->setWattage(5);
 
     // add objects to scene
     g_scene->addObject(wall_B);
@@ -75,13 +75,13 @@ makeRoomScene(){
     // let objects do pre-calculations if needed
     g_scene->preCalc();
 
-    PhotonMap map = g_scene->generatePhotonMap();
+    /*PhotonMap map = g_scene->generatePhotonMap();
     for (int i = 0; i < map.size(); i++) {
         Sphere* sphere = new Sphere();
         sphere->setCenter(map[i].m_location);
         sphere->setRadius(0.001);
         g_scene->addObject(sphere);
-    }
+    }//*/
 }
 
 int

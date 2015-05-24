@@ -80,8 +80,8 @@
     <ClCompile Include="miro\Mirror.cpp" />
     <ClCompile Include="miro\Parallellogram.cpp" />
     <ClCompile Include="miro\ParallelogramLight.cpp" />
+    <ClCompile Include="miro\PhotonMap.cpp" />
     <ClCompile Include="miro\PointLight.cpp" />
-    <ClCompile Include="miro\RayPath.cpp" />
     <ClCompile Include="miro\Scene.cpp" />
     <ClCompile Include="miro\Sphere.cpp" />
     <ClCompile Include="miro\Triangle.cpp" />
@@ -106,6 +106,7 @@
     <ClInclude Include="miro\MiroWindow.h" />
     <ClInclude Include="miro\Object.h" />
     <ClInclude Include="miro\OpenGL.h" />
+    <ClInclude Include="miro\PhotonMap.h" />
     <ClInclude Include="miro\PointLight.h" />
     <ClInclude Include="miro\Ray.h" />
     <ClInclude Include="miro\Parallelogram.h" />

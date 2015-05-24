@@ -35,6 +35,17 @@ RayPDF ParallelogramLight::randRay() const {
     return RayPDF(Ray(o.v, d.v),o.p*d.p);
 }
 
+float ParallelogramLight::rayPDF(const Ray& ray) const {
+    Vector3 cr = ray.o - m_center; // vector from center to ray origin
+    Vector3 vecY = m_vecY;
+    Vector3 YperpX = vecY.orthogonal(m_vecX).normalize();
+    Vector3 cr_x = cr - (dot(cr, YperpX) / dot(m_vecY, YperpX))*m_vecY; // find componenets along skew-basis
+    Vector3 cr_y = cr - cr_x;
+    if (cr_x.length() > m_spanX || cr_y.length() > m_spanY) return 0; // ray originates from outside of parallelogram
+
+    return m_material->emitPDF(cross(m_vecX, m_vecY).normalize(), ray.d) / area();
+}
+
 
 void
 ParallelogramLight::renderGL() {

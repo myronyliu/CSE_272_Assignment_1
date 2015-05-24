@@ -77,6 +77,7 @@ public:
     RayPath generateRayPath(RayPath &);
 
     Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath);
+    Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, PhotonMap photonMap);
 
     PhotonMap generatePhotonMap();
 
@@ -93,7 +94,7 @@ protected:
     PointLights m_pointLights;
     AreaLights m_areaLights;
     float m_samplingHeuristic = 0.5; // probability of sampling BRDF. Complement is for sampling light
-
+    float m_photonMapRadius = 0.01; // radius for gathering photons in the vicinity
     bool m_preview = false;
 };
 

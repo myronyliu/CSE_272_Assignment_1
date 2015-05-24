@@ -24,6 +24,7 @@ public:
                           const Scene& scene) const;
 
     virtual vec3pdf randEmit(const Vector3& n) const;
+    virtual float emitPDF(const Vector3& n, const Vector3& v) const { return 0; }
     virtual vec3pdf randReflect(const Vector3& ray, const Vector3& hit) const;
     virtual float BRDF(const Vector3& in, const Vector3& normal, const Vector3& out) const { return 0; }
 

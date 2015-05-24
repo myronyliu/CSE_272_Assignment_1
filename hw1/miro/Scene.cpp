@@ -323,8 +323,8 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
     float W = 0.5;
 
-    for (int y = h-1; y > -1; y--)
-    //for (int y = 0; y < h; y++)
+    for (int y = h - 1; y > -1; y--)
+        //for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
         {
@@ -507,7 +507,7 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
             brdf[k] = m->BRDF(in, n, out);
         }
         cosF[k] = std::max(0.0f, dot(n, out));
-        cosB[k] = std::max(0.0f, dot(nNext,-out));
+        cosB[k] = std::max(0.0f, dot(nNext, -out));
         length2[k] = (hNext.P - h.P).length2();
         if (length2[k] == 0) {
             printf("location 1\n");
@@ -547,16 +547,16 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
         if (u == 0) cosB[k] = 1.0f;
         else {
             Vector3 nNext = eyePath.m_hits[u - 1].N;
-            cosB[k] = std::max(0.0f, dot(nNext,-out));
+            cosB[k] = std::max(0.0f, dot(nNext, -out));
         }
         if (u == j - 1) length2[k] = (eyePath.m_hits[u].P - eyePath.m_rays[u].o).length2();
         else length2[k] = (eyePath.m_rays[u + 1].o - eyePath.m_rays[u].o).length2();
         /*if (length2[k] == 0) {
-            printf("location 3\n");
-            printf("%i %i\n", u, j-1);
-            printf("%f %f %f\n", eyePath.m_hits[u].P[0], eyePath.m_hits[u].P[1], eyePath.m_hits[u].P[2]);
-            printf("%f %f %f\n", eyePath.m_rays[u].o[0], eyePath.m_rays[u].o[1], eyePath.m_rays[u].o[2]);
-            system("PAUSE");
+        printf("location 3\n");
+        printf("%i %i\n", u, j-1);
+        printf("%f %f %f\n", eyePath.m_hits[u].P[0], eyePath.m_hits[u].P[1], eyePath.m_hits[u].P[2]);
+        printf("%f %f %f\n", eyePath.m_rays[u].o[0], eyePath.m_rays[u].o[1], eyePath.m_rays[u].o[2]);
+        system("PAUSE");
         }*/
         decayF[k] = decayF[k - 1] * brdf[k] * cosF[k];
         probF[k] = probF[k - 1] * brdf[k] * cosF[k] * cosB[k] / length2[k];
@@ -583,7 +583,7 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
             system("PAUSE");
         }//*/
         Vector3 flux = lightPath.m_light->wattage()*brdf[k] * brdf[k + 1] * decayB[k + 1] * form;
-        float prob = probF[k+1];
+        float prob = probF[k + 1];
         if (k > 0) {
             prob *= probB[k - 1];
             flux *= decayF[k - 1];
@@ -637,5 +637,40 @@ PhotonMap Scene::generatePhotonMap() {
             }
         }
     }
-    return map;
+}
+
+Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, PhotonMap photonMap) {
+    Vector3 flux = Vector3(0, 0, 0);
+    HitInfo h;
+    float intersectEpsilon = 0.00001;
+    Ray rayE = eyePath.m_rays[j - 1];
+    HitInfo hitE = eyePath.m_hits[j - 1];
+    HitInfo hitL = lightPath.m_hits[i];
+    const Material* matE = hitE.material;
+    const Material* matL = hitL.material;
+    float xDot = dot(Vector3(1, 0, 0), hitE.N);
+    float yDot = dot(Vector3(0, 0, 1), hitE.N);
+    Vector3 yAxis;
+    if (fabs(yDot) > fabs(xDot)) yAxis = Vector3(0, 1, 0).orthogonal(hitE.N).normalize();
+    else yAxis = Vector3(1, 0, 0).orthogonal(hitE.N).normalize();
+    Vector3 xAxis = cross(yAxis, hitE.N);
+    float r = sqrt(m_photonMapRadius*rand() / RAND_MAX);
+    float phi = 2.0f * PI*rand() / RAND_MAX;
+    Vector3 perturbation = r*cos(phi)*xAxis + r*sin(phi)*yAxis;
+    Vector3 hitPointE_perturbed = hitE.P + perturbation;
+    Ray LshadowE(hitL.P, (hitPointE_perturbed - hitL.P).normalize());
+    float LshadowE_length2 = (hitPointE_perturbed - hitL.P).length2();
+
+    if (trace(h, LshadowE, intersectEpsilon, sqrt(LshadowE_length2) - intersectEpsilon)) return flux;
+    if (i == 0) {
+        if (!lightPath.m_light->intersect(h, Ray(hitE.P + perturbation,-LshadowE.d))) return flux;
+        float f = matE->BRDF(-LshadowE.d, hitE.N, -perturbation.normalized()) * matE->BRDF(perturbation.normalized(), hitE.N, -rayE.d);
+        flux = lightPath.m_light->wattage()*lightPath.m_light->rayPDF(LshadowE)*f*eyePath.m_fluxDecay[j - 1];
+    }
+    else {
+        float f = matE->BRDF(-LshadowE.d, hitE.N, -perturbation.normalized()) * matE->BRDF(perturbation.normalized(), hitE.N, -rayE.d);
+        float brdfL = matL->BRDF(LshadowE.d, hitL.N, perturbation.normalized());
+        flux = lightPath.m_light->wattage()*lightPath.m_fluxDecay[i] * brdfL*eyePath.m_fluxDecay[j - 1];
+    }
+    return flux;
 }
