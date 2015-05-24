@@ -34,7 +34,7 @@ public:
     int maxPaths() { return m_maxPaths; }
     void addObject(Object* pObj) { m_objects.push_back(pObj); }
     const Objects* objects() const { return &m_objects; }
-    void setSamplingHeuristic(float p) { m_samplingHeuristic = fmin(fmax(0, p), 1); }
+    void setSamplingHeuristic(float p) { m_samplingHeuristic = fmin(fmax(0.0f, p), 1.0f); }
     float samplingHeuristic() { return m_samplingHeuristic; }
 
     void setPreview(bool preview) { m_preview = preview;  }
@@ -95,8 +95,8 @@ protected:
     Lights m_lights;
     PointLights m_pointLights;
     AreaLights m_areaLights;
-    float m_samplingHeuristic = 0.5; // probability of sampling BRDF. Complement is for sampling light
-    float m_photonMapRadius = 0.01; // radius for gathering photons in the vicinity
+    float m_samplingHeuristic = 0.5f; // probability of sampling BRDF. Complement is for sampling light
+    float m_photonMapRadius = 0.01f; // radius for gathering photons in the vicinity
     bool m_preview = false;
 };
 

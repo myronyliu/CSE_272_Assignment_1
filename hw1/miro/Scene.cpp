@@ -496,12 +496,13 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
             flux *= lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
         }
     }
+    return flux;
 }
 
 PhotonMap Scene::generatePhotonMap() {
     HitInfo hit;
     PhotonMap map;
-    for (int i = 0; i < m_lights.size(); i++) {
+    for (unsigned int i = 0; i < m_lights.size(); i++) {
         Light* light = m_lights[i];
         int nPhotons = m_emittedPhotonsPerLight[i];
         Vector3 photonPower = light->wattage() / nPhotons;
