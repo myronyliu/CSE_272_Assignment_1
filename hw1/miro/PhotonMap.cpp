@@ -24,8 +24,8 @@ Vector3 PhotonMap::powerDensity(const Vector3& x, const float& r) {
 }
 
 bool comparePhotons(const std::pair<float,PhotonDeposit>& p1, const std::pair<float,PhotonDeposit>& p2) {
-    if (p1.first < p1.first) return true;
-    else if (p1.first > p1.first) return false;
+    if (p1.first < p2.first) return true;
+    else if (p1.first > p2.first) return false;
     PhotonDeposit d1 = p1.second;
     PhotonDeposit d2 = p2.second;
     if (d1.m_location[0] < d2.m_location[0]) return true;
@@ -50,7 +50,7 @@ RadiusDensityPhotons PhotonMap::radiusDensityPhotons(const Vector3& x, const int
     }
     std::partial_sort(displacement2.begin(), displacement2.begin() + n, displacement2.end(),comparePhotons);
     RadiusDensityPhotons rdp;
-    rdp.m_radius = sqrt(displacement2[n].first);
+    rdp.m_radius = sqrt(displacement2[n-1].first);
     for (int i = 0; i < n; i++) {
         rdp.m_photons.push_back(displacement2[i].second);
         rdp.m_density += displacement2[i].second.m_power;
