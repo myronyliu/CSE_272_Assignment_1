@@ -50,11 +50,11 @@ RadiusDensityPhotons PhotonMap::radiusDensityPhotons(const Vector3& x, const int
     }
     std::partial_sort(displacement2.begin(), displacement2.begin() + n, displacement2.end(),comparePhotons);
     RadiusDensityPhotons rdp;
-    rdp.m_radius = sqrt(displacement2[n-1].first);
+    rdp.m_radius = sqrt(displacement2[n - 1].first);
     for (int i = 0; i < n; i++) {
         rdp.m_photons.push_back(displacement2[i].second);
         rdp.m_density += displacement2[i].second.m_power;
     }
-    rdp.m_density /= (float) n;
+    rdp.m_density /= M_PI*displacement2[n - 1].first*n;
     return rdp;
 }

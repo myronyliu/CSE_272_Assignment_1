@@ -58,10 +58,10 @@ makeRoomScene(){
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
-    wall_F->setMaterial(mat);
+    wall_F->setMaterial(mir);
     cover->setMaterial(coverMat);
 
-    light->flip(); cover->flip(); light->setWattage(5);
+    //light->flip(); cover->flip(); light->setWattage(5);
 
     // add objects to scene
     g_scene->addObject(wall_B);

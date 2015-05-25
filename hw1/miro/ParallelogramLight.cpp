@@ -14,7 +14,8 @@ ParallelogramLight::ParallelogramLight(const Vector3& center,
     m_back = false;
     m_color = Vector3(1, 1, 1);
     m_wattage = 100;
-    Material* mat = new Lambert(Vector3(1.0, 1.0, 1.0));
+    Lambert * mat = new Lambert(Vector3(1.0, 1.0, 1.0));
+    mat->setKd(0);
     mat->setEmittance(1.0);
     mat->setPowerPerArea(m_wattage*m_color / area());
     setMaterial(mat);
