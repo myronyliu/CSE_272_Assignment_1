@@ -78,10 +78,10 @@ public:
     RayPath randLightPath();
     RayPath generateRayPath(RayPath &);
     Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath);
-    Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, PhotonMap photonMap);
+    Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, PhotonMap* photonMap);
 
 
-    PhotonMap generatePhotonMap();
+    PhotonMap* generatePhotonMap();
 
 protected:
     Objects m_objects;

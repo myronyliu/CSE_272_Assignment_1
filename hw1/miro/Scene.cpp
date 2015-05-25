@@ -498,9 +498,9 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
     }
 }
 
-PhotonMap Scene::generatePhotonMap() {
+PhotonMap* Scene::generatePhotonMap() {
     HitInfo hit;
-    PhotonMap map;
+    SequentialPhotonMap spm;
     for (int i = 0; i < m_lights.size(); i++) {
         Light* light = m_lights[i];
         int nPhotons = m_emittedPhotonsPerLight[i];
@@ -508,7 +508,7 @@ PhotonMap Scene::generatePhotonMap() {
         for (int j = 0; j < nPhotons; j++) {
             Ray ray = light->randRay().r;
             PhotonDeposit photon(photonPower, ray.o);
-            map.push_back(photon);
+            spm.addPhoton(photon);
             while (true) {
                 if (!trace(hit, ray)) break;
                 ray.o = hit.P;
@@ -519,7 +519,7 @@ PhotonMap Scene::generatePhotonMap() {
                 if (reflectance[0] / reflectance[1] == photon.m_power[0] / photon.m_power[1] &&
                     reflectance[1] / reflectance[2] == photon.m_power[1] / photon.m_power[2]) {
                     float rn = (float)rand() / RAND_MAX;
-                    if (reflectance[0] == 1 || rn < reflectance[0]) map.push_back(photon);
+                    if (reflectance[0] == 1 || rn < reflectance[0]) spm.addPhoton(photon);
                     else break;
                 }
                 else {
@@ -529,17 +529,19 @@ PhotonMap Scene::generatePhotonMap() {
                     if (!(reflectance[0] == 1 || rn0 < reflectance[0])) photon.m_power[0] = 0;
                     if (!(reflectance[1] == 1 || rn1 < reflectance[1])) photon.m_power[1] = 0;
                     if (!(reflectance[2] == 1 || rn2 < reflectance[2])) photon.m_power[2] = 0;
-                    if (photon.m_power[0] > 0 || photon.m_power[1] > 0 || photon.m_power[2] > 0) map.push_back(photon);
+                    if (photon.m_power[0] > 0 || photon.m_power[1] > 0 || photon.m_power[2] > 0) spm.addPhoton(photon);
                     else break;
                 }
                 // TODO: handle cases where two of the channels match, so we don't get rainbow colors all over the place
             }
         }
     }
-    return map;
+    PhotonMap* pm = new PhotonMap;
+    pm->buildOctree(spm);
+    return pm;
 }
 
-Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, PhotonMap photonMap) {
+Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, PhotonMap* photonMap) {
     Vector3 flux = Vector3(0, 0, 0);
     HitInfo h;
     float intersectEpsilon = 0.00001;
@@ -555,7 +557,7 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, Ph
     if (fabs(yDot) > fabs(xDot)) yAxis = Vector3(0, 1, 0).orthogonal(hitE.N).normalize();
     else yAxis = Vector3(1, 0, 0).orthogonal(hitE.N).normalize();
     Vector3 xAxis = cross(yAxis, hitE.N);
-    RadiusDensityPhotons rdp = photonMap.radiusDensityPhotons(hitE.P, 16);
+    RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hitE.P, 16);
     float r = rdp.m_radius;
     int randN = std::max(rdp.m_photons.size()-1,rdp.m_photons.size()*rand() / RAND_MAX);
     PhotonDeposit photon = rdp.m_photons[randN];
@@ -591,7 +593,8 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
-    PhotonMap pm = generatePhotonMap();
+    PhotonMap* pm = generatePhotonMap();
+    //std::vector<PhotonDeposit> asdf = pm->getAllPhotons();
 
     for (int y = 0; y < h; y++)
     {

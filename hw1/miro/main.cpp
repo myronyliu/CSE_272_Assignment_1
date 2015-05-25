@@ -50,18 +50,18 @@ makeRoomScene(){
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
     Parallelogram * wall_B = new Parallelogram(Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1); // bottom
 
-    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.9), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
-    Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.9), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
+    ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
+    Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     cover->disableBack();
     
     wall_T->setMaterial(mat);
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
-    wall_F->setMaterial(mat);
+    wall_F->setMaterial(mir);
     cover->setMaterial(coverMat);
 
-    light->flip(); cover->flip(); light->setWattage(5);
+    //light->flip(); cover->flip(); light->setWattage(5);
 
     // add objects to scene
     g_scene->addObject(wall_B);
