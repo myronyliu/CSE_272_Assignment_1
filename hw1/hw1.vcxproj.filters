@@ -81,6 +81,9 @@
     <ClCompile Include="miro\PhotonMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="miro\RefractiveInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="miro\BLPatch.h">
@@ -162,6 +165,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="miro\PhotonMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="miro\RefractiveInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

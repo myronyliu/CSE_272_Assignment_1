@@ -93,9 +93,10 @@ Parallelogram::intersect(HitInfo& result, const Ray& ray,
     if (nSteps<tMin || nSteps>tMax) return false;
 
     Vector3 eps = 0.000001*(ray.o - r).normalize();
+    eps = Vector3(0, 0, 0);
     result.t = nSteps;
     result.N = -step_perp.normalized();
     result.P = r + eps;
-    result.material = this->m_material;
+    result.object = this;
     return true;
 }

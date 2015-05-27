@@ -49,46 +49,50 @@ public:
     Vector3 powerDensity(const Vector3& x, const float& r);
     void addPhoton(const PhotonDeposit& photonDeposit);
     RadiusDensityPhotons radiusDensityPhotons(const Vector3& x, const int& n);
-    void buildOctree();
-};
+    //void buildTree();
 
+    std::vector<PhotonDeposit> getPhotons() { return m_photonDeposits; }
+};
 
 // adopted from http://www.brandonpelfrey.com/blog/coding-a-simple-octree/
 class PhotonMap {
 protected:
-    Vector3 m_origin;
-    Vector3 m_halfDimensions;
-    PhotonMap* m_children[8];
+    int m_depth;
+    Vector3 m_xyz;
+    Vector3 m_XYZ;
+    PhotonMap* m_parent;
+    PhotonMap* m_child0;
+    PhotonMap* m_child1;
     PhotonDeposit* m_photon; // the photon associated with this octant if this is a leaf node
-    // Children follow a predictable pattern to make accesses simple. - means less than 'origin' in that dimension, + means greater than.
-    // child:	0 1 2 3 4 5 6 7
-    // x:       - - - - + + + +
-    // y:       - - + + - - + +
-    // z:       - + - + - + - +
 public:
-    PhotonMap() : m_origin(Vector3(0, 0, 0)), m_halfDimensions(Vector3(0, 0, 0)), m_photon(NULL) { for (int i = 0; i < 8; i++) m_children[i] = NULL; }
-    PhotonMap(const Vector3& origin, const Vector3& halfDimensions) : m_origin(origin), m_halfDimensions(halfDimensions), m_photon(NULL) { for (int i = 0; i < 8; i++) m_children[i] = NULL; }
-    PhotonMap(const PhotonMap& copy) : m_origin(copy.m_origin), m_halfDimensions(copy.m_halfDimensions), m_photon(copy.m_photon) {}
-    ~PhotonMap() { for (int i = 0; i < 8; i++) delete m_children[i]; } // recursively delete children
-    int getOctant(const Vector3& point) const; // Determine which octant of the tree would contain 'point'
-    bool isLeafNode() const { return m_children[0] == NULL; }
-    void addPhoton(PhotonDeposit* photon);
-    void getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector<PhotonDeposit*>& results);
-    std::vector<PhotonDeposit> getAllPhotons() {
-        std::vector<PhotonDeposit*> photonPointers;
-        std::vector<PhotonDeposit> photons;
-        float s = 0.05;
-        //getPhotons(m_origin - s*m_halfDimensions, m_origin + s*m_halfDimensions, photonPointers);
-        Vector3 x(0, 0, 2);
-        getPhotons(x - s*m_halfDimensions, x + s*m_halfDimensions, photonPointers);
-        for (int i = 0; i < photonPointers.size(); i++) photons.push_back(*photonPointers[i]);
-        return photons;
+    PhotonMap() {};
+    PhotonMap(
+        const Vector3& xyz, const Vector3& XYZ,
+        PhotonDeposit* photon = NULL,
+        PhotonMap* parent = NULL,
+        PhotonMap* child0 = NULL, PhotonMap* child1 = NULL) :
+        m_xyz(xyz), m_XYZ(XYZ), m_photon(photon), m_parent(parent), m_child0(child0), m_child1(child1)
+    {
+        if (m_parent == NULL) m_depth = 0;
+        else m_depth = m_parent->m_depth + 1;
     }
-    void buildOctree(SequentialPhotonMap spm);
+    PhotonMap(const PhotonMap& copy) :
+        m_xyz(copy.m_xyz), m_XYZ(copy.m_XYZ), m_photon(copy.m_photon), m_parent(copy.m_parent), m_child0(copy.m_child0), m_child1(copy.m_child1) {}
+    ~PhotonMap() { delete m_child0; delete m_child1; } // recursively delete children
+    
+    PhotonMap* getDeepestNode(const Vector3& x);
+    bool isLeafNode() const { return m_child0 == NULL; }
+    void addPhoton(PhotonDeposit photon);
+    void getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector<PhotonDeposit>& photons);
+    std::vector<PhotonDeposit> getPhotons(const Vector3& bmin, const Vector3& bmax) {
+        std::vector<PhotonDeposit> photons; getPhotons(bmin, bmax, photons); return photons;
+    }
+    std::vector<PhotonDeposit> getPhotons() { return getPhotons(m_xyz, m_XYZ); }
+    std::vector<PhotonDeposit> getNearestPhotons(const Vector3& x, const int& n); // returns the n nearest neighbors of input location x
+    void buildTree(SequentialPhotonMap spm);
+    void buildBalancedTree(std::vector<PhotonDeposit> spm, int depth = 0);
+    void buildBalancedTree(SequentialPhotonMap spm);
     RadiusDensityPhotons radiusDensityPhotons(const Vector3& x, const int& n);
-
-    Vector3 origin() { return m_origin; }
-    Vector3 halfDimensions() { return m_halfDimensions; }
 };
 
 #endif // CSE168_PHOTONMAP_H_INCLUDED
