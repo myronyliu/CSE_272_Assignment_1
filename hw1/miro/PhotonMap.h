@@ -8,11 +8,12 @@
 #include "Vector3.h"
 
 struct PhotonDeposit {
-    PhotonDeposit() : m_power(Vector3(0, 0, 0)), m_location(Vector3(0, 0, 0)) {}
-    PhotonDeposit(const Vector3& power, const Vector3& location) : m_power(power), m_location(location) {}
-    PhotonDeposit(const PhotonDeposit& copy) : m_power(copy.m_power), m_location(copy.m_location) {}
+    PhotonDeposit() : m_power(Vector3(0, 0, 0)), m_location(Vector3(0, 0, 0)), m_prob(0) {}
+    PhotonDeposit(const Vector3& power, const Vector3& location, const float& prob) : m_power(power), m_location(location), m_prob(prob) {}
+    PhotonDeposit(const PhotonDeposit& copy) : m_power(copy.m_power), m_location(copy.m_location), m_prob(copy.m_prob) {}
     Vector3 m_power;
     Vector3 m_location;
+    float m_prob;
 };
 
 struct RadiusDensityPhotons {
