@@ -34,6 +34,11 @@ BVH::intersect(HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
                 minHit = tempMinHit;
         }
     }
+    /*if (hit == false) return hit;
+    if (minHit.object->material()->isInteracting() == false) {
+        Ray newRay(minHit.P,minHit.object->randReflect(-ray.d, minHit.N, minHit.P).v); // ugh, what should i do with the pdf? right now, the only interface we have is deterministic so it's fine
+        intersect(minHit, newRay, tMin, tMax);
+    }//*/
     return hit;
 }
 
@@ -57,6 +62,10 @@ BVH::intersect(HitInfo& minHit, const Ray& ray, const Object* skip, float tMin, 
                 minHit = tempMinHit;
         }
     }
-    
+    /*if (hit == false) return hit;
+    if (minHit.object->material()->isInteracting() == false) {
+        Ray newRay(minHit.P, minHit.object->randReflect(-ray.d, minHit.N, minHit.P).v);
+        intersect(minHit, newRay, tMin, tMax);
+    }//*/
     return hit;
 }
