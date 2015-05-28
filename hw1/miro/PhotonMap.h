@@ -1,14 +1,14 @@
 #ifndef CSE168_PHOTONMAP_H_INCLUDED
 #define CSE168_PHOTONMAP_H_INCLUDED
 
-#include <list>
 #include <vector>
+#include <queue>
 #include <algorithm>
+#include <functional>
 #include "Vector3.h"
 
-
 struct PhotonDeposit {
-    PhotonDeposit() : m_power(0), m_location(Vector3(0, 0, 0)) {}
+    PhotonDeposit() : m_power(Vector3(0, 0, 0)), m_location(Vector3(0, 0, 0)) {}
     PhotonDeposit(const Vector3& power, const Vector3& location) : m_power(power), m_location(location) {}
     PhotonDeposit(const PhotonDeposit& copy) : m_power(copy.m_power), m_location(copy.m_location) {}
     Vector3 m_power;
@@ -21,6 +21,31 @@ struct RadiusDensityPhotons {
     std::vector<PhotonDeposit> m_photons;
 
     RadiusDensityPhotons() : m_radius(0), m_density(0), m_photons(std::vector<PhotonDeposit>(0)) {}
+};
+
+
+struct RsqrPhoton {
+    float m_r2;
+    PhotonDeposit m_photon;
+    RsqrPhoton() : m_r2(0), m_photon(PhotonDeposit()) {}
+    RsqrPhoton(const float& r2, const PhotonDeposit& photon) : m_r2(r2), m_photon(photon) {}
+    bool operator<(const RsqrPhoton& rhs) const {
+        if (m_r2 < rhs.m_r2) return true;
+        else if (m_r2 > rhs.m_r2) return false;
+        else if (m_photon.m_location[0] < rhs.m_photon.m_location[0]) return true;
+        else if (m_photon.m_location[0] > rhs.m_photon.m_location[0]) return false;
+        else if (m_photon.m_location[1] < rhs.m_photon.m_location[1]) return true;
+        else if (m_photon.m_location[1] > rhs.m_photon.m_location[1]) return false;
+        else if (m_photon.m_location[2] < rhs.m_photon.m_location[2]) return true;
+        else if (m_photon.m_location[2] > rhs.m_photon.m_location[2]) return false;
+        else if (m_photon.m_power[0] < rhs.m_photon.m_power[0]) return true;
+        else if (m_photon.m_power[0] > rhs.m_photon.m_power[0]) return false;
+        else if (m_photon.m_power[1] < rhs.m_photon.m_power[1]) return true;
+        else if (m_photon.m_power[1] > rhs.m_photon.m_power[1]) return false;
+        else if (m_photon.m_power[2] < rhs.m_photon.m_power[2]) return true;
+        else if (m_photon.m_power[2] > rhs.m_photon.m_power[2]) return false;
+        else return false;
+    }
 };
 
 
@@ -64,6 +89,9 @@ protected:
     PhotonMap* m_child0;
     PhotonMap* m_child1;
     PhotonDeposit* m_photon; // the photon associated with this octant if this is a leaf node
+
+    void getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector<PhotonDeposit>& photons);
+    void getNearestPhotons(const Vector3& x, const int& k, PhotonMap* node, std::priority_queue<RsqrPhoton>& photons, const bool& startAtLeaf = false);
 public:
     PhotonMap() {};
     PhotonMap(
@@ -79,13 +107,14 @@ public:
     PhotonMap(const PhotonMap& copy) :
         m_xyz(copy.m_xyz), m_XYZ(copy.m_XYZ), m_photon(copy.m_photon), m_parent(copy.m_parent), m_child0(copy.m_child0), m_child1(copy.m_child1) {}
     ~PhotonMap() { delete m_child0; delete m_child1; } // recursively delete children
-    
-    PhotonMap* getDeepestNode(const Vector3& x);
+
+    PhotonMap* getLeafNode(const Vector3& x);
     bool isLeafNode() const { return m_child0 == NULL; }
     void addPhoton(PhotonDeposit photon);
-    void getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector<PhotonDeposit>& photons);
     std::vector<PhotonDeposit> getPhotons(const Vector3& bmin, const Vector3& bmax) {
-        std::vector<PhotonDeposit> photons; getPhotons(bmin, bmax, photons); return photons;
+        std::vector<PhotonDeposit> photons;
+        getPhotons(bmin, bmax, photons);
+        return photons;
     }
     std::vector<PhotonDeposit> getPhotons() { return getPhotons(m_xyz, m_XYZ); }
     std::vector<PhotonDeposit> getNearestPhotons(const Vector3& x, const int& n); // returns the n nearest neighbors of input location x
