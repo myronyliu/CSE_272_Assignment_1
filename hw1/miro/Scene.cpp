@@ -337,19 +337,19 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
             Concurrency::parallel_for(0, bidiSamplesPerPix(), [&](int k){
                 RayPath eyePath = randEyePath(x, y, cam, img);
-                if (eyePath.m_hits.size() == 0) {
+                if (eyePath.m_hit.size() == 0) {
                     return;
                 }
                 RayPath lightPath = randLightPath();
 
-                int dj = eyePath.m_hits.size();
-                int di = lightPath.m_hits.size();
+                int dj = eyePath.m_hit.size();
+                int di = lightPath.m_hit.size();
                 for (int i = 0; i < di; i++) {
                     for (int j = 1; j < dj; j++) {
                         fluxSum = estimateFluxMIS(i, j, eyePath, lightPath);
                     }
                 }
-                fluxSum += eyePath.m_hits[0].object->material()->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
+                fluxSum += eyePath.m_hit[0].object->material()->radiance(eyePath.m_hit[0].N, -eyePath.m_ray[0].d);
 
                 if (y == h / 2 && x == w / 2){
                     plotfile << fluxSum[0] / (k + 1) / M_PI / 0.04 << std::endl;
@@ -383,8 +383,9 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
 RayPath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {
     RayPath raypath(cam->eyeRay(x, y, img->width(), img->height()));
-    raypath.m_probs.push_back(1.0);
-    raypath.m_fluxDecay.push_back(1.0);
+    raypath.m_prob.push_back(1);
+    raypath.m_decay.push_back(1);
+    raypath.m_cosF.push_back(1);
     return generateRayPath(raypath);
 }
 
@@ -395,32 +396,36 @@ RayPath Scene::randLightPath() {
 
     RayPDF rp = light->randRay();
     RayPath raypath(rp.r);
-    raypath.m_fluxDecay.push_back(1.0);
+    raypath.m_light = light;
+    HitInfo first_hit(0.0f, rp.r.o, light->normal(rp.r.o), light);
+    raypath.m_hit.push_back(first_hit);
+    raypath.m_brdf.push_back(1);
 
+    raypath.m_decay.push_back(1);
     if (trace(hit, rp.r)) {
         float cosPrime = std::max(0.0f, dot(hit.N, -rp.r.d));
         float distSqr = (hit.P - rp.r.o).length2();
-        raypath.m_probs.push_back(rp.p*cosPrime / distSqr);
+        raypath.m_prob.push_back(rp.p*cosPrime / distSqr);
     }
-    else raypath.m_probs.push_back(1.0);
-
-    HitInfo first_hit(0.0f, rp.r.o, light->normal(rp.r.o),light);
-    raypath.m_hits.push_back(first_hit);
-    raypath.m_light = light;
+    else raypath.m_prob.push_back(1.0);
+    raypath.m_cosF.push_back(std::max(0.0f, dot(first_hit.N, rp.r.d)));
 
     return generateRayPath(raypath);
 }
 
 RayPath Scene::generateRayPath(RayPath & raypath) {
     HitInfo hit;
-    if (!trace(hit, raypath.m_rayInit)) return raypath;
-    raypath.m_hits.push_back(hit);
+    Ray rayInit = raypath.m_ray[0];
+    if (!trace(hit, rayInit)) return raypath;
+    raypath.m_hit.push_back(hit);
+    raypath.m_cosB.push_back(std::max(0.0f, dot(hit.N, -rayInit.d)));
+    raypath.m_length2.push_back((hit.P - rayInit.o).length2());
 
     int bounce = 0;
     while (bounce < m_maxPaths)
     {
-        Ray lastRay = raypath.m_rays.back();
-        HitInfo lastHit = raypath.m_hits.back();
+        Ray lastRay = raypath.m_ray.back();
+        HitInfo lastHit = raypath.m_hit.back();
 
         vec3pdf vp = lastHit.object->material()->randReflect(-lastRay.d, lastHit.N);
         Ray newRay(lastHit.P, vp.v);
@@ -429,10 +434,16 @@ RayPath Scene::generateRayPath(RayPath & raypath) {
         float cos = std::max(0.0f, dot(lastHit.N, newRay.d));
         float cosPrime = std::max(0.0f, dot(hit.N, -newRay.d));
         float distSqr = (hit.P - lastHit.P).length2();
-        raypath.m_rays.push_back(newRay);
-        raypath.m_hits.push_back(hit);
-        raypath.m_probs.push_back(brdf*cos*cosPrime * raypath.m_probs.back() / distSqr);
-        raypath.m_fluxDecay.push_back(brdf*cos*raypath.m_fluxDecay.back());
+
+        raypath.m_hit.push_back(hit);
+        raypath.m_brdf.push_back(brdf);
+
+        raypath.m_ray.push_back(newRay);
+        raypath.m_cosF.push_back(cos);
+        raypath.m_cosB.push_back(cosPrime);
+        raypath.m_length2.push_back(distSqr);
+        raypath.m_prob.push_back(brdf*cos*cosPrime * raypath.m_prob.back() / distSqr);
+        raypath.m_decay.push_back(brdf*cos*raypath.m_decay.back());
 
         bounce++;
     }
@@ -445,9 +456,9 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
     float intersectEpsilon = 0.00001;
 
     if (i == 0) {
-        Vector3 lightPoint = lightPath.m_hits[0].P;
-        Ray rayEye = eyePath.m_rays[j - 1];
-        HitInfo hit = eyePath.m_hits[j - 1];
+        Vector3 lightPoint = lightPath.m_hit[0].P;
+        Ray rayEye = eyePath.m_ray[j - 1];
+        HitInfo hit = eyePath.m_hit[j - 1];
         Material* mat = hit.object->material();
         Ray rayShadow(lightPoint, (hit.P - lightPoint).normalize());
         float shadowLength2 = (hit.P - lightPoint).length2();
@@ -459,27 +470,27 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath) {
             return flux;
         }
         //TODO maybe unnecessary
-        if (dot(lightPath.m_hits[0].N, rayShadow.d) <= 0) {
+        if (dot(lightPath.m_hit[0].N, rayShadow.d) <= 0) {
             return flux; // hits backside of light
         }
         float brdf = mat->BRDF(rayShadow.d, hit.N, -rayEye.d);
-        float form = std::max(0.0f, dot(lightPath.m_hits[0].N, -rayShadow.d))*std::max(0.0f, dot(hit.N, rayShadow.d)) / shadowLength2;
+        float form = std::max(0.0f, dot(lightPath.m_hit[0].N, -rayShadow.d))*std::max(0.0f, dot(hit.N, rayShadow.d)) / shadowLength2;
         flux = lightPath.m_light->wattage() * brdf *  form;
-        flux *= eyePath.m_fluxDecay[j - 1];
+        flux *= eyePath.m_decay[j - 1];
     }
     else {
-        HitInfo hitj = eyePath.m_hits[j - 1];
-        HitInfo hiti = lightPath.m_hits[i];
+        HitInfo hitj = eyePath.m_hit[j - 1];
+        HitInfo hiti = lightPath.m_hit[i];
         Material* mati = hiti.object->material();
         Material* matj = hitj.object->material();
         Ray rayShadow(hitj.P, (hiti.P - hitj.P).normalize());
         float shadowLength2 = (hiti.P - hitj.P).length2();
         if (!trace(h, rayShadow, intersectEpsilon, sqrt(shadowLength2) - intersectEpsilon)) {
-            float brdfi = mati->BRDF(-rayShadow.d, hiti.N, -lightPath.m_rays[i - 1].d);
-            float brdfj = matj->BRDF(rayShadow.d, hitj.N, -eyePath.m_rays[j - 1].d);
+            float brdfi = mati->BRDF(-rayShadow.d, hiti.N, -lightPath.m_ray[i - 1].d);
+            float brdfj = matj->BRDF(rayShadow.d, hitj.N, -eyePath.m_ray[j - 1].d);
             float form = std::max(0.0f, dot(-rayShadow.d, hiti.N))*std::max(0.0f, dot(rayShadow.d, hitj.N)) / shadowLength2;
             flux = lightPath.m_light->wattage() * brdfi * brdfj * form;
-            flux *= lightPath.m_fluxDecay[i - 1] * eyePath.m_fluxDecay[j - 1];
+            flux *= lightPath.m_decay[i - 1] * eyePath.m_decay[j - 1];
         }
     }
 }
@@ -487,46 +498,39 @@ Vector3 Scene::estimateFluxMIS(int i, int j, RayPath eyePath, RayPath lightPath)
     HitInfo hit;
     float intersectEpsilon = 0.00001;
     // The following is for the explicit connection
-    HitInfo hitE = eyePath.m_hits[j - 1];
-    HitInfo hitL = lightPath.m_hits[i];
+    HitInfo hitE = eyePath.m_hit[j - 1];
+    HitInfo hitL = lightPath.m_hit[i];
     Material* matE = hitE.object->material();
     Material* matL = hitL.object->material();
     Ray LshadowE(hitL.P, (hitE.P - hitL.P).normalize()); // shadow ray from Light path to Eye path
     float LshadowE_length2 = (hitE.P - hitL.P).length2();
     if (trace(hit, LshadowE, intersectEpsilon, sqrt(LshadowE_length2) - intersectEpsilon)) return Vector3(0, 0, 0);
     if (i == 0) {
-        Vector3 lightPoint = lightPath.m_hits[0].P;
+        Vector3 lightPoint = lightPath.m_hit[0].P;
         if (!lightPath.m_light->intersect(hit, Ray(hitE.P, (lightPoint - hitE.P).normalize()))) return Vector3(0, 0, 0);
     }
     float LcosE = std::max(0.0f, dot(LshadowE.d, hitL.N));
     float EcosL = std::max(0.0f, dot(-LshadowE.d, hitE.N));
-    float brdfE = matE->BRDF(-LshadowE.d, hitE.N, -eyePath.m_rays[j - 1].d);
+    float brdfE = matE->BRDF(-LshadowE.d, hitE.N, -eyePath.m_ray[j - 1].d);
     float brdfL = 1;
-    if (i>0) brdfL = matL->BRDF(LshadowE.d, hitL.N, -lightPath.m_rays[i - 1].d);
+    if (i>0) brdfL = matL->BRDF(LshadowE.d, hitL.N, -lightPath.m_ray[i - 1].d);
     float EdprobL = (LcosE / LshadowE_length2)*EcosL*brdfE;
     float LdprobE = (EcosL / LshadowE_length2)*LcosE*brdfL;
     ///////////////////////////////////////////////////////////////////////////////////////////////
     vector<float> probF(i + j + 1); // forward from light to eye
     vector<float> probB(i + j + 1); // backward from eye to light
-    vector<float> brdf(i + j + 1);
     vector<float> cosF(i + j + 1);
     vector<float> cosB(i + j + 1);
+    vector<float> brdf(i + j + 1);
     vector<float> length2(i + j + 1);
     for (int k = 0; k < i; k++) {
-        probF[k] = lightPath.m_probs[k];
-        HitInfo h = lightPath.m_hits[k];
-        Vector3 n = h.N;
-        Material* m = h.object->material();
-        HitInfo hNext = lightPath.m_hits[k + 1];
-        Vector3 nNext = hNext.N;
-        Vector3 out = lightPath.m_rays[k].d;
-        if (k == 0) brdf[k] = 1;
-        else brdf[k] = m->BRDF(-lightPath.m_rays[k - 1].d, n, out);
-        cosF[k] = std::max(0.0f, dot(n, out));
-        cosB[k] = std::max(0.0f, dot(nNext, -out));
-        length2[k] = (hNext.P - h.P).length2();
+        probF[k] = lightPath.m_prob[k];
+        brdf[k] = lightPath.m_brdf[k];
+        cosF[k] = lightPath.m_cosF[k];
+        cosB[k] = lightPath.m_cosB[k];
+        length2[k] = lightPath.m_length2[k];
     }
-    probB[i] = EdprobL*eyePath.m_probs[j - 1];
+    probB[i] = EdprobL*eyePath.m_prob[j - 1];
     probF[i] = LdprobE;
     if (i > 0) probF[i] *= probF[i - 1];
     cosF[i] = LcosE;
@@ -535,27 +539,21 @@ Vector3 Scene::estimateFluxMIS(int i, int j, RayPath eyePath, RayPath lightPath)
     length2[i] = LshadowE_length2;
     for (int k = i + 1; k < i + j + 1; k++) {
         int u = i + j - k;
-        probB[k] = eyePath.m_probs[u];
-        HitInfo h = eyePath.m_hits[u];
-        Vector3 n = h.N;
-        const Material* m = h.object->material();
-        Vector3 out = -eyePath.m_rays[u].d;
-        cosF[k] = std::max(0.0f, dot(n, out));
-        if (u == j - 1) brdf[k] = brdfE;
-        else brdf[k] = m->BRDF(eyePath.m_rays[u + 1].d, n, out);
-        if (u == 0) cosB[k] = 1.0f;
-        else cosB[k] = std::max(0.0f, dot(eyePath.m_hits[u - 1].N, -out));
-        length2[k] = (eyePath.m_hits[u].P - eyePath.m_rays[u].o).length2();
+        cosF[k] = eyePath.m_cosB[u]; // note the swap
+        cosB[k] = eyePath.m_cosF[u];
+        brdf[k] = eyePath.m_brdf[u];
+        length2[k] = eyePath.m_length2[u];
+        probB[k] = eyePath.m_prob[u];
         probF[k] = probF[k - 1] * brdf[k] * cosF[k] * cosB[k] / length2[k];
     }
     for (int k = i - 1; k > -1; k--) probB[k] = probB[k + 1] * brdf[k + 1] * cosB[k];
     //////////////////////////////////////////////////////////////////////////
     float form = LcosE * EcosL / LshadowE_length2; // form factor
-    Vector3 flux = lightPath.m_light->wattage()*brdfL* brdfE * eyePath.m_fluxDecay[j - 1] * form;
+    Vector3 flux = lightPath.m_light->wattage()*brdfL* brdfE * eyePath.m_decay[j - 1] * form;
     float prob = probF[i + 1];
     if (i > 0) {
         prob *= probB[i - 1];
-        flux *= lightPath.m_fluxDecay[i - 1];
+        flux *= lightPath.m_decay[i - 1];
     }
     float probSum = 0;
     for (int k = 0; k < i + j; k++) {
@@ -563,7 +561,7 @@ Vector3 Scene::estimateFluxMIS(int i, int j, RayPath eyePath, RayPath lightPath)
         if (k > 0) p *= probF[k - 1];
         probSum += p;
     }
-    return flux / probSum;
+    return flux*prob / probSum;
 }
 
 
@@ -617,10 +615,10 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, Ph
     Vector3 flux = Vector3(0, 0, 0);
     HitInfo h;
     float intersectEpsilon = 0.00001;
-    Ray rayE = eyePath.m_rays[j - 1];
+    Ray rayE = eyePath.m_ray[j - 1];
 
-    HitInfo hitE = eyePath.m_hits[j - 1];
-    HitInfo hitL = lightPath.m_hits[i];
+    HitInfo hitE = eyePath.m_hit[j - 1];
+    HitInfo hitL = lightPath.m_hit[i];
     Material* matE = hitE.object->material();
     Material* matL = hitL.object->material();
     float xDot = dot(Vector3(1, 0, 0), hitE.N);
@@ -643,13 +641,13 @@ Vector3 Scene::estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, Ph
     if (i == 0) {
         if (!lightPath.m_light->intersect(h, Ray(hitPointE_perturbed,-LshadowE.d))) return flux;
         float f = matE->BRDF(-LshadowE.d, hitE.N, -perturbedDirection) * matE->BRDF(perturbedDirection, hitE.N, -rayE.d);
-        flux = lightPath.m_light->wattage()*lightPath.m_light->rayPDF(LshadowE)*density*f*eyePath.m_fluxDecay[j - 1];
+        flux = lightPath.m_light->wattage()*lightPath.m_light->rayPDF(LshadowE)*density*f*eyePath.m_decay[j - 1];
     }
     else {
         float f = matE->BRDF(-LshadowE.d, hitE.N, -perturbedDirection) * matE->BRDF(perturbedDirection, hitE.N, -rayE.d);
-        float brdfL = matL->BRDF(LshadowE.d, hitL.N, -lightPath.m_rays[i - 1].d);
+        float brdfL = matL->BRDF(LshadowE.d, hitL.N, -lightPath.m_ray[i - 1].d);
         float cosL = std::max(0.0f, dot(LshadowE.d, hitL.N));
-        flux = lightPath.m_light->wattage()*lightPath.m_fluxDecay[i - 1] * density*f* brdfL*cosL*eyePath.m_fluxDecay[j - 1];
+        flux = lightPath.m_light->wattage()*lightPath.m_decay[i - 1] * density*f* brdfL*cosL*eyePath.m_decay[j - 1];
     }
     return flux;
 }
@@ -685,24 +683,24 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
             Concurrency::parallel_for(0, bidiSamplesPerPix(), [&](int k){
                 RayPath eyePath = randEyePath(x, y, cam, img);
-                if (eyePath.m_hits.size() == 0) {
+                if (eyePath.m_hit.size() == 0) {
                     return;
                 }
                 RayPath lightPath = randLightPath();
 
-                int dj = eyePath.m_hits.size();
-                int di = lightPath.m_hits.size();
+                int dj = eyePath.m_hit.size();
+                int di = lightPath.m_hit.size();
                 vector<Vector3> fixedLengthFlux(di + dj - 1, Vector3(0, 0, 0));
                 vector<float> fixedLengthPDF(di + dj - 1, 0);
-                fixedLengthFlux[0] = eyePath.m_hits[0].object->material()->radiance(eyePath.m_hits[0].N, -eyePath.m_rays[0].d);
+                fixedLengthFlux[0] = eyePath.m_hit[0].object->material()->radiance(eyePath.m_hit[0].N, -eyePath.m_ray[0].d);
                 fixedLengthPDF[0] = 1;
                 fluxSum += fixedLengthFlux[0];
                 for (int i = 0; i < di; i++){
                     for (int j = 1; j < dj; j++) {
                         Vector3 flux = estimateFlux(i, j, eyePath, lightPath, pm);
                         float pathPDF = 0;
-                        if (i<1) pathPDF = eyePath.m_probs[j - 1];
-                        else pathPDF = lightPath.m_probs[i - 1] * eyePath.m_probs[j - 1];
+                        if (i<1) pathPDF = eyePath.m_prob[j - 1];
+                        else pathPDF = lightPath.m_prob[i - 1] * eyePath.m_prob[j - 1];
                         fixedLengthPDF[i + j] += pathPDF;
                         fixedLengthFlux[i + j] += pathPDF*flux;
                     }

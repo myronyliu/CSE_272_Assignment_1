@@ -8,16 +8,21 @@
 class RayPath
 {
 public:
-    RayPath(Ray rayInit) : m_rayInit(rayInit), m_light(nullptr) {
-        m_rays.push_back(rayInit);
+    RayPath(Ray rayInit) : m_light(nullptr) {
+        m_ray.push_back(rayInit);
     };
 
-    Ray m_rayInit;
-    std::vector<Ray> m_rays;
-    std::vector<HitInfo> m_hits;
-    std::vector<float> m_fluxDecay;
-    std::vector<float> m_probs;
-    std::vector<float> m_brdfs;
+    // brdf is aligned with hit
+    std::vector<HitInfo> m_hit;
+    std::vector<float> m_brdf;
+
+    // the following are all aligned. ray_i corresponds to the ray emitted off of hit_i
+    std::vector<Ray> m_ray;
+    std::vector<float> m_decay; // cumulative
+    std::vector<float> m_prob;  // cumulative
+    std::vector<float> m_cosB;
+    std::vector<float> m_cosF;
+    std::vector<float> m_length2;
 
     Light * m_light;
 };
