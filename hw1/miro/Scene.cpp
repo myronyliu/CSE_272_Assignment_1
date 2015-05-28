@@ -536,7 +536,7 @@ PhotonMap* Scene::generatePhotonMap() {
     }
     PhotonMap* pm = new PhotonMap;
     pm->buildBalancedTree(spm);
-    std::vector<PhotonDeposit> asdf = pm->getPhotons();
+    //std::vector<PhotonDeposit> asdf = pm->getPhotons();
     return pm;
 }
 

@@ -91,7 +91,7 @@ protected:
     PhotonDeposit* m_photon; // the photon associated with this octant if this is a leaf node
 
     void getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector<PhotonDeposit>& photons);
-    void getNearestPhotons(const Vector3& x, const int& k, PhotonMap* node, std::priority_queue<RsqrPhoton>& photons, const bool& startAtLeaf = false);
+    void getNearestPhotons(const Vector3& x, const int& k, PhotonMap* inputNode, const int& rootDepth, std::priority_queue<RsqrPhoton>& photons);
 public:
     PhotonMap() {};
     PhotonMap(

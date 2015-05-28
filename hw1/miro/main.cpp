@@ -79,7 +79,7 @@ makeRoomScene(){
     g_scene->addObject(wall_R);
     g_scene->addObject(wall_T);
     g_scene->addObject(cover);
-    g_scene->addAreaLight(light, 1);
+    g_scene->addAreaLight(light, 10000);
     //g_scene->addObject(water_T);
     //g_scene->addObject(water_N);
 

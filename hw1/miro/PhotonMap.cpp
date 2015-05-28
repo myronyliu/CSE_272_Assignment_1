@@ -110,57 +110,65 @@ void PhotonMap::getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector
     }
 }
 
-void PhotonMap::getNearestPhotons(const Vector3& x, const int& k, PhotonMap* node, std::priority_queue<RsqrPhoton>& photons, const bool& startAtLeaf) {
-    if (startAtLeaf == true) getNearestPhotons(x, k, node->getLeafNode(x), photons);
-    PhotonDeposit photon = *node->m_photon;
+void PhotonMap::getNearestPhotons(const Vector3& x, const int& k, PhotonMap* inputNode, const int& rootDepth, std::priority_queue<RsqrPhoton>& photons) {
+    PhotonMap* node = inputNode->getLeafNode(x);
     PhotonMap* parent = node->m_parent;
     if (parent == NULL) { // this will only ever happen if there is only a single photon, since (in practice) we start at leaf nodes
-        photons.push(RsqrPhoton((node->m_photon->m_location - x).length2(), photon));
+        photons.push(RsqrPhoton((node->m_photon->m_location - x).length2(), *node->m_photon));
         return;
     }
     PhotonMap* sibling = parent->m_child0;
     if (node == parent->m_child0) sibling = parent->m_child1;
 
+    PhotonDeposit photon;
     float r2;
-    bool siblingIntersected = false;
-    if (node->m_photon != NULL) {
-        bool photonAdded = true;
-        r2 = (node->m_photon->m_location - x).length2();
-        if (photons.size() < k) photons.push(RsqrPhoton(r2, photon));
-        else if (r2 < photons.top().m_r2) {
-            photons.pop();
-            photons.push(RsqrPhoton(r2, photon));
+    while (true) {
+        bool photonAdded = false;
+        bool siblingIntersected = false;
+        if (node->m_photon != NULL) {
+            photon = *node->m_photon;
+            photonAdded = true;
+            r2 = (node->m_photon->m_location - x).length2();
+            if (photons.size() < k) photons.push(RsqrPhoton(r2, photon));
+            else if (r2 < photons.top().m_r2) {
+                photons.pop();
+                photons.push(RsqrPhoton(r2, *node->m_photon));
+            }
+            else photonAdded = false;
         }
-        else photonAdded = false;
+        if (node->m_depth == rootDepth) return;
         if (photonAdded == true) {
             int splitAxis = parent->m_depth % 3;
             float d2 = photon.m_location[splitAxis] - parent->m_photon->m_location[splitAxis];
             d2 *= d2;
             if (r2 >= d2) { // sibling division was intersected, so recurse in the sibling
                 siblingIntersected = true;
-                getNearestPhotons(x, k, sibling, photons, true);
+                getNearestPhotons(x, k, sibling, node->m_depth, photons);
             }
         }
-    }
-    if (parent->m_parent == NULL) { // i.e. if parent is root
-        float R2 = (parent->m_photon->m_location - x).length2();
-        PhotonDeposit PHOTON = *parent->m_photon;
-        if (photons.size() < k) photons.push(RsqrPhoton(R2, PHOTON));
-        else if (R2 < photons.top().m_r2) {
-            photons.pop();
-            photons.push(RsqrPhoton(R2, PHOTON));
+        if (parent->m_parent == NULL) { // i.e. if parent is the root of the "entire tree"
+            float R2 = (parent->m_photon->m_location - x).length2();
+            PhotonDeposit PHOTON = *parent->m_photon;
+            if (photons.size() < k) photons.push(RsqrPhoton(R2, PHOTON));
+            else if (R2 < photons.top().m_r2) {
+                photons.pop();
+                photons.push(RsqrPhoton(R2, PHOTON));
+            }
+            if (siblingIntersected == false && photons.size() < k) {
+                getNearestPhotons(x, k, sibling, node->m_depth, photons);
+            }
+            return;
         }
-        if (siblingIntersected == false && photons.size() < k) {
-            getNearestPhotons(x, k, sibling, photons, true);
-        }
-        return;
+        node = parent;
+        parent = node->m_parent;
+        sibling = parent->m_child0;
+        if (node == parent->m_child0) sibling = parent->m_child1;
     }
-    else getNearestPhotons(x, k, parent, photons); // continue moving up the tree
 }
 
 std::vector<PhotonDeposit> PhotonMap::getNearestPhotons(const Vector3& x, const int& n) {
     std::priority_queue<RsqrPhoton> photonQueue;
-    getNearestPhotons(x, n, getLeafNode(x), photonQueue);
+    getNearestPhotons(x, n, getLeafNode(x), m_depth, photonQueue);
     std::vector<PhotonDeposit> photons(photonQueue.size());
     for (int i = 0; i < photonQueue.size(); i++) {
         photons[photonQueue.size() - i - 1] = photonQueue.top().m_photon;
