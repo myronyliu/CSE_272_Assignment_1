@@ -18,13 +18,17 @@ public:
 
     // the following are all aligned. ray_i corresponds to the ray emitted off of hit_i
     std::vector<Ray> m_ray;
-    std::vector<float> m_decay; // CUMULATIVE decay in the flux
-    std::vector<float> m_prob;  // CUMULATIVE probability DENSITY (can be greater than 1)
     std::vector<float> m_cosB;
     std::vector<float> m_cosF;
     std::vector<float> m_length2;
+    std::vector<float> m_decay; // CUMULATIVE decay in the flux
+    std::vector<float> m_prob;  // CUMULATIVE probability DENSITY (can be greater than 1)
+                                // eyePath.m_prob[k] is dimensionless (or 1/Steradians if you like)
+                                // lightPath.m_prob[k] has units of 1/A
+                                // cosB[k]/length2[k] is the conversion factor
+    // TODO: maybe we should just remove m_decay. Since the first term is 1, we can just use m_decay[k]=m_prob[k]/m_prob[0]
 
-    Light * m_light;
+    Light* m_light;
 };
 
 #endif // CSE168_RAYPATH_H_INCLUDED

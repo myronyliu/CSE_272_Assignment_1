@@ -71,7 +71,7 @@ makeRoomScene(){
     water_N->setMaterial(waterMat);
     
 
-    light->flip(); cover->flip(); light->setWattage(2);
+    //light->flip(); cover->flip(); light->setWattage(2);
 
     // add objects to scene
     g_scene->addObject(wall_B);
