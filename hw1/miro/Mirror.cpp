@@ -15,7 +15,7 @@ Mirror::~Mirror()
 }
 
 float Mirror::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const {
-    if (dot((in + out).normalize(), normal) > 0.99999) return (ks()[0] + ks()[1] + ks()[2]) / 3;
+    if (dot((in + out).normalize(), normal) > 0.99999) return (ks()[0] + ks()[1] + ks()[2]) / 3 / dot(normal, out);
     else return 0;
 }
 
