@@ -16,7 +16,11 @@ public:
     std::vector<HitInfo> m_hit;
     std::vector<float> m_brdf;
 
-    // the following are all aligned. ray_i corresponds to the ray emitted off of hit_i
+    // the following are all aligned.
+    // for LIGHTpath: ray_i corresponds to the ray emitted off of hit_i
+    // for   EYEpath: ray_i corresponds to the ray incident on hit_i
+    // Hence for LIGHTpath, there will be one more hit than rays
+    // This is following LAFORTUNE's paper
     std::vector<Ray> m_ray;
     std::vector<float> m_cosB;
     std::vector<float> m_cosF;

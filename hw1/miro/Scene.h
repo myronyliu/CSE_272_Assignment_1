@@ -80,7 +80,6 @@ public:
     RayPath randLightPath();
     RayPath generateRayPath(RayPath &, const int& paths);
     Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath);
-    Vector3 estimateFluxMIS(int i, int j, RayPath eyePath, RayPath lightPath);
     Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, PhotonMap* photonMap);
 
 

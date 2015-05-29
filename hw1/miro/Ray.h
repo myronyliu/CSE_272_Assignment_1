@@ -36,7 +36,7 @@ public:
     Object* object;
 
     //! Default constructor.
-    explicit HitInfo(float t = 0.0f, const Vector3& P = Vector3(), const Vector3& N = Vector3(0.0f, 1.0f, 0.0f)) : t(t), P(P), N(N), object(0) {}
+    explicit HitInfo(float t = 0.0f, const Vector3& P = Vector3(), const Vector3& N = Vector3(0.0f, 0.0f, 0.0f)) : t(t), P(P), N(N), object(0) {}
     explicit HitInfo(float t, const Vector3& P, const Vector3& N, Object* object) : t(t), P(P), N(N), object(object) {}
 };
 
