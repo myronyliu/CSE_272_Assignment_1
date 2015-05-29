@@ -76,11 +76,11 @@ public:
     LightPDF randLightByWattage();
 
 
-    RayPath randEyePath(float i, float j, Camera* cam, Image* img);
-    RayPath randLightPath();
-    RayPath generateRayPath(RayPath &, const int& paths);
-    Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath);
-    Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, PhotonMap* photonMap);
+    EyePath randEyePath(float i, float j, Camera* cam, Image* img);
+    LightPath randLightPath();
+    void bounceRayPath(RayPath &, const int& paths);
+    Vector3 estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath);
+    Vector3 estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath, PhotonMap* photonMap);
 
 
     PhotonMap* generatePhotonMap();

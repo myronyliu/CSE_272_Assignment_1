@@ -31,7 +31,7 @@ makeRoomScene(){
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(256);
-    g_scene->setBidiSamplesPerPix(8);
+    g_scene->setBidiSamplesPerPix(4);
     g_scene->setMaxBounces(100);
     g_scene->setMaxEyePaths(5);
     g_scene->setMaxLightPaths(5);
@@ -71,7 +71,7 @@ makeRoomScene(){
     water_N->setMaterial(waterMat);
     
 
-    //light->flip(); cover->flip(); light->setWattage(2);
+    light->flip(); cover->flip(); light->setWattage(2);
 
     // add objects to scene
     g_scene->addObject(wall_B);
