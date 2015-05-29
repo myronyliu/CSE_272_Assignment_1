@@ -1,5 +1,5 @@
-#ifndef CSE168_MIRROR_H_INCLUDED
-#define CSE168_MIRROR_H_INCLUDED
+#ifndef CSE168_PHONG_H_INCLUDED
+#define CSE168_PHONG_H_INCLUDED
 
 #include "Material.h"
 
@@ -39,4 +39,4 @@ protected:
     float m_n;
 };
 
-#endif // CSE168_MIRROR_H_INCLUDED
+#endif // CSE168_PHONG_H_INCLUDED
