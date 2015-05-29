@@ -13,6 +13,7 @@
 #include "Triangle.h"
 #include "Lambert.h"
 #include "Mirror.h"
+#include "Phong.h"
 #include "RefractiveInterface.h"
 #include "MiroWindow.h"
 
@@ -42,6 +43,8 @@ makeRoomScene(){
     mat->setKd(0.8f);
     Mirror* mir = new Mirror(Vector3(1.0f, 1.0f, 1.0f));
     mir->setKs(0.8f);
+    Phong* pho = new Phong(Vector3(1.0f, 1.0f, 1.0f));
+    pho->setN(50);
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
     coverMat->setKd(0.0f);
     RefractiveInterface* waterMat = new RefractiveInterface(Vector3(1.0f, 1.0f, 1.0f), Vector3(1.0f, 1.0f, 1.0f));
