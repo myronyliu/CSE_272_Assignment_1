@@ -18,8 +18,8 @@ public:
 
     // the following are all aligned. ray_i corresponds to the ray emitted off of hit_i
     std::vector<Ray> m_ray;
-    std::vector<float> m_decay; // cumulative
-    std::vector<float> m_prob;  // cumulative
+    std::vector<float> m_decay; // CUMULATIVE decay in the flux
+    std::vector<float> m_prob;  // CUMULATIVE probability DENSITY (can be greater than 1)
     std::vector<float> m_cosB;
     std::vector<float> m_cosF;
     std::vector<float> m_length2;

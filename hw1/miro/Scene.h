@@ -30,8 +30,10 @@ public:
     int photonSamples() { return m_photonSamples; }
     void setMaxBounces(int i) { m_maxBounces = fmax(0, i); }
     int maxBounces() { return m_maxBounces; }
-    void setMaxPaths(int i) { m_maxPaths = fmax(0, i); }
-    int maxPaths() { return m_maxPaths; }
+    void setMaxEyePaths(int i) { m_maxEyePaths = fmax(0, i); }
+    void setMaxLightPaths(int i) { m_maxLightPaths = fmax(0, i); }
+    int maxEyePaths() { return m_maxEyePaths; }
+    int maxLightPaths() { return m_maxLightPaths; }
     void addObject(Object* pObj) { m_objects.push_back(pObj); }
     const Objects* objects() const { return &m_objects; }
     void setSamplingHeuristic(float p) { m_samplingHeuristic = fmin(fmax(0, p), 1); }
@@ -76,7 +78,7 @@ public:
 
     RayPath randEyePath(float i, float j, Camera* cam, Image* img);
     RayPath randLightPath();
-    RayPath generateRayPath(RayPath &);
+    RayPath generateRayPath(RayPath &, const int& paths);
     Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath);
     Vector3 estimateFluxMIS(int i, int j, RayPath eyePath, RayPath lightPath);
     Vector3 estimateFlux(int i, int j, RayPath eyePath, RayPath lightPath, PhotonMap* photonMap);
@@ -91,7 +93,8 @@ protected:
     int m_bidiSamplesPerPix = 50;
     int m_photonSamples = 100000000;
     int m_maxBounces = 20;
-    int m_maxPaths = 3;
+    int m_maxEyePaths = 1;
+    int m_maxLightPaths = 0;
     std::vector<int> m_emittedPhotonsPerLight;
     Lights m_lights;
     PointLights m_pointLights;
