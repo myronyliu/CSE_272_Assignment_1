@@ -54,14 +54,17 @@ PhotonMap* PhotonMap::getLeafNode(const Vector3& x) {
     if (isLeafNode()) return this;
     else {
         float splitPoint = m_photon->m_location[m_axis];
-        if (x[m_axis] > splitPoint) {
-            if (m_child0->m_XYZ[m_axis] > m_child1->m_XYZ[m_axis]) return m_child0->getLeafNode(x);
-            else return m_child1->getLeafNode(x);
+        if (x[m_axis] < splitPoint) {
+            if (m_child0->m_xyz[m_axis] < m_child1->m_XYZ[m_axis]) return m_child0->getLeafNode(x);
+            else if (m_child1->m_xyz[m_axis] < m_child0->m_XYZ[m_axis]) return m_child1->getLeafNode(x);
+            else return m_child0->getLeafNode(x); // otherwise both children are degenerate (story of my parent's life...)
         }
-        else {
-            if (m_child0->m_xyz[m_axis] <= m_child1->m_xyz[m_axis]) return m_child0->getLeafNode(x);
-            else return m_child1->getLeafNode(x);
+        else if (x[m_axis] > splitPoint) {
+            if (m_child0->m_XYZ[m_axis] > m_child1->m_xyz[m_axis]) return m_child0->getLeafNode(x);
+            else if (m_child1->m_XYZ[m_axis] > m_child0->m_xyz[m_axis]) return m_child1->getLeafNode(x);
+            else return m_child0->getLeafNode(x);
         }
+        else return m_child0->getLeafNode(x);
     }
 }
 
@@ -72,10 +75,10 @@ void PhotonMap::addPhoton(PhotonDeposit newPhotonReference) {
     else {
         Vector3 xyz = leafNode->m_xyz;
         Vector3 XYZ = leafNode->m_XYZ;
-        float splitPoint = leafNode->m_photon->m_location[m_axis];
+        float splitPoint = newPhoton->m_location[m_axis];
         XYZ[m_axis] = splitPoint;
         xyz[m_axis] = splitPoint;
-        if (newPhoton->m_location[m_axis] > splitPoint) {
+        if (newPhoton->m_location[m_axis] <= splitPoint) {
             leafNode->m_child0 = new PhotonMap(xyz, leafNode->m_XYZ, newPhoton, leafNode); // LEFT balanced tree (m_child0 gets filled first always)
             leafNode->m_child1 = new PhotonMap(leafNode->m_xyz, XYZ, NULL, leafNode);
         }
