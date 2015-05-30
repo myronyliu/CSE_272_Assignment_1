@@ -80,14 +80,14 @@ makeRoomScene(){
     g_scene->addObject(wall_R);
     g_scene->addObject(wall_T);
     g_scene->addObject(cover);
-    g_scene->addAreaLight(light, 1000);
+    g_scene->addAreaLight(light, 1000000);
     //g_scene->addObject(water_T);
     //g_scene->addObject(water_N);
 
     // let objects do pre-calculations if needed
     g_scene->preCalc();
 
-    /*PhotonMap* photonMap = g_scene->generatePhotonMapTest();
+    PhotonMap* photonMap = g_scene->generatePhotonMapTest();
     std::vector<PhotonDeposit> photons = photonMap->getPhotons();
     for (int i = 0; i < photons.size(); i++) {
         Sphere* sphere = new Sphere();
@@ -96,15 +96,16 @@ makeRoomScene(){
         g_scene->addObject(sphere);
     }
     float eps = 1;
+    int n = 1;
     std::vector<PhotonDeposit> nearbyPhotons;
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, -eps, 1 - eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, -eps, 1 + eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, eps, 1 - eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, eps, 1 + eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, -eps, 1 - eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, -eps, 1 + eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, eps, 1 - eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, eps, 1 + eps), 1);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, -eps, 1 - eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, -eps, 1 + eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, eps, 1 - eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, eps, 1 + eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, -eps, 1 - eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, -eps, 1 + eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, eps, 1 - eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, eps, 1 + eps), n);
     //*/
 }
 

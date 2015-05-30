@@ -83,6 +83,13 @@ void PhotonMap::addPhoton(PhotonDeposit newPhotonReference) {
             leafNode->m_child0 = new PhotonMap(leafNode->m_xyz, XYZ, newPhoton, leafNode);
             leafNode->m_child1 = new PhotonMap(xyz, leafNode->m_XYZ, NULL, leafNode);
         }
+        PhotonMap* parent = leafNode->m_parent;
+        if (parent != NULL) {
+            if (parent->m_child0 == leafNode) return; // sibling is child1 so we are done
+            if (parent->m_child0->isLeafNode() == false) return; // sibling is child0, but it already has children, so we are done
+            parent->m_child1 = parent->m_child0; // otherwise swap to make tree LEFT balanced
+            parent->m_child0 = leafNode;
+        }
     }
 }
 // Results holds points within a bounding box defined by min/max points (bmin, bmax)
@@ -109,10 +116,27 @@ void PhotonMap::getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector
 }
 
 void PhotonMap::getNearestPhotons(const Vector3& x, const int& k, std::priority_queue<RsqrPhoton>& photons) {
-    if (m_photon == NULL) return;
-    PhotonMap* node = this;
-    while (true) {
-        if (node->m_photon == NULL) break;
+    /*std::vector<PhotonDeposit> allPhotons = getPhotons();
+    for (int i = 0; i < allPhotons.size(); i++) {
+        float rSqr = (allPhotons[i].m_location - x).length2();
+        photons.push(RsqrPhoton(rSqr,allPhotons[i]));
+    }
+    while (photons.size()>k) {
+        photons.pop();
+    }
+    return;//*/
+
+
+    PhotonMap* node = getLeafNode(x);
+    while (node != this) {
+        PhotonMap* parent = node->m_parent;
+        PhotonMap* sibling = parent->m_child0;
+        if (node == sibling) sibling = parent->m_child1;
+        if (node->m_photon == NULL) {
+            sibling->getNearestPhotons(x, k, photons);
+            node = parent;
+            continue;
+        }
         PhotonDeposit photon = *node->m_photon;
         float r2 = (photon.m_location - x).length2();
         if (photons.size() < k) photons.push(RsqrPhoton(r2, photon));
@@ -120,34 +144,22 @@ void PhotonMap::getNearestPhotons(const Vector3& x, const int& k, std::priority_
             photons.pop();
             photons.push(RsqrPhoton(r2, photon));
         }
-        if (node->isLeafNode()) break;
-        int axis = node->m_axis;
-        PhotonMap* child0 = node->m_child0;
-        PhotonMap* child1 = node->m_child1;
-        if (x[axis] > photon.m_location[axis]) {
-            if (child0->m_XYZ[axis] > child1->m_XYZ[axis]) node = child0;
-            else node = child1;
-        }
+        if (photons.size() < k) sibling->getNearestPhotons(x, k, photons);
         else {
-            if (child0->m_xyz[axis] <= child1->m_xyz[axis]) node = child0;
-            else node = m_child1;
-        }
-    }
-    while (node != this) {
-        PhotonMap* parent = node->m_parent;
-        PhotonMap* sibling = parent->m_child0;
-        if (this == sibling) sibling = parent->m_child1;
-        if (photons.size() < k) {
-            sibling->getNearestPhotons(x, k, photons);
-        }
-        else {
-            if (node->m_photon == NULL) return;
-            float d2 = node->m_photon->m_location[m_axis] - x[m_axis];
+            float d2 = parent->m_photon->m_location[parent->m_axis] - x[parent->m_axis];
             d2 *= d2;
             if (d2 < photons.top().m_r2) sibling->getNearestPhotons(x, k, photons);
-            else return;
         }
         node = parent;
+    }
+    // we've reached this node
+    if (node->m_photon == NULL) return;
+    PhotonDeposit photon = *node->m_photon;
+    float r2 = (photon.m_location - x).length2();
+    if (photons.size() < k) photons.push(RsqrPhoton(r2, photon));
+    else if (r2 < photons.top().m_r2) {
+        photons.pop();
+        photons.push(RsqrPhoton(r2, photon));
     }
 }
 std::vector<PhotonDeposit> PhotonMap::getNearestPhotons(const Vector3& x, const int& n) {
@@ -167,8 +179,9 @@ void PhotonMap::buildTree(SequentialPhotonMap spm) {
     for (int i = 0; i < spm.nPhotons(); i++) addPhoton(spm[i]);
 }
 void PhotonMap::buildBalancedTree(SequentialPhotonMap spm) {
-    m_xyz = Vector3(spm.xMin(), spm.yMin(), spm.zMin());
-    m_XYZ = Vector3(spm.xMax(), spm.yMax(), spm.zMax());
+    Vector3 padding = Vector3(1, 1, 1)*0.0001;
+    m_xyz = Vector3(spm.xMin(), spm.yMin(), spm.zMin()) - padding;
+    m_XYZ = Vector3(spm.xMax(), spm.yMax(), spm.zMax()) + padding;
     buildBalancedTree(spm.getPhotons(), 0);
 }
 void PhotonMap::buildBalancedTree(std::vector<PhotonDeposit>photons, int depth) {

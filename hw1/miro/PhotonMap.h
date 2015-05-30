@@ -113,7 +113,7 @@ public:
     ~PhotonMap() { delete m_child0; delete m_child1; } // recursively delete children
 
     PhotonMap* getLeafNode(const Vector3& x);
-    bool isLeafNode() const { return m_child0 == NULL; }
+    inline bool isLeafNode() const { return m_child0 == NULL; }
     void addPhoton(PhotonDeposit photon);
     std::vector<PhotonDeposit> getPhotons(const Vector3& bmin, const Vector3& bmax) {
         std::vector<PhotonDeposit> photons;
@@ -126,6 +126,12 @@ public:
     void buildBalancedTree(std::vector<PhotonDeposit> spm, int depth = 0);
     void buildBalancedTree(SequentialPhotonMap spm);
     RadiusDensityPhotons radiusDensityPhotons(const Vector3& x, const int& n);
+
+    inline PhotonMap* getSibling() {
+        if (m_parent == NULL) return NULL;
+        else if (m_parent->m_child0 == this) return m_parent->m_child1;
+        else return m_parent->m_child0;
+    }
 };
 
 #endif // CSE168_PHOTONMAP_H_INCLUDED

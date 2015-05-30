@@ -682,10 +682,11 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
-    //PhotonMap* photonMap = generatePhotonMap();
-    PhotonMap* photonMap = generatePhotonMapTest();
+    PhotonMap* photonMap = generatePhotonMap();
+    //PhotonMap* photonMap = generatePhotonMapTest();
 
-    for (int y = 0; y < h; y++)
+    for (int y = h - 1; y > -1; y--)
+    //for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
         {
