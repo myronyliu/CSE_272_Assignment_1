@@ -165,12 +165,13 @@ void PhotonMap::getNearestPhotons(const Vector3& x, const int& k, std::priority_
         photons.push(RsqrPhoton(r2, photon));
     }
 }
-std::vector<PhotonDeposit> PhotonMap::getNearestPhotons(const Vector3& x, const int& n) {
+std::vector<PhotonDeposit> PhotonMap::getNearestPhotons(const Vector3& x, const int& k) {
     std::priority_queue<RsqrPhoton> photonQueue;
-    getNearestPhotons(x, n, photonQueue);
-    std::vector<PhotonDeposit> photons(photonQueue.size());
-    for (int i = 0; i < photonQueue.size(); i++) {
-        photons[photonQueue.size() - i - 1] = photonQueue.top().m_photon;
+    getNearestPhotons(x, k, photonQueue);
+    int n = photonQueue.size();
+    std::vector<PhotonDeposit> photons(n);
+    for (int i = 0; i < n; i++) {
+        photons[n - i - 1] = photonQueue.top().m_photon;
         photonQueue.pop();
     }
     return photons;

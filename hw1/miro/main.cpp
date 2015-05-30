@@ -87,6 +87,26 @@ makeRoomScene(){
     // let objects do pre-calculations if needed
     g_scene->preCalc();
 
+    /*PhotonMap* photonMap = g_scene->generatePhotonMapTest();
+    std::vector<PhotonDeposit> photons = photonMap->getPhotons();
+    for (int i = 0; i < photons.size(); i++) {
+        Sphere* sphere = new Sphere();
+        sphere->setCenter(photons[i].m_location);
+        sphere->setRadius(0.1);
+        g_scene->addObject(sphere);
+    }
+    float eps = 1;
+    int n = 3;
+    std::vector<PhotonDeposit> nearbyPhotons;
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, -eps, 1 - eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, -eps, 1 + eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, eps, 1 - eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, eps, 1 + eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, -eps, 1 - eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, -eps, 1 + eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, eps, 1 - eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, eps, 1 + eps), n);
+    //*/
 }
 
 int
