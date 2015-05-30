@@ -100,3 +100,13 @@ Parallelogram::intersect(HitInfo& result, const Ray& ray,
     result.object = this;
     return true;
 }
+
+std::pair<Vector3, Vector3> Parallelogram::axisAlignedBounds() {
+    Vector3 diagP = m_spanX*m_vecX + m_spanY*m_vecY;
+    Vector3 diagM = m_spanX*m_vecX - m_spanY*m_vecY;
+    Vector3 dCenter;
+    dCenter.x = fmax(fabs(diagP.x), fabs(diagM.x));
+    dCenter.y = fmax(fabs(diagP.y), fabs(diagM.y));
+    dCenter.z = fmax(fabs(diagP.z), fabs(diagM.z));
+    return std::pair<Vector3, Vector3>(m_center - dCenter, m_center + dCenter);
+}

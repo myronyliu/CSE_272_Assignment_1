@@ -66,6 +66,8 @@ public:
         return m_material->randReflect(in, n, isFront);
     }
 
+    virtual std::pair<Vector3, Vector3> axisAlignedBounds();
+
 protected:
     Vector3 m_center;
     float m_spanX;

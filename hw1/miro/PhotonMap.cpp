@@ -183,9 +183,8 @@ void PhotonMap::buildTree(SequentialPhotonMap spm) {
     for (int i = 0; i < spm.nPhotons(); i++) addPhoton(spm[i]);
 }
 void PhotonMap::buildBalancedTree(SequentialPhotonMap spm) {
-    Vector3 padding = Vector3(1, 1, 1)*0.0001;
-    m_xyz = Vector3(spm.xMin(), spm.yMin(), spm.zMin()) - padding;
-    m_XYZ = Vector3(spm.xMax(), spm.yMax(), spm.zMax()) + padding;
+    m_xyz = Vector3(spm.xMin(), spm.yMin(), spm.zMin());
+    m_XYZ = Vector3(spm.xMax(), spm.yMax(), spm.zMax());
     buildBalancedTree(spm.getPhotons(), 0);
 }
 void PhotonMap::buildBalancedTree(std::vector<PhotonDeposit>photons, int depth) {
@@ -225,21 +224,25 @@ RadiusDensityPhotons PhotonMap::radiusDensityPhotons(const Vector3& x, const int
 
 
 
-void SequentialPhotonMap::addPhoton(const PhotonDeposit& photonDeposit) {
-    m_photonDeposits.push_back(photonDeposit);
-    if (photonDeposit.m_location[0] < m_xMin) m_xMin = photonDeposit.m_location[0];
-    if (photonDeposit.m_location[1] < m_yMin) m_yMin = photonDeposit.m_location[1];
-    if (photonDeposit.m_location[2] < m_zMin) m_zMin = photonDeposit.m_location[2];
-    if (photonDeposit.m_location[0] > m_xMax) m_xMax = photonDeposit.m_location[0];
-    if (photonDeposit.m_location[1] > m_yMax) m_yMax = photonDeposit.m_location[1];
-    if (photonDeposit.m_location[2] > m_zMax) m_zMax = photonDeposit.m_location[2];
+void SequentialPhotonMap::addPhoton(const PhotonDeposit& photon) {
+    m_photons.push_back(photon);
+    if (m_photons.size() == 1) {
+        m_xyz = photon.m_location;
+        m_XYZ = photon.m_location;
+    }
+    if (photon.m_location[0] < m_xyz.x) m_xyz.x = photon.m_location[0];
+    if (photon.m_location[1] < m_xyz.y) m_xyz.y = photon.m_location[1];
+    if (photon.m_location[2] < m_xyz.z) m_xyz.z = photon.m_location[2];
+    if (photon.m_location[0] > m_XYZ.x) m_XYZ.x = photon.m_location[0];
+    if (photon.m_location[1] > m_XYZ.y) m_XYZ.y = photon.m_location[1];
+    if (photon.m_location[2] > m_XYZ.z) m_XYZ.z = photon.m_location[2];
 }
 
 Vector3 SequentialPhotonMap::powerDensity(const Vector3& x, const float& r) {
     Vector3 rho(0, 0, 0);
-    for (int i = 0; i < m_photonDeposits.size(); i++) {
-        if ((m_photonDeposits[i].m_location - x).length2() < r*r) {
-            rho += m_photonDeposits[i].m_power / (M_PI*r*r);
+    for (int i = 0; i < m_photons.size(); i++) {
+        if ((m_photons[i].m_location - x).length2() < r*r) {
+            rho += m_photons[i].m_power / (M_PI*r*r);
         }
     }
     return rho;
@@ -247,9 +250,9 @@ Vector3 SequentialPhotonMap::powerDensity(const Vector3& x, const float& r) {
 
 
 RadiusDensityPhotons SequentialPhotonMap::radiusDensityPhotons(const Vector3& x, const int& n) {
-    std::vector<std::pair<float, PhotonDeposit>> displacement2(m_photonDeposits.size());
+    std::vector<std::pair<float, PhotonDeposit>> displacement2(m_photons.size());
     for (int i = 0; i < displacement2.size(); i++) {
-        displacement2[i] = std::pair<float, PhotonDeposit>((m_photonDeposits[i].m_location - x).length2(), m_photonDeposits[i]);
+        displacement2[i] = std::pair<float, PhotonDeposit>((m_photons[i].m_location - x).length2(), m_photons[i]);
     }
     std::partial_sort(displacement2.begin(), displacement2.begin() + n, displacement2.end(), comparePhotons);
     RadiusDensityPhotons rdp;
@@ -260,4 +263,32 @@ RadiusDensityPhotons SequentialPhotonMap::radiusDensityPhotons(const Vector3& x,
     }
     rdp.m_density /= M_PI*displacement2[n - 1].first;
     return rdp;
+}
+
+PhotonMap* SequentialPhotonMap::buildTree() {
+    PhotonMap* photonMap = new PhotonMap(m_xyz, m_XYZ);
+    for (int i = 0; i < m_photons.size(); i++) photonMap->addPhoton(m_photons[i]);
+    return photonMap;
+}
+void SequentialPhotonMap::buildBalancedTree(PhotonMap*& photonMap, std::vector<PhotonDeposit> photons, int depth) {
+    if (photons.size() == 0) return;
+    int medianIndex = photons.size() / 2;
+    if (depth % 3 == 0) std::nth_element(photons.begin(), photons.begin() + medianIndex, photons.end(), compareX);
+    else if (depth % 3 == 1) std::nth_element(photons.begin(), photons.begin() + medianIndex, photons.end(), compareY);
+    else std::nth_element(photons.begin(), photons.begin() + medianIndex, photons.end(), compareZ);
+    photonMap->addPhoton(photons[medianIndex]);
+    if (medianIndex > 0) {
+        std::vector<PhotonDeposit>photonsL(photons.begin(), photons.begin() + medianIndex);
+        buildBalancedTree(photonMap, photonsL, depth + 1);
+    }
+    if (medianIndex + 1 < photons.size()) {
+        std::vector<PhotonDeposit>photonsR(photons.begin() + medianIndex + 1, photons.end());
+        buildBalancedTree(photonMap, photonsR, depth + 1);
+    }
+}
+PhotonMap* SequentialPhotonMap::buildBalancedTree(int depth) {
+    PhotonMap* photonMap = new PhotonMap(m_xyz, m_XYZ);
+    std::vector<PhotonDeposit> photons = m_photons;
+    buildBalancedTree(photonMap, photons);
+    return photonMap;
 }

@@ -76,14 +76,14 @@ public:
     LightPDF randLightByWattage();
 
 
-    EyePath randEyePath(float i, float j, Camera* cam, Image* img);
-    LightPath randLightPath();
+    EyePath randEyePath(float i, float j, Camera* cam, Image* img, const int& bounces = -1);
+    LightPath randLightPath(Light* light = NULL, const int& bounces = -1);
     void bounceRayPath(RayPath &, const int& paths);
     Vector3 estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath);
     Vector3 estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath, PhotonMap* photonMap);
 
-    PhotonMap* generatePhotonMap();
-    PhotonMap* generatePhotonMapTest();
+    std::pair<PhotonMap*, std::vector<LightPath>> generatePhotonMap();
+    std::pair<Vector3, Vector3> axisAlignedBounds();
 
 protected:
     Objects m_objects;
