@@ -34,8 +34,8 @@ makeRoomScene(){
     g_scene->setSamplesPerPix(256);
     g_scene->setBidiSamplesPerPix(4);
     g_scene->setMaxBounces(100);
-    g_scene->setMaxEyePaths(1);
-    g_scene->setMaxLightPaths(0);
+    g_scene->setMaxEyePaths(8);
+    g_scene->setMaxLightPaths(8);
     g_scene->setPhotonSamples(10000000);
 
     // create room geometry
@@ -75,7 +75,7 @@ makeRoomScene(){
     water_N->setMaterial(waterMat);
     
 
-    //light->flip(); cover->flip(); light->setWattage(2);
+    light->flip(); cover->flip(); light->setWattage(2);
 
     // add objects to scene
     g_scene->addObject(wall_B);
@@ -100,15 +100,16 @@ makeRoomScene(){
         g_scene->addObject(sphere);
     }
     float eps = 1;
+    int n = 3;
     std::vector<PhotonDeposit> nearbyPhotons;
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, -eps, 1 - eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, -eps, 1 + eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, eps, 1 - eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, eps, 1 + eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, -eps, 1 - eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, -eps, 1 + eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, eps, 1 - eps), 1);
-    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, eps, 1 + eps), 1);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, -eps, 1 - eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, -eps, 1 + eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, eps, 1 - eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, eps, 1 + eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, -eps, 1 - eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, -eps, 1 + eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, eps, 1 - eps), n);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, eps, 1 + eps), n);
     //*/
 }
 

@@ -25,6 +25,8 @@ public:
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const Vector3& point = Vector3(0, 0, 0)) const { return Vector3(0, 0, 0); }
     virtual float BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, Vector3& point = Vector3(0, 0, 0)) const { return 0; }
     virtual vec3pdf randReflect(const Vector3& in, const Vector3& normal, const Vector3& point = Vector3(0,0,0)) const { return vec3pdf(); }
+
+    virtual std::pair<Vector3, Vector3> axisAlignedBounds() { return std::pair<Vector3, Vector3>(Vector3(0, 0, 0), Vector3(0, 0, 0)); }
 protected:
     Material* m_material;
 };

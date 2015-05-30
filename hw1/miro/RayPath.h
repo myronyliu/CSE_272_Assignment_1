@@ -17,8 +17,8 @@ public:
 
     std::vector<Ray> m_ray;
     std::vector<float> m_length2;
-    std::vector<float> m_decay; // CUMULATIVE decay in the flux
-    std::vector<float> m_prob;  // CUMULATIVE probability DENSITY (can be greater than 1)
+    std::vector<float> m_decay; // CUMULATIVE decay in the flux (can also be amplified, since we do Russian Roulette)
+    std::vector<float> m_prob;  // CUMULATIVE probability DENSITY in solid angle space
 
 };
 class EyePath : public RayPath

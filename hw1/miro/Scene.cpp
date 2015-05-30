@@ -376,16 +376,18 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
 }
 
-EyePath Scene::randEyePath(float x, float y, Camera* cam, Image* img) {
+EyePath Scene::randEyePath(float x, float y, Camera* cam, Image* img, const int& bounces) {
     EyePath eyePath(cam->eyeRay(x, y, img->width(), img->height()));
     eyePath.m_prob.push_back(1);
-    bounceRayPath(eyePath, m_maxEyePaths);
+    if (bounces < 0) bounceRayPath(eyePath, m_maxEyePaths);
+    else bounceRayPath(eyePath, m_maxEyePaths);
     return eyePath;
 }
-LightPath Scene::randLightPath() {
+LightPath Scene::randLightPath(Light* lightInput, const int& bounces) {
     HitInfo hit;
-    LightPDF lp = randLightByWattage();
-    Light* light = lp.l;
+    Light* light;
+    if (lightInput==NULL) light = randLightByWattage().l;
+    else light = lightInput;
 
     RayPDF rp = light->randRay();
     Ray rayInit = rp.m_ray;
@@ -398,12 +400,13 @@ LightPath Scene::randLightPath() {
     lightPath.m_lightHit = lightHit;
     lightPath.m_originProb = rp.m_oProb;
 
-    bounceRayPath(lightPath, m_maxLightPaths);
+    if (bounces < 0) bounceRayPath(lightPath, m_maxLightPaths);
+    else bounceRayPath(lightPath, bounces);
     return lightPath;
 }
 
-void Scene::bounceRayPath(RayPath & raypath, const int& paths) {
-    if (paths < 1) return;
+void Scene::bounceRayPath(RayPath & raypath, const int& maxBounces) {
+    if (maxBounces < 1) return;
     HitInfo hit;
     Ray rayInit = raypath.m_ray[0];
     if (!trace(hit, rayInit)) return;
@@ -412,10 +415,16 @@ void Scene::bounceRayPath(RayPath & raypath, const int& paths) {
     raypath.m_length2.push_back((hit.P - rayInit.o).length2());
 
     int bounce = 1;
-    while (bounce < paths)
+    while (bounce < maxBounces)
     {
         Ray lastRay = raypath.m_ray.back();
         HitInfo lastHit = raypath.m_hit.back();
+
+        // Russian Roulette
+        Vector3 reflectanceRGB = lastHit.object->material()->reflectance();
+        float reflectance = (reflectanceRGB[0] + reflectanceRGB[1] + reflectanceRGB[2]) / 3;
+        float rn = (float)rand() / RAND_MAX;
+        if (rn > reflectance) return;
 
         vec3pdf vp = lastHit.object->material()->randReflect(-lastRay.d, lastHit.N);
         Ray newRay(lastHit.P, vp.v);
@@ -433,7 +442,7 @@ void Scene::bounceRayPath(RayPath & raypath, const int& paths) {
         raypath.m_ray.push_back(newRay);
         raypath.m_length2.push_back(distSqr);
         raypath.m_prob.push_back(brdf*cos*raypath.m_prob.back());
-        float decay = brdf*cos;
+        float decay = brdf*cos / reflectance; // divide by Russian Roulette termination probability
         if (raypath.m_decay.size() != 0) decay*=raypath.m_decay.back();
         raypath.m_decay.push_back(decay);
 
@@ -443,6 +452,7 @@ void Scene::bounceRayPath(RayPath & raypath, const int& paths) {
 
 Vector3 Scene::estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath) {
     if (i == 0 && j == 0) return eyePath.m_hit[0].object->material()->radiance(eyePath.m_hit[0].N, -eyePath.m_ray[0].d);
+    if (i < 0 || j < 1) return Vector3(0, 0, 0);
     HitInfo hit;
     float intersectEpsilon = 0.00001;
     // The following is for the explicit connection
@@ -525,72 +535,50 @@ Vector3 Scene::estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath) 
     return flux;
 }
 
-
-PhotonMap* Scene::generatePhotonMapTest() {
-    SequentialPhotonMap spm;
-    Vector3 power(100, 100, 100);
-    spm.addPhoton(PhotonDeposit(power, Vector3(-1, -1, 0), 1));
-    spm.addPhoton(PhotonDeposit(power, Vector3(-1, -1, 2), 1));
-    spm.addPhoton(PhotonDeposit(power, Vector3(-1, 1, 0), 1));
-    spm.addPhoton(PhotonDeposit(power, Vector3(-1, 1, 2), 1));
-    spm.addPhoton(PhotonDeposit(power, Vector3(1, -1, 0), 1));
-    spm.addPhoton(PhotonDeposit(power, Vector3(1, -1, 2), 1));//*/
-    spm.addPhoton(PhotonDeposit(power, Vector3(1, 1, 0), 1));
-    spm.addPhoton(PhotonDeposit(power, Vector3(1, 1, 2), 1));
-    PhotonMap* pm = new PhotonMap;
-    pm->buildBalancedTree(spm);
-    return pm;
+pair<Vector3, Vector3> Scene::axisAlignedBounds() {
+    if (m_objects.size() == 0) return pair<Vector3, Vector3>(Vector3(0, 0, 0), Vector3(0, 0, 0));
+    pair<Vector3, Vector3> objBounds = m_objects[0]->axisAlignedBounds();
+    Vector3 minBounds = objBounds.first;
+    Vector3 maxBounds = objBounds.second;
+    for (int i = 1; i < m_objects.size(); i++) {
+        objBounds = m_objects[i]->axisAlignedBounds();
+        Vector3 xyz = objBounds.first;
+        Vector3 XYZ = objBounds.second;
+        if (xyz.x < minBounds.x) minBounds.x = xyz.x;
+        if (xyz.y < minBounds.y) minBounds.y = xyz.y;
+        if (xyz.z < minBounds.z) minBounds.z = xyz.z;
+        if (XYZ.x > maxBounds.x) maxBounds.x = XYZ.x;
+        if (XYZ.y > maxBounds.y) maxBounds.y = XYZ.y;
+        if (XYZ.z > maxBounds.z) maxBounds.z = XYZ.z;
+    }
+    return pair<Vector3, Vector3>(minBounds, maxBounds);
 }
 
-PhotonMap* Scene::generatePhotonMap() {
-    HitInfo hit;
+pair<PhotonMap*, vector<LightPath>> Scene::generatePhotonMap() {
+    int nPaths = 0;
+    for (int i = 0; i < m_lights.size(); i++) nPaths += m_emittedPhotonsPerLight[i];
+    vector<LightPath> paths(nPaths);
+
     SequentialPhotonMap spm;
-    for (unsigned int i = 0; i < m_lights.size(); i++) {
+    int pathCount = 0;
+    for (int i = 0; i < m_lights.size(); i++) {
         Light* light = m_lights[i];
         int nPhotons = m_emittedPhotonsPerLight[i];
         Vector3 photonPower = light->wattage() / nPhotons;
         for (int j = 0; j < nPhotons; j++) {
-            RayPDF rp = light->randRay();
-            Ray ray = rp.m_ray;
-            PhotonDeposit photon(photonPower, ray.o, 1);
-            photon.m_prob = rp.m_oProb*rp.m_dProb;
-            spm.addPhoton(photon);
-            while (true) {
-                if (!trace(hit, ray)) break;
-                ray.o = hit.P;
-                ray.d = hit.object->material()->randReflect(-ray.d, hit.N).v;
-                photon.m_location = hit.P;
-                //photon.m_prob // TODO: put in the probability for photon propagation
-                Vector3 reflectance = hit.object->material()->reflectance();
-                // Surface is same color as incident photon
-                if (reflectance[0] / reflectance[1] == photon.m_power[0] / photon.m_power[1] &&
-                    reflectance[1] / reflectance[2] == photon.m_power[1] / photon.m_power[2]) {
-                    float rn = (float)rand() / RAND_MAX;
-                    if (reflectance[0] == 1 || rn < reflectance[0]) spm.addPhoton(photon);
-                    else break;
-                }
-                else {
-                    float rn0 = (float)rand() / RAND_MAX;
-                    float rn1 = (float)rand() / RAND_MAX;
-                    float rn2 = (float)rand() / RAND_MAX;
-                    if (!(reflectance[0] == 1 || rn0 < reflectance[0])) photon.m_power[0] = 0;
-                    if (!(reflectance[1] == 1 || rn1 < reflectance[1])) photon.m_power[1] = 0;
-                    if (!(reflectance[2] == 1 || rn2 < reflectance[2])) photon.m_power[2] = 0;
-                    if (photon.m_power[0] > 0 || photon.m_power[1] > 0 || photon.m_power[2] > 0) spm.addPhoton(photon);
-                    else break;
-                }
-                // TODO: handle cases where two of the channels match, so we don't get rainbow colors all over the place
-            }
+            LightPath path = randLightPath(light, 1024);
+            paths[pathCount] = path;
+            pathCount++;
+            spm.addPhoton(PhotonDeposit(photonPower, path.m_lightHit.P));
+            for (int k = 0; k < path.m_hit.size(); k++) spm.addPhoton(PhotonDeposit(photonPower, path.m_hit[k].P));
         }
     }
-    PhotonMap* pm = new PhotonMap;
-    pm->buildBalancedTree(spm);
-    //std::vector<PhotonDeposit> asdf = pm->getPhotons();
-    return pm;
+    return pair<PhotonMap*, vector<LightPath>>(spm.buildBalancedTree(), paths);
 }
 
 Vector3 Scene::estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath, PhotonMap* photonMap) {
     if (i == 0 && j == 0) return eyePath.m_hit[0].object->material()->radiance(eyePath.m_hit[0].N, -eyePath.m_ray[0].d);
+    if (i < 0 || j < 1) return Vector3(0, 0, 0);
     HitInfo hit;
     float intersectEpsilon = 0.00001;
     // The following is for the explicit connection
@@ -657,7 +645,7 @@ Vector3 Scene::estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath, 
     probF[i + j] = probF[i + j - 1] * brdf[i + j - 1] * cosF[i + j - 1];
     for (int k = i - 1; k > -1; k--) probB[k] = probB[k + 1] * brdf[k + 1] * cosB[k + 1];
     //////////////////////////////////////////////////////////////////////////
-    RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, 1);
+    RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, 16);
     Vector3 flux = brdf_L*cosF_L*brdf_E*rdp.m_density;
     if (j > 1) flux *= eyePath.m_decay[j - 2];
     if (i > 1) flux *= lightPath.m_decay[i - 2];
@@ -682,10 +670,12 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
-    //PhotonMap* photonMap = generatePhotonMap();
-    PhotonMap* photonMap = generatePhotonMapTest();
+    pair<PhotonMap*,vector<LightPath>> mapAndPaths = generatePhotonMap();
+    PhotonMap* photonMap = mapAndPaths.first;
+    vector<LightPath> lightPaths = mapAndPaths.second;
 
-    for (int y = 0; y < h; y++)
+    for (int y = h - 1; y > -1; y--)
+    //for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
         {
@@ -702,7 +692,8 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
             Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
                 EyePath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hit.size() == 0) return;
-                LightPath lightPath = randLightPath();
+                float lightPathIndex = fmin(lightPaths.size() - 1, (float)lightPaths.size()*rand() / RAND_MAX);
+                LightPath lightPath = lightPaths[lightPathIndex];
                 Vector3 fluxSum = estimateFlux(0, 0, lightPath, eyePath);
                 for (int i = 0; i <= lightPath.m_hit.size(); i++) {
                     for (int j = 1; j <= eyePath.m_hit.size(); j++) {

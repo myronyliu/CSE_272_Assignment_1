@@ -6,14 +6,14 @@
 #include <algorithm>
 #include <functional>
 #include "Vector3.h"
+#include "Miro.h"
 
 struct PhotonDeposit {
-    PhotonDeposit() : m_power(Vector3(0, 0, 0)), m_location(Vector3(0, 0, 0)), m_prob(0) {}
-    PhotonDeposit(const Vector3& power, const Vector3& location, const float& prob) : m_power(power), m_location(location), m_prob(prob) {}
-    PhotonDeposit(const PhotonDeposit& copy) : m_power(copy.m_power), m_location(copy.m_location), m_prob(copy.m_prob) {}
+    PhotonDeposit() : m_power(Vector3(0, 0, 0)), m_location(Vector3(0, 0, 0)) {}
+    PhotonDeposit(const Vector3& power, const Vector3& location) : m_power(power), m_location(location) {}
+    PhotonDeposit(const PhotonDeposit& copy) : m_power(copy.m_power), m_location(copy.m_location) {}
     Vector3 m_location;
     Vector3 m_power;
-    float m_prob;
 };
 
 struct RadiusDensityPhotons {
@@ -23,7 +23,6 @@ struct RadiusDensityPhotons {
 
     RadiusDensityPhotons() : m_radius(0), m_density(0), m_photons(std::vector<PhotonDeposit>(0)) {}
 };
-
 
 struct RsqrPhoton {
     float m_r2;
@@ -52,35 +51,33 @@ struct RsqrPhoton {
 
 class SequentialPhotonMap {
 protected:
-    float m_xMin;
-    float m_yMin;
-    float m_zMin;
-    float m_xMax;
-    float m_yMax;
-    float m_zMax;
-    std::vector<PhotonDeposit> m_photonDeposits;
+    Vector3 m_xyz;
+    Vector3 m_XYZ;
+    std::vector<PhotonDeposit> m_photons;
+
+    void buildBalancedTree(PhotonMap*& photonMap, std::vector<PhotonDeposit> photons, int depth = 0);
 public:
-    SequentialPhotonMap() : m_photonDeposits(std::vector<PhotonDeposit>(0)), m_xMin(0), m_yMin(0), m_zMin(0), m_xMax(0), m_yMax(0), m_zMax(0) {}
+    SequentialPhotonMap() : m_photons(std::vector<PhotonDeposit>(0)), m_xyz(Vector3(0, 0, 0)), m_XYZ(Vector3(0, 0, 0)) {}
     ~SequentialPhotonMap() {}
 
-    float xMin() { return m_xMin; }
-    float yMin() { return m_yMin; }
-    float zMin() { return m_zMin; }
-    float xMax() { return m_xMax; }
-    float yMax() { return m_yMax; }
-    float zMax() { return m_zMax; }
-    int nPhotons() { return m_photonDeposits.size(); }
-    PhotonDeposit operator[](int i) const { return m_photonDeposits[i]; }
-    PhotonDeposit& operator[](int i) { return m_photonDeposits[i]; }
+    float xMin() { return m_xyz.x; }
+    float yMin() { return m_xyz.y; }
+    float zMin() { return m_xyz.z; }
+    float xMax() { return m_XYZ.x; }
+    float yMax() { return m_XYZ.y; }
+    float zMax() { return m_XYZ.z; }
+    int nPhotons() { return m_photons.size(); }
+    PhotonDeposit operator[](int i) const { return m_photons[i]; }
+    PhotonDeposit& operator[](int i) { return m_photons[i]; }
     Vector3 powerDensity(const Vector3& x, const float& r);
     void addPhoton(const PhotonDeposit& photonDeposit);
     RadiusDensityPhotons radiusDensityPhotons(const Vector3& x, const int& n);
-    //void buildTree();
+    PhotonMap* buildTree();
+    PhotonMap* buildBalancedTree(int depth = 0);
 
-    std::vector<PhotonDeposit> getPhotons() { return m_photonDeposits; }
+    std::vector<PhotonDeposit> getPhotons() { return m_photons; }
 };
 
-// adopted from http://www.brandonpelfrey.com/blog/coding-a-simple-octree/
 class PhotonMap {
 protected:
     int m_depth;
@@ -113,7 +110,7 @@ public:
     ~PhotonMap() { delete m_child0; delete m_child1; } // recursively delete children
 
     PhotonMap* getLeafNode(const Vector3& x);
-    bool isLeafNode() const { return m_child0 == NULL; }
+    inline bool isLeafNode() const { return m_child0 == NULL; }
     void addPhoton(PhotonDeposit photon);
     std::vector<PhotonDeposit> getPhotons(const Vector3& bmin, const Vector3& bmax) {
         std::vector<PhotonDeposit> photons;
@@ -126,6 +123,12 @@ public:
     void buildBalancedTree(std::vector<PhotonDeposit> spm, int depth = 0);
     void buildBalancedTree(SequentialPhotonMap spm);
     RadiusDensityPhotons radiusDensityPhotons(const Vector3& x, const int& n);
+
+    inline PhotonMap* getSibling() {
+        if (m_parent == NULL) return NULL;
+        else if (m_parent->m_child0 == this) return m_parent->m_child1;
+        else return m_parent->m_child0;
+    }
 };
 
 #endif // CSE168_PHOTONMAP_H_INCLUDED
