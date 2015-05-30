@@ -11,8 +11,8 @@ struct PhotonDeposit {
     PhotonDeposit() : m_power(Vector3(0, 0, 0)), m_location(Vector3(0, 0, 0)), m_prob(0) {}
     PhotonDeposit(const Vector3& power, const Vector3& location, const float& prob) : m_power(power), m_location(location), m_prob(prob) {}
     PhotonDeposit(const PhotonDeposit& copy) : m_power(copy.m_power), m_location(copy.m_location), m_prob(copy.m_prob) {}
-    Vector3 m_power;
     Vector3 m_location;
+    Vector3 m_power;
     float m_prob;
 };
 
@@ -84,6 +84,7 @@ public:
 class PhotonMap {
 protected:
     int m_depth;
+    int m_axis;
     Vector3 m_xyz;
     Vector3 m_XYZ;
     PhotonMap* m_parent;
@@ -91,8 +92,9 @@ protected:
     PhotonMap* m_child1;
     PhotonDeposit* m_photon; // the photon associated with this octant if this is a leaf node
 
+    void setAxis() { m_axis = m_depth % 3; } // this is just here in case one wishes to define a different splitting convention
     void getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector<PhotonDeposit>& photons);
-    void getNearestPhotons(const Vector3& x, const int& k, PhotonMap* inputNode, const int& rootDepth, std::priority_queue<RsqrPhoton>& photons);
+    void getNearestPhotons(const Vector3& x, const int& k, std::priority_queue<RsqrPhoton>& photons);
 public:
     PhotonMap() {};
     PhotonMap(
@@ -104,6 +106,7 @@ public:
     {
         if (m_parent == NULL) m_depth = 0;
         else m_depth = m_parent->m_depth + 1;
+        setAxis();
     }
     PhotonMap(const PhotonMap& copy) :
         m_xyz(copy.m_xyz), m_XYZ(copy.m_XYZ), m_photon(copy.m_photon), m_parent(copy.m_parent), m_child0(copy.m_child0), m_child1(copy.m_child1) {}

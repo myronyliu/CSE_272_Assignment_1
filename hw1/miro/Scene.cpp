@@ -526,6 +526,22 @@ Vector3 Scene::estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath) 
 }
 
 
+PhotonMap* Scene::generatePhotonMapTest() {
+    SequentialPhotonMap spm;
+    Vector3 power(100, 100, 100);
+    spm.addPhoton(PhotonDeposit(power, Vector3(-1, -1, 0), 1));
+    spm.addPhoton(PhotonDeposit(power, Vector3(-1, -1, 2), 1));
+    spm.addPhoton(PhotonDeposit(power, Vector3(-1, 1, 0), 1));
+    spm.addPhoton(PhotonDeposit(power, Vector3(-1, 1, 2), 1));
+    spm.addPhoton(PhotonDeposit(power, Vector3(1, -1, 0), 1));
+    spm.addPhoton(PhotonDeposit(power, Vector3(1, -1, 2), 1));//*/
+    spm.addPhoton(PhotonDeposit(power, Vector3(1, 1, 0), 1));
+    spm.addPhoton(PhotonDeposit(power, Vector3(1, 1, 2), 1));
+    PhotonMap* pm = new PhotonMap;
+    pm->buildBalancedTree(spm);
+    return pm;
+}
+
 PhotonMap* Scene::generatePhotonMap() {
     HitInfo hit;
     SequentialPhotonMap spm;
@@ -641,10 +657,8 @@ Vector3 Scene::estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath, 
     probF[i + j] = probF[i + j - 1] * brdf[i + j - 1] * cosF[i + j - 1];
     for (int k = i - 1; k > -1; k--) probB[k] = probB[k + 1] * brdf[k + 1] * cosB[k + 1];
     //////////////////////////////////////////////////////////////////////////
-    RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, 16);
-    float r = rdp.m_radius;
-    Vector3 density = rdp.m_density;
-    Vector3 flux = lightPath.m_light->wattage()*brdf_L*cosF_L*brdf_E*density;
+    RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, 1);
+    Vector3 flux = brdf_L*cosF_L*brdf_E*rdp.m_density;
     if (j > 1) flux *= eyePath.m_decay[j - 2];
     if (i > 1) flux *= lightPath.m_decay[i - 2];
     float prob = probB[i + 1] * (cosF[i] / length2[i + 1])*probF[i] * (cosB[i] / length2[i]);
@@ -668,7 +682,8 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
-    PhotonMap* photonMap = generatePhotonMap();
+    //PhotonMap* photonMap = generatePhotonMap();
+    PhotonMap* photonMap = generatePhotonMapTest();
 
     for (int y = 0; y < h; y++)
     {

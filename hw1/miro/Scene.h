@@ -82,8 +82,8 @@ public:
     Vector3 estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath);
     Vector3 estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath, PhotonMap* photonMap);
 
-
     PhotonMap* generatePhotonMap();
+    PhotonMap* generatePhotonMapTest();
 
 protected:
     Objects m_objects;
