@@ -75,10 +75,13 @@
     <ClCompile Include="miro\Light.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="miro\RayPath.cpp">
+    <ClCompile Include="miro\Mirror.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="miro\Mirror.cpp">
+    <ClCompile Include="miro\PhotonMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="miro\RefractiveInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -159,6 +162,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="miro\Mirror.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="miro\PhotonMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="miro\RefractiveInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

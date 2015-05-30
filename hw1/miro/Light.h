@@ -7,10 +7,11 @@
 #include "Ray.h"
 
 struct RayPDF {
-    Ray r;
-    float p;
-    RayPDF() { r = Ray(Vector3(0, 0, 0), Vector3(0, 0, 0)); p = 0; }
-    RayPDF(Ray R, float P) { r = R; p = P; }
+    Ray m_ray;
+    float m_oProb;
+    float m_dProb;
+    RayPDF() : m_ray(Ray(Vector3(0, 0, 0), Vector3(0, 0, 0))), m_oProb(0), m_dProb(0) {}
+    RayPDF(Ray ray, float oProb, float dProb) : m_ray(ray), m_oProb(oProb), m_dProb(dProb) {}
 };
 
 class Light: public virtual Object
@@ -25,8 +26,8 @@ public:
     //virtual bool intersect(HitInfo& result, const Ray& ray, float tMin = 0.0f, float tMax = MIRO_TMAX) { return false; }
     virtual float area() const { return 1; }
     virtual RayPDF randRay() const { return RayPDF(); }
+    virtual float rayPDF(const Ray& ray) const { return 0; }
     virtual vec3pdf randPt() const { return vec3pdf(Vector3(0, 0, 0), 1); }
-    
 
 protected:
     Vector3 m_color;

@@ -5,21 +5,37 @@
 #include "Ray.h"
 #include "Light.h"
 
-class RayPath
+class RayPath {
+public:
+    RayPath() {}
+    RayPath(Ray rayInit) { m_ray.push_back(rayInit); }
+
+    std::vector<HitInfo> m_hit;
+    std::vector<float> m_brdf;
+    std::vector<float> m_cosF;
+    std::vector<float> m_cosB;
+
+    std::vector<Ray> m_ray;
+    std::vector<float> m_length2;
+    std::vector<float> m_decay; // CUMULATIVE decay in the flux
+    std::vector<float> m_prob;  // CUMULATIVE probability DENSITY (can be greater than 1)
+
+};
+class EyePath : public RayPath
 {
 public:
-    RayPath(Ray rayInit) : m_rayInit(rayInit), m_light(nullptr) {
-        m_rays.push_back(rayInit);
-    };
+    EyePath() : RayPath() {}
+    EyePath(Ray rayInit) : RayPath(rayInit) {}
+};
 
-    Ray m_rayInit;
-    std::vector<Ray> m_rays;
-    std::vector<HitInfo> m_hits;
-    std::vector<float> m_fluxDecay;
-    std::vector<float> m_probs;
-    std::vector<float> m_brdfs;
+class LightPath : public RayPath {
+public:
+    LightPath() : RayPath(), m_light(nullptr) {}
+    LightPath(Ray rayInit) : RayPath(rayInit), m_light(nullptr) {}
 
-    Light * m_light;
+    float m_originProb; // the probability density of sampling the first point on the light (not including the emitted direction PDF, which is in m_prob[0])
+    HitInfo m_lightHit; // the hitinfo on the light
+    Light* m_light;
 };
 
 #endif // CSE168_RAYPATH_H_INCLUDED

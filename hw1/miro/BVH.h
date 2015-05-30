@@ -20,9 +20,6 @@ public:
     bool intersect(HitInfo& result, const Ray& ray, const Object* skip,
         float tMin = 0.0f, float tMax = MIRO_TMAX) const;
 
-    bool intersectLights(HitInfo& results, const Ray& ray,
-        float tMin = 0.0f, float tMax = MIRO_TMAX) const;
-
 protected:
     Objects* m_objects;
     AreaLights* m_areaLights;

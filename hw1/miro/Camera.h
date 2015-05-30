@@ -20,10 +20,12 @@ public:
         RENDER_RAYTRACE = 1,
         RENDER_PATHTRACE = 2,
         RENDER_PHOTONTRACE = 3,
-        RENDER_BIDITRACE = 4
+        RENDER_BIDITRACE = 4,
+        RENDER_UNIFIEDPATH = 5
     };
 
     void click(Scene* pScene, Image* pImage);
+    void renderPrep();
 
     inline bool isOpenGL() const {return m_renderer == RENDER_OPENGL;}
     inline void setRenderer(int i) {m_renderer = i;}

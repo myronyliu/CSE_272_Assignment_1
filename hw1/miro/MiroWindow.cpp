@@ -147,6 +147,7 @@ MiroWindow::keyboard(unsigned char key, int x, int y)
 {
     switch (key)
     {
+        /* ESC */
         case 27:
             exit(0);
         break;
@@ -231,6 +232,11 @@ MiroWindow::keyboard(unsigned char key, int x, int y)
         case 'b':
         case 'B':
             g_camera->setRenderer(Camera::RENDER_BIDITRACE);
+        break;
+
+        case 'u':
+        case 'U':
+            g_camera->setRenderer(Camera::RENDER_UNIFIEDPATH);
         break;
 
         case 'g':

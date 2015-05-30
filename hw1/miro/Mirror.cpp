@@ -14,13 +14,13 @@ Mirror::~Mirror()
 {
 }
 
-float Mirror::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out) const {
-    if (dot((in + out).normalize(), normal) > 0.99999) return (ks()[0] + ks()[1] + ks()[2]) / 3;
+float Mirror::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const {
+    if (dot((in + out).normalize(), normal) > 0.99999) return (ks()[0] + ks()[1] + ks()[2]) / 3 / dot(normal, out);
     else return 0;
 }
 
 Vector3
-Mirror::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
+Mirror::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const bool& isFront) const
 {
     Ray rayLight;
     HitInfo hitLight;
@@ -45,10 +45,10 @@ Mirror::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         float falloff = l.length2();
 
         // get the diffuse component
+        float nDotL = dot(hit.N, l);
         Vector3 result = pLight->color();
-        result *= m_ks;
 
-        L += pLight->wattage() / falloff * result;
+        L += std::max(0.0f, nDotL / falloff * pLight->wattage() *brdf) * result;
     }
 
     const AreaLights *alightlist = scene.areaLights();
@@ -78,20 +78,21 @@ Mirror::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         // the inverse-squared falloff
         float falloff = l.length2();
 
-        // get the diffuse component
+        float nDotL = dot(hit.N, l);
         Vector3 result = aLight->color();
-        result *= m_ks;
 
-        L += std::max(0.0f, dot(hitLight.N, -l))*aLight->wattage() / aLight->area() * result / (vp.p);
+        L += std::max(0.0f, dot(hitLight.N, -l))*
+            std::max(0.0f, nDotL / falloff*
+            aLight->wattage() / aLight->area() *brdf) * result / (vp.p);
     }
 
     // add the ambient component
     L += m_ka;
 
     return L;
-}
+}//*/
 
-vec3pdf Mirror::randReflect(const Vector3& in, const Vector3& normal) const{
+vec3pdf Mirror::randReflect(const Vector3& in, const Vector3& normal, const bool& isFront) const{
     Vector3 out = 2 * dot(normal, in)*normal - in;
     return vec3pdf(out, 1);
 }

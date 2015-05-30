@@ -59,7 +59,7 @@ Sphere::intersect(HitInfo& result, const Ray& ray,
     result.P = ray.o + result.t*ray.d; 
     result.N = (result.P-m_center); 
     result.N.normalize(); 
-    result.material = this->m_material; 
+    result.object = this;
 
     return true;
 }

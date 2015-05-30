@@ -18,18 +18,18 @@ public:
 
     virtual void preCalc() {}
     
-    virtual Vector3 shade(const Ray& ray, const HitInfo& hit,
-                          const Scene& scene) const;
+    virtual Vector3 shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const bool& isFront) const;
 
     // Returns a random direction for an emitted photon given a surface normal
     virtual vec3pdf randEmit(const Vector3& n) const;
+    virtual float emitPDF(const Vector3& n, const Vector3& v) const;
     // Generates a random ray in the upper hemisphere according the BRDF
-    virtual vec3pdf Lambert::randReflect(const Vector3& in, const Vector3& normal) const;
-    // BRDF
-    virtual float BRDF(const Vector3& in, const Vector3& normal, const Vector3& out) const;
+    virtual vec3pdf randReflect(const Vector3& in, const Vector3& normal, const bool& isFront = true) const;
+    virtual float BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront = true) const;
     virtual Vector3 radiance(const Vector3& normal, const Vector3& direction) const;
     virtual Vector3 sum_L_cosTheta_dOmega() const;
 
+    virtual Vector3 reflectance() const { return m_kd; }
 protected:
     Vector3 m_kd;
     Vector3 m_ka;
