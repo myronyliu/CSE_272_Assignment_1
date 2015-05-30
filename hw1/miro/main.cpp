@@ -32,10 +32,10 @@ makeRoomScene(){
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(256);
-    g_scene->setBidiSamplesPerPix(8);
+    g_scene->setBidiSamplesPerPix(4);
     g_scene->setMaxBounces(100);
-    g_scene->setMaxEyePaths(5);
-    g_scene->setMaxLightPaths(5);
+    g_scene->setMaxEyePaths(1);
+    g_scene->setMaxLightPaths(0);
     g_scene->setPhotonSamples(10000000);
 
     // create room geometry
@@ -44,8 +44,7 @@ makeRoomScene(){
     mat->setKd(0.8f);
     Mirror* mir = new Mirror(Vector3(1.0f, 1.0f, 1.0f));
     mir->setKs(0.8f);
-    Phong* pho = new Phong(Vector3(1.0f, 1.0f, 1.0f));
-    pho->setN(50);
+    Phong* pho = new Phong(0.0f, 1.0f, 10, g_camera->eye());
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
     coverMat->setKd(0.0f);
     RefractiveInterface* waterMat = new RefractiveInterface(Vector3(1.0f, 1.0f, 1.0f), Vector3(1.0f, 1.0f, 1.0f));
@@ -64,7 +63,8 @@ makeRoomScene(){
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     cover->disableBack();
     
-    wall_T->setMaterial(mat);
+    //wall_T->setMaterial(mat);
+    wall_T->setMaterial(pho);
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
@@ -84,20 +84,32 @@ makeRoomScene(){
     g_scene->addObject(wall_R);
     g_scene->addObject(wall_T);
     g_scene->addObject(cover);
-    g_scene->addAreaLight(light, 1000000);
+    g_scene->addAreaLight(light, 1000);
     //g_scene->addObject(water_T);
     //g_scene->addObject(water_N);
 
     // let objects do pre-calculations if needed
     g_scene->preCalc();
 
-    /*PhotonMap map = g_scene->generatePhotonMap();
-    for (int i = 0; i < map.size(); i++) {
+    /*PhotonMap* photonMap = g_scene->generatePhotonMapTest();
+    std::vector<PhotonDeposit> photons = photonMap->getPhotons();
+    for (int i = 0; i < photons.size(); i++) {
         Sphere* sphere = new Sphere();
-        sphere->setCenter(map[i].m_location);
-        sphere->setRadius(0.001);
+        sphere->setCenter(photons[i].m_location);
+        sphere->setRadius(0.1);
         g_scene->addObject(sphere);
-    }//*/
+    }
+    float eps = 1;
+    std::vector<PhotonDeposit> nearbyPhotons;
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, -eps, 1 - eps), 1);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, -eps, 1 + eps), 1);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, eps, 1 - eps), 1);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(-eps, eps, 1 + eps), 1);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, -eps, 1 - eps), 1);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, -eps, 1 + eps), 1);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, eps, 1 - eps), 1);
+    nearbyPhotons = photonMap->getNearestPhotons(Vector3(eps, eps, 1 + eps), 1);
+    //*/
 }
 
 int

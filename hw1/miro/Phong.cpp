@@ -5,9 +5,10 @@
 #include <algorithm>
 #include <random>
 
-Phong::Phong(const Vector3 & ks, const Vector3 & ka) :
-m_ks(ks), m_ka(ka)
+Phong::Phong(const Vector3 & kd, const Vector3 & ks, const float n, const Vector3 & v) :
+m_kd(kd), m_ks(ks), m_n(n), m_v(v)
 {
+    m_v.normalize();
 }
 
 Phong::~Phong()
@@ -15,8 +16,11 @@ Phong::~Phong()
 }
 
 float Phong::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const {
-    if (dot((in + out).normalize(), normal) > 0.99999) return (ks()[0] + ks()[1] + ks()[2]) / 3;
-    else return 0;
+    if (dot(normal, out) < 0) return 0;
+    else{
+        Vector3 R = 2.0 * dot(normal, in) * normal - in;
+        return 2*M_PI/(m_n+1) * (m_ks[0] + m_ks[1] + m_ks[2]) / 3 * pow(dot(R, m_v), m_n);
+    }
 }
 
 Vector3
@@ -25,7 +29,7 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const bool&
     Ray rayLight;
     HitInfo hitLight;
     Vector3 L = Vector3(0.0f, 0.0f, 0.0f);
-
+    
     const Vector3 viewDir = -ray.d; // d is a unit vector
 
     const PointLights *plightlist = scene.pointLights();
@@ -44,11 +48,14 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const bool&
         // the inverse-squared falloff
         float falloff = l.length2();
 
+        // normalize the light direction
+        l /= sqrt(falloff);
+
         // get the diffuse component
         float nDotL = dot(hit.N, l);
         Vector3 result = pLight->color();
 
-        L += std::max(0.0f, nDotL / falloff * pLight->wattage() *brdf) * result;
+        L += std::max(0.0f, nDotL / falloff * pLight->wattage()*brdf) * result;
     }
 
     const AreaLights *alightlist = scene.areaLights();
@@ -78,17 +85,21 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const bool&
         // the inverse-squared falloff
         float falloff = l.length2();
 
+        // normalize the light direction
+        l /= sqrt(falloff);
+
+        // get the diffuse component
         float nDotL = dot(hit.N, l);
         Vector3 result = aLight->color();
 
         L += std::max(0.0f, dot(hitLight.N, -l))*
             std::max(0.0f, nDotL / falloff*
-            aLight->wattage() / aLight->area() *brdf) * result / (vp.p);
+            aLight->wattage() / aLight->area()*brdf) * result / (vp.p);
     }
-
+    
     // add the ambient component
     L += m_ka;
-
+    
     return L;
 }//*/
 
@@ -102,8 +113,8 @@ vec3pdf Phong::randEmit(const Vector3& n) const {
 }
 
 Vector3 Phong::radiance(const Vector3& normal, const Vector3& direction) const {
-    if (dot(normal, direction) < 0.99999) return Vector3(0, 0, 0);
-    return m_powerPerArea;
+    if (dot(normal, direction) < 0) return Vector3(0, 0, 0);
+    return m_powerPerArea / (2.0*M_PI);
 }
 
 Vector3 Phong::sum_L_cosTheta_dOmega() const {

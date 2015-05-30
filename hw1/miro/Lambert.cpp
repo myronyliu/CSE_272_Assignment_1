@@ -7,8 +7,7 @@
 
 Lambert::Lambert(const Vector3 & kd, const Vector3 & ka) :
     m_kd(kd), m_ka(ka)
-{
-
+{ 
 }
 
 Lambert::~Lambert()

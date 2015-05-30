@@ -36,6 +36,8 @@ class Lambert;
 class Mirror;
 class PhotonMap;
 class RayPath;
+class EyePath;
+class LightPath;
 
 extern void ParseFile(FILE* fp);
 extern void initOpenGL();

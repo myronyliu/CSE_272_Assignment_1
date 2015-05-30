@@ -6,17 +6,19 @@
 class Phong : public Material
 {
 public:
-    Phong(const Vector3 & ks = Vector3(1),
-        const Vector3 & ka = Vector3(0));
+    Phong(const Vector3 & kd = Vector3(1),
+        const Vector3 & ks = Vector3(0),
+        const float n = 1.0f,
+        const Vector3 & v = Vector3(0));
     virtual ~Phong();
 
+    const Vector3 & kd() const { return m_kd; }
     const Vector3 & ks() const { return m_ks; }
-    const Vector3 & ka() const { return m_ka; }
-    const int n() const { return m_n; }
+    const float n() const { return m_n; }
 
+    void setKd(const Vector3 & kd) { m_kd = kd; }
     void setKs(const Vector3 & ks) { m_ks = ks; }
-    void setKa(const Vector3 & ka) { m_ka = ka; }
-    void setN(const int n) { m_n = n;}
+    void setN(const float n) { m_n = n;}
 
     virtual void preCalc() {}
 
@@ -34,9 +36,10 @@ public:
     virtual Vector3 reflectance() const { return m_ks; }
     virtual Vector3 transmittance() const { return Vector3(0, 0, 0); }
 protected:
+    Vector3 m_kd;
     Vector3 m_ks;
-    Vector3 m_ka;
     float m_n;
+    Vector3 m_v;
 };
 
 #endif // CSE168_PHONG_H_INCLUDED

@@ -22,7 +22,7 @@ bool compareY(const PhotonDeposit& lhs, const PhotonDeposit& rhs) {
     L.m_location = Vector3(L.m_location[1], L.m_location[2], L.m_location[0]);
     R.m_location = Vector3(R.m_location[1], R.m_location[2], R.m_location[0]);
     return compareX(L, R);
-        }
+}
 bool compareZ(const PhotonDeposit& lhs, const PhotonDeposit& rhs) {
     PhotonDeposit L = lhs;
     PhotonDeposit R = rhs;
@@ -52,15 +52,14 @@ bool comparePhotons(const std::pair<float, PhotonDeposit>& p1, const std::pair<f
 
 PhotonMap* PhotonMap::getLeafNode(const Vector3& x) {
     if (isLeafNode()) return this;
-        else {
-        int splitAxis = m_depth % 3;
-        float splitPoint = m_photon->m_location[splitAxis];
-        if (x[splitAxis] > splitPoint) {
-            if (m_child0->m_XYZ[splitAxis] > m_child1->m_XYZ[splitAxis]) return m_child0->getLeafNode(x);
+    else {
+        float splitPoint = m_photon->m_location[m_axis];
+        if (x[m_axis] > splitPoint) {
+            if (m_child0->m_XYZ[m_axis] > m_child1->m_XYZ[m_axis]) return m_child0->getLeafNode(x);
             else return m_child1->getLeafNode(x);
-            }
+        }
         else {
-            if (m_child0->m_xyz[splitAxis] <= m_child1->m_xyz[splitAxis]) return m_child0->getLeafNode(x);
+            if (m_child0->m_xyz[m_axis] <= m_child1->m_xyz[m_axis]) return m_child0->getLeafNode(x);
             else return m_child1->getLeafNode(x);
         }
     }
@@ -71,29 +70,28 @@ void PhotonMap::addPhoton(PhotonDeposit newPhotonReference) {
     PhotonMap* leafNode = getLeafNode(newPhoton->m_location);
     if (leafNode->m_photon == NULL) leafNode->m_photon = newPhoton;
     else {
-        int splitAxis = leafNode->m_depth % 3;
         Vector3 xyz = leafNode->m_xyz;
         Vector3 XYZ = leafNode->m_XYZ;
-        float splitPoint = leafNode->m_photon->m_location[splitAxis];
-        XYZ[splitAxis] = splitPoint;
-        xyz[splitAxis] = splitPoint;
-        if (newPhoton->m_location[splitAxis] > splitPoint) {
+        float splitPoint = leafNode->m_photon->m_location[m_axis];
+        XYZ[m_axis] = splitPoint;
+        xyz[m_axis] = splitPoint;
+        if (newPhoton->m_location[m_axis] > splitPoint) {
             leafNode->m_child0 = new PhotonMap(xyz, leafNode->m_XYZ, newPhoton, leafNode); // LEFT balanced tree (m_child0 gets filled first always)
             leafNode->m_child1 = new PhotonMap(leafNode->m_xyz, XYZ, NULL, leafNode);
-    }
+        }
         else {
             leafNode->m_child0 = new PhotonMap(leafNode->m_xyz, XYZ, newPhoton, leafNode);
             leafNode->m_child1 = new PhotonMap(xyz, leafNode->m_XYZ, NULL, leafNode);
-}
+        }
     }
 }
 // Results holds points within a bounding box defined by min/max points (bmin, bmax)
 void PhotonMap::getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector<PhotonDeposit>& photons) {
     // If we're at a leaf node, just see if the current data point is inside the query bounding box
-        if (m_photon != NULL) {
-            const Vector3& p = m_photon->m_location;
-            if (p.x > bmax.x || p.y > bmax.y || p.z > bmax.z) return;
-            if (p.x < bmin.x || p.y < bmin.y || p.z < bmin.z) return;
+    if (m_photon != NULL) {
+        const Vector3& p = m_photon->m_location;
+        if (p.x > bmax.x || p.y > bmax.y || p.z > bmax.z) return;
+        if (p.x < bmin.x || p.y < bmin.y || p.z < bmin.z) return;
         photons.push_back(*m_photon);
         if (isLeafNode()) return;
         // We're at an interior node of the tree. Check to see if the query bounding box lies outside the octants of this node.
@@ -110,83 +108,69 @@ void PhotonMap::getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector
     }
 }
 
-void PhotonMap::getNearestPhotons(const Vector3& x, const int& k, PhotonMap* inputNode, const int& rootDepth, std::priority_queue<RsqrPhoton>& photons) {
-    PhotonMap* node = inputNode->getLeafNode(x);
-    PhotonMap* parent = node->m_parent;
-    if (parent == NULL) { // this will only ever happen if there is only a single photon, since (in practice) we start at leaf nodes
-        photons.push(RsqrPhoton((node->m_photon->m_location - x).length2(), *node->m_photon));
-        return;
-    }
-    PhotonMap* sibling = parent->m_child0;
-    if (node == parent->m_child0) sibling = parent->m_child1;
-
-    PhotonDeposit photon;
-    float r2;
+void PhotonMap::getNearestPhotons(const Vector3& x, const int& k, std::priority_queue<RsqrPhoton>& photons) {
+    if (m_photon == NULL) return;
+    PhotonMap* node = this;
     while (true) {
-        bool photonAdded = false;
-        bool siblingIntersected = false;
-        if (node->m_photon != NULL) {
-            photon = *node->m_photon;
-            photonAdded = true;
-            r2 = (node->m_photon->m_location - x).length2();
+        if (node->m_photon == NULL) break;
+        PhotonDeposit photon = *node->m_photon;
+        float r2 = (photon.m_location - x).length2();
             if (photons.size() < k) photons.push(RsqrPhoton(r2, photon));
             else if (r2 < photons.top().m_r2) {
                 photons.pop();
-                photons.push(RsqrPhoton(r2, *node->m_photon));
+            photons.push(RsqrPhoton(r2, photon));
             }
-            else photonAdded = false;
+        if (node->isLeafNode()) break;
+        int axis = node->m_axis;
+        PhotonMap* child0 = node->m_child0;
+        PhotonMap* child1 = node->m_child1;
+        if (x[axis] > photon.m_location[axis]) {
+            if (child0->m_XYZ[axis] > child1->m_XYZ[axis]) node = child0;
+            else node = child1;
+            }
+        else {
+            if (child0->m_xyz[axis] <= child1->m_xyz[axis]) node = child0;
+            else node = m_child1;
         }
-        if (node->m_depth == rootDepth) return;
-        if (photonAdded == true) {
-            int splitAxis = parent->m_depth % 3;
-            float d2 = photon.m_location[splitAxis] - parent->m_photon->m_location[splitAxis];
+            }
+    while (node != this) {
+        PhotonMap* parent = node->m_parent;
+        PhotonMap* sibling = parent->m_child0;
+        if (this == sibling) sibling = parent->m_child1;
+        if (photons.size() < k) {
+            sibling->getNearestPhotons(x, k, photons);
+            }
+        else {
+            if (node->m_photon == NULL) return;
+            float d2 = node->m_photon->m_location[m_axis] - x[m_axis];
             d2 *= d2;
-            if (r2 >= d2) { // sibling division was intersected, so recurse in the sibling
-                siblingIntersected = true;
-                getNearestPhotons(x, k, sibling, node->m_depth, photons);
-    }
+            if (d2 < photons.top().m_r2) sibling->getNearestPhotons(x, k, photons);
+            else return;
         }
-        if (parent->m_parent == NULL) { // i.e. if parent is the root of the "entire tree"
-            float R2 = (parent->m_photon->m_location - x).length2();
-            PhotonDeposit PHOTON = *parent->m_photon;
-            if (photons.size() < k) photons.push(RsqrPhoton(R2, PHOTON));
-            else if (R2 < photons.top().m_r2) {
-                photons.pop();
-                photons.push(RsqrPhoton(R2, PHOTON));
-    }
-            if (siblingIntersected == false && photons.size() < k) {
-                getNearestPhotons(x, k, sibling, node->m_depth, photons);
-}
-            return;
-    }
         node = parent;
-        parent = node->m_parent;
-        sibling = parent->m_child0;
-        if (node == parent->m_child0) sibling = parent->m_child1;
+    }
 }
-}
-
 std::vector<PhotonDeposit> PhotonMap::getNearestPhotons(const Vector3& x, const int& n) {
     std::priority_queue<RsqrPhoton> photonQueue;
-    getNearestPhotons(x, n, getLeafNode(x), m_depth, photonQueue);
+    getNearestPhotons(x, n, photonQueue);
     std::vector<PhotonDeposit> photons(photonQueue.size());
     for (int i = 0; i < photonQueue.size(); i++) {
         photons[photonQueue.size() - i - 1] = photonQueue.top().m_photon;
         photonQueue.pop();
-        }
+    }
     return photons;
-            }
+}
 
 void PhotonMap::buildTree(SequentialPhotonMap spm) {
     m_xyz = Vector3(spm.xMin(), spm.yMin(), spm.zMin());
     m_XYZ = Vector3(spm.xMax(), spm.yMax(), spm.zMax());
     for (int i = 0; i < spm.nPhotons(); i++) addPhoton(spm[i]);
-            }
+}
 void PhotonMap::buildBalancedTree(SequentialPhotonMap spm) {
     m_xyz = Vector3(spm.xMin(), spm.yMin(), spm.zMin());
     m_XYZ = Vector3(spm.xMax(), spm.yMax(), spm.zMax());
     buildBalancedTree(spm.getPhotons(), 0);
-                }
+}
 void PhotonMap::buildBalancedTree(std::vector<PhotonDeposit>photons, int depth) {
     if (photons.size() == 0) return;
     int medianIndex = photons.size() / 2;
@@ -197,12 +181,12 @@ void PhotonMap::buildBalancedTree(std::vector<PhotonDeposit>photons, int depth) 
     if (medianIndex > 0) {
         std::vector<PhotonDeposit>photonsL(photons.begin(), photons.begin() + medianIndex);
         buildBalancedTree(photonsL, depth + 1);
-            }
+    }
     if (medianIndex + 1 < photons.size()) {
         std::vector<PhotonDeposit>photonsR(photons.begin() + medianIndex + 1, photons.end());
         buildBalancedTree(photonsR, depth + 1);
-        }
     }
+}
 
 
 RadiusDensityPhotons PhotonMap::radiusDensityPhotons(const Vector3& x, const int& k) {
