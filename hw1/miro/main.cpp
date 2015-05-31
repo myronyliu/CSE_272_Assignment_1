@@ -34,8 +34,8 @@ makeRoomScene(){
     g_scene->setSamplesPerPix(256);
     g_scene->setBidiSamplesPerPix(8);
     g_scene->setMaxBounces(100);
-    g_scene->setMaxEyePaths(8);
-    g_scene->setMaxLightPaths(8);
+    g_scene->setMaxEyePaths(64);
+    g_scene->setMaxLightPaths(64);
     g_scene->setPhotonSamples(10000000);
 
     // create room geometry
@@ -63,8 +63,8 @@ makeRoomScene(){
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     cover->disableBack();
     
-    //wall_T->setMaterial(mat);
-    wall_T->setMaterial(pho);
+    wall_T->setMaterial(mat);
+    //wall_T->setMaterial(pho);
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
