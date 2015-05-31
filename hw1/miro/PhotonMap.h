@@ -5,15 +5,23 @@
 #include <queue>
 #include <algorithm>
 #include <functional>
-#include "Vector3.h"
-#include "Miro.h"
+#include "RayPath.h"
 
-struct PhotonDeposit {
-    PhotonDeposit() : m_power(Vector3(0, 0, 0)), m_location(Vector3(0, 0, 0)) {}
-    PhotonDeposit(const Vector3& power, const Vector3& location) : m_power(power), m_location(location) {}
-    PhotonDeposit(const PhotonDeposit& copy) : m_power(copy.m_power), m_location(copy.m_location) {}
-    Vector3 m_location;
+class PhotonDeposit {
+public:
     Vector3 m_power;
+    LightPath* m_lightPath;
+    int m_hitIndex;
+
+    PhotonDeposit() : m_power(Vector3(0, 0, 0)), m_lightPath(NULL), m_hitIndex(-1) {}
+    PhotonDeposit(const Vector3& power) : m_power(power), m_lightPath(NULL), m_hitIndex(-1) {}
+    PhotonDeposit(const Vector3& power, LightPath* lightPath, const int& hitIndex) : m_power(power), m_lightPath(lightPath), m_hitIndex(hitIndex) {}
+    PhotonDeposit(const PhotonDeposit& copy) : m_power(copy.m_power), m_lightPath(copy.m_lightPath), m_hitIndex(copy.m_hitIndex) {}
+
+    inline Vector3 location() const {
+        if (m_hitIndex < 0) return m_lightPath->m_lightHit.P;
+        else return m_lightPath->m_hit[m_hitIndex].P;
+    }
 };
 
 struct RadiusDensityPhotons {
@@ -32,12 +40,12 @@ struct RsqrPhoton {
     bool operator<(const RsqrPhoton& rhs) const {
         if (m_r2 < rhs.m_r2) return true;
         else if (m_r2 > rhs.m_r2) return false;
-        else if (m_photon.m_location[0] < rhs.m_photon.m_location[0]) return true;
-        else if (m_photon.m_location[0] > rhs.m_photon.m_location[0]) return false;
-        else if (m_photon.m_location[1] < rhs.m_photon.m_location[1]) return true;
-        else if (m_photon.m_location[1] > rhs.m_photon.m_location[1]) return false;
-        else if (m_photon.m_location[2] < rhs.m_photon.m_location[2]) return true;
-        else if (m_photon.m_location[2] > rhs.m_photon.m_location[2]) return false;
+        else if (m_photon.location()[0] < rhs.m_photon.location()[0]) return true;
+        else if (m_photon.location()[0] > rhs.m_photon.location()[0]) return false;
+        else if (m_photon.location()[1] < rhs.m_photon.location()[1]) return true;
+        else if (m_photon.location()[1] > rhs.m_photon.location()[1]) return false;
+        else if (m_photon.location()[2] < rhs.m_photon.location()[2]) return true;
+        else if (m_photon.location()[2] > rhs.m_photon.location()[2]) return false;
         else if (m_photon.m_power[0] < rhs.m_photon.m_power[0]) return true;
         else if (m_photon.m_power[0] > rhs.m_photon.m_power[0]) return false;
         else if (m_photon.m_power[1] < rhs.m_photon.m_power[1]) return true;

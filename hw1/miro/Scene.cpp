@@ -339,10 +339,10 @@ Scene::biditraceImage(Camera *cam, Image *img)
                 EyePath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hit.size() == 0) return;
                 LightPath lightPath = randLightPath();
-                Vector3 fluxSum = estimateFlux(0, 0, lightPath, eyePath);
+                Vector3 fluxSum = bidiFlux(0, 0, lightPath, eyePath);
                 for (int i = 0; i <= lightPath.m_hit.size(); i++) {
                     for (int j = 1; j <= eyePath.m_hit.size(); j++) {
-                        fluxSum += estimateFlux(i, j, lightPath, eyePath);
+                        fluxSum += bidiFlux(i, j, lightPath, eyePath);
                     }
                 }
                 fluxSumOverSamples += fluxSum;
@@ -450,7 +450,7 @@ void Scene::bounceRayPath(RayPath & raypath, const int& maxBounces) {
     }
 }
 
-Vector3 Scene::estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath) {
+Vector3 Scene::bidiFlux(int i, int j, LightPath lightPath, EyePath eyePath) {
     if (i == 0 && j == 0) return eyePath.m_hit[0].object->material()->radiance(eyePath.m_hit[0].N, -eyePath.m_ray[0].d);
     if (i < 0 || j < 1) return Vector3(0, 0, 0);
     HitInfo hit;
@@ -554,10 +554,10 @@ pair<Vector3, Vector3> Scene::axisAlignedBounds() {
     return pair<Vector3, Vector3>(minBounds, maxBounds);
 }
 
-pair<PhotonMap*, vector<LightPath>> Scene::generatePhotonMap() {
+pair<PhotonMap*, vector<LightPath*>> Scene::generatePhotonMap() {
     int nPaths = 0;
     for (int i = 0; i < m_lights.size(); i++) nPaths += m_emittedPhotonsPerLight[i];
-    vector<LightPath> paths(nPaths);
+    vector<LightPath*> paths(nPaths);
 
     SequentialPhotonMap spm;
     int pathCount = 0;
@@ -566,17 +566,18 @@ pair<PhotonMap*, vector<LightPath>> Scene::generatePhotonMap() {
         int nPhotons = m_emittedPhotonsPerLight[i];
         Vector3 photonPower = light->wattage() / nPhotons;
         for (int j = 0; j < nPhotons; j++) {
-            LightPath path = randLightPath(light, 1024);
+            LightPath* path = new LightPath;
+            *path = randLightPath(light, 1024);
             paths[pathCount] = path;
             pathCount++;
-            spm.addPhoton(PhotonDeposit(photonPower, path.m_lightHit.P));
-            for (int k = 0; k < path.m_hit.size(); k++) spm.addPhoton(PhotonDeposit(photonPower, path.m_hit[k].P));
+            spm.addPhoton(PhotonDeposit(photonPower, path, -1));
+            for (int k = 0; k < path->m_hit.size(); k++) spm.addPhoton(PhotonDeposit(photonPower, path, k));
         }
     }
-    return pair<PhotonMap*, vector<LightPath>>(spm.buildBalancedTree(), paths);
+    return pair<PhotonMap*, vector<LightPath*>>(spm.buildBalancedTree(), paths);
 }
 
-Vector3 Scene::estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath, PhotonMap* photonMap) {
+Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath, PhotonMap* photonMap, const bool& explicitConnection, const int& nLightPaths) {
     if (i == 0 && j == 0) return eyePath.m_hit[0].object->material()->radiance(eyePath.m_hit[0].N, -eyePath.m_ray[0].d);
     if (i < 0 || j < 1) return Vector3(0, 0, 0);
     HitInfo hit;
@@ -645,22 +646,51 @@ Vector3 Scene::estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath, 
     probF[i + j] = probF[i + j - 1] * brdf[i + j - 1] * cosF[i + j - 1];
     for (int k = i - 1; k > -1; k--) probB[k] = probB[k + 1] * brdf[k + 1] * cosB[k + 1];
     //////////////////////////////////////////////////////////////////////////
-    float nGatheredPhotons = 16;
-    RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, nGatheredPhotons);
-    Vector3 flux = brdf_L*cosF_L*brdf_E*rdp.m_density;
+    Vector3 flux;
+    if (explicitConnection == true) {
+        float formFactor = cosF_L * cosB_E / shadowLength2; // form factor
+        flux = lightPath.m_light->wattage()*brdf_L*brdf_E*formFactor; // flux for path integration (additional decay factors below)
+    }
+    else {
+        RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, m_nGatheredPhotons);
+        flux = rdp.m_density*(brdf_L*cosF_L)*brdf_E; // flux for density estimation (additional decay factors below)
+    }
     if (j > 1) flux *= eyePath.m_decay[j - 2];
     if (i > 1) flux *= lightPath.m_decay[i - 2];
-    float prob = probB[i + 1] * (cosF[i] / length2[i + 1])*probF[i] * (cosB[i] / length2[i])*rdp.m_density[0];
-    float probSum = prob;
+
+    float probSum = 0;
     for (int k = 0; k < i + j; k++) {
-        if (k == i) continue;
-        else if (k < i) rdp = photonMap->radiusDensityPhotons(lightPath.m_hit[k].P, nGatheredPhotons);
-        else rdp = photonMap->radiusDensityPhotons(eyePath.m_hit[i + j - k - 1].P, nGatheredPhotons);
-        float p = probB[k + 1] * (cosF[k] / length2[k + 1])*probF[k] * (cosB[k] / length2[k])*rdp.m_density[0];
-        probSum += p;
+        RadiusDensityPhotons rdp;
+        if (k < i) rdp = photonMap->radiusDensityPhotons(lightPath.m_hit[k].P, m_nGatheredPhotons);
+        else rdp = photonMap->radiusDensityPhotons(eyePath.m_hit[i + j - k - 1].P, m_nGatheredPhotons);
+        float densityKernel = 1.0f / (M_PI*rdp.m_radius*rdp.m_radius);
+
+        float probCommon = probB[k + 1] * (cosF[k] / length2[k + 1]);
+        float probPI = probCommon*probF[k] * (cosB[k] / length2[k]);
+        float probDE = probCommon*densityKernel*nLightPaths;
+
+        if (k == i) flux *= probPI + probDE;
+
+        probSum += probPI + probDE;
     }
-    flux *= prob / probSum;
-    return flux;
+    return flux / probSum;
+}
+
+
+Vector3 Scene::uniFluxDE(const int& j, const EyePath& eyePath, PhotonMap* photonMap, const int& nLightPaths) {
+    HitInfo hit_E = eyePath.m_hit[j - 1];
+    RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, m_nGatheredPhotons);
+    float densityKernel = 1.0f / (M_PI*rdp.m_radius*rdp.m_radius);
+
+    Vector3 flux(0,0,0);
+
+    for (int k = 0; k < m_nGatheredPhotons; k++) {
+        PhotonDeposit photon = rdp.m_photons[k];
+        int i = photon.m_hitIndex + 1;
+        LightPath lightPath = *photon.m_lightPath;
+        flux += uniFlux(i, j, lightPath, eyePath, photonMap, false, nLightPaths);
+    }
+    return flux / nLightPaths;
 }
 
 void
@@ -674,9 +704,8 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
-    pair<PhotonMap*,vector<LightPath>> mapAndPaths = generatePhotonMap();
-    PhotonMap* photonMap = mapAndPaths.first;
-    vector<LightPath> lightPaths = mapAndPaths.second;
+    pair<PhotonMap*,vector<LightPath*>> mapAndPaths = generatePhotonMap();
+    int nLightPaths = mapAndPaths.second.size();
 
     for (int y = h - 1; y > -1; y--)
     //for (int y = 0; y < h; y++)
@@ -696,12 +725,13 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
             Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
                 EyePath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hit.size() == 0) return;
-                float lightPathIndex = fmin(lightPaths.size() - 1, (float)lightPaths.size()*rand() / RAND_MAX);
-                LightPath lightPath = lightPaths[lightPathIndex];
-                Vector3 fluxSum = estimateFlux(0, 0, lightPath, eyePath);
-                for (int i = 0; i <= lightPath.m_hit.size(); i++) {
-                    for (int j = 1; j <= eyePath.m_hit.size(); j++) {
-                        fluxSum += estimateFlux(i, j, lightPath, eyePath, photonMap);
+                float lightPathIndex = fmin(nLightPaths - 1, (float)nLightPaths*rand() / RAND_MAX);
+                LightPath lightPath = *mapAndPaths.second[lightPathIndex];
+                Vector3 fluxSum = uniFlux(0, 0, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
+                for (int j = 1; j <= eyePath.m_hit.size(); j++) {
+                    fluxSum += uniFluxDE(j, eyePath, mapAndPaths.first, nLightPaths);
+                    for (int i = 0; i <= lightPath.m_hit.size(); i++) {
+                        fluxSum += uniFlux(i, j, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
                     }
                 }
                 fluxSumOverSamples += fluxSum;

@@ -79,10 +79,11 @@ public:
     EyePath randEyePath(float i, float j, Camera* cam, Image* img, const int& bounces = -1);
     LightPath randLightPath(Light* light = NULL, const int& bounces = -1);
     void bounceRayPath(RayPath &, const int& paths);
-    Vector3 estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath);
-    Vector3 estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath, PhotonMap* photonMap);
+    Vector3 bidiFlux(int i, int j, LightPath lightPath, EyePath eyePath);
+    Vector3 uniFlux(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath, PhotonMap* photonMap, const bool& explicitConnection = true, const int& nLightPaths = 1);
+    Vector3 uniFluxDE(const int& j, const EyePath& eyePath, PhotonMap* photonMap, const int& nLightPaths = 1);
 
-    std::pair<PhotonMap*, std::vector<LightPath>> generatePhotonMap();
+    std::pair<PhotonMap*, std::vector<LightPath*>> generatePhotonMap();
     std::pair<Vector3, Vector3> axisAlignedBounds();
 
 protected:
@@ -94,6 +95,8 @@ protected:
     int m_maxBounces = 20;
     int m_maxEyePaths = 1;
     int m_maxLightPaths = 0;
+    int m_nGatheredPhotons = 8;
+
     std::vector<int> m_emittedPhotonsPerLight;
     Lights m_lights;
     PointLights m_pointLights;
