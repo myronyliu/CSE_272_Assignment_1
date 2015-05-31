@@ -2,6 +2,7 @@
 #define CSE168_RAY_H_INCLUDED
 
 #include "Vector3.h"
+#include "Object.h"
 
 class Ray
 {
@@ -32,11 +33,11 @@ public:
     float t;                            //!< The hit distance
     Vector3 P;                          //!< The hit point
     Vector3 N;                          //!< Shading normal vector
-    //Material* material;                 //!< Material of the intersected object
+    //Material* material;               //!< Material of the intersected object
     Object* object;
 
     //! Default constructor.
-    explicit HitInfo(float t = 0.0f, const Vector3& P = Vector3(), const Vector3& N = Vector3(0.0f, 0.0f, 0.0f)) : t(t), P(P), N(N), object(0) {}
+    explicit HitInfo(float t = 0.0f, const Vector3& P = Vector3(), const Vector3& N = Vector3(0.0f, 0.0f, 0.0f)) : t(t), P(P), N(N), object(NULL) {}
     explicit HitInfo(float t, const Vector3& P, const Vector3& N, Object* object) : t(t), P(P), N(N), object(object) {}
 };
 

@@ -36,7 +36,7 @@ public:
     int maxLightPaths() { return m_maxLightPaths; }
     void addObject(Object* pObj) { m_objects.push_back(pObj); }
     const Objects* objects() const { return &m_objects; }
-    void setSamplingHeuristic(float p) { m_samplingHeuristic = fmin(fmax(0, p), 1); }
+    void setSamplingHeuristic(float p) { m_samplingHeuristic = fmin(fmax(0.0f, p), 1.0f); }
     float samplingHeuristic() { return m_samplingHeuristic; }
 
     void setPreview(bool preview) { m_preview = preview;  }
@@ -76,14 +76,15 @@ public:
     LightPDF randLightByWattage();
 
 
-    EyePath randEyePath(float i, float j, Camera* cam, Image* img);
-    LightPath randLightPath();
+    EyePath randEyePath(float i, float j, Camera* cam, Image* img, const int& bounces = -1);
+    LightPath randLightPath(Light* light = NULL, const int& bounces = -1);
     void bounceRayPath(RayPath &, const int& paths);
-    Vector3 estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath);
-    Vector3 estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath, PhotonMap* photonMap);
+    Vector3 bidiFlux(int i, int j, LightPath lightPath, EyePath eyePath);
+    Vector3 uniFlux(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath, PhotonMap* photonMap, const bool& explicitConnection = true, const int& nLightPaths = 1);
+    Vector3 uniFluxDE(const int& j, const EyePath& eyePath, PhotonMap* photonMap, const int& nLightPaths = 1);
 
-    PhotonMap* generatePhotonMap();
-    PhotonMap* generatePhotonMapTest();
+    std::pair<PhotonMap*, std::vector<LightPath*>> generatePhotonMap();
+    std::pair<Vector3, Vector3> axisAlignedBounds();
 
 protected:
     Objects m_objects;
@@ -94,12 +95,14 @@ protected:
     int m_maxBounces = 20;
     int m_maxEyePaths = 1;
     int m_maxLightPaths = 0;
+    int m_nGatheredPhotons = 8;
+
     std::vector<int> m_emittedPhotonsPerLight;
     Lights m_lights;
     PointLights m_pointLights;
     AreaLights m_areaLights;
-    float m_samplingHeuristic = 0.5; // probability of sampling BRDF. Complement is for sampling light
-    float m_photonMapRadius = 0.01; // radius for gathering photons in the vicinity
+    float m_samplingHeuristic = 0.5f; // probability of sampling BRDF. Complement is for sampling light
+    float m_photonMapRadius = 0.01f; // radius for gathering photons in the vicinity
     bool m_preview = false;
 };
 

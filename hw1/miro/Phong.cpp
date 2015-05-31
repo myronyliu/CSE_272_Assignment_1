@@ -1,25 +1,30 @@
 #define _USE_MATH_DEFINES
-#include "Lambert.h"
+#include "Phong.h"
 #include "Ray.h"
 #include "Scene.h"
 #include <algorithm>
 #include <random>
 
-Lambert::Lambert(const Vector3 & kd, const Vector3 & ka) :
-    m_kd(kd), m_ka(ka)
-{ 
+Phong::Phong(const Vector3 & kd, const Vector3 & ks, const float n, const Vector3 & v) :
+m_kd(kd), m_ks(ks), m_n(n), m_v(v)
+{
+    m_v.normalize();
 }
 
-Lambert::~Lambert()
+Phong::~Phong()
 {
 }
 
-float Lambert::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const {
+float Phong::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const {
     if (dot(normal, out) < 0) return 0;
-    else return (m_kd[0] + m_kd[1] + m_kd[2]) / 3 * 1.0f / M_PI;
+    else{
+        Vector3 R = 2.0 * dot(normal, in) * normal - in;
+        return (m_kd[0] + m_kd[1] + m_kd[2]) / 3 * 1.0f / M_PI + 2*M_PI/(m_n+1) * (m_ks[0] + m_ks[1] + m_ks[2]) / 3 * pow(dot(R, m_v), m_n);
+    }
 }
 
-Vector3 Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const bool& isFront) const
+Vector3
+Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const bool& isFront) const
 {
     Ray rayLight;
     HitInfo hitLight;
@@ -98,51 +103,20 @@ Vector3 Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, c
     return L;
 }//*/
 
-vec3pdf Lambert::randReflect(const Vector3& in, const Vector3& normal, const bool& isFront) const{
-    //double phi = 2.0 * M_PI*((double)rand() / RAND_MAX);
-    //double theta = acos((double)rand() / RAND_MAX);
-    //Vector3 d = Vector3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
-    double u = ((double)rand() / RAND_MAX);
-    while (u == 1) u = ((double)rand() / RAND_MAX);
-    double v = 2.0 * M_PI*((double)rand() / RAND_MAX);
-    Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
-
-    // generate a basis with surface normal hit.N as the z-axis
-    Vector3 z = normal.normalized();
-    float a = dot(Vector3(1, 0, 0), z);
-    float b = dot(Vector3(0, 1, 0), z);
-    Vector3 y;
-    if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
-    else y = Vector3(0, 1, 0).orthogonal(z).normalize();
-    Vector3 x = cross(y, z).normalize();
-    return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1 - u) / M_PI);
+vec3pdf Phong::randReflect(const Vector3& in, const Vector3& normal, const bool& isFront) const{
+    Vector3 out = 2 * dot(normal, in)*normal - in;
+    return vec3pdf(out, 1);
 }
 
-vec3pdf Lambert::randEmit(const Vector3& n) const {
-    double u = ((double)rand() / RAND_MAX);
-    while (u == 1.0) u = ((double)rand() / RAND_MAX);
-    double v = 2.0 * M_PI*((double)rand() / RAND_MAX);
-    Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
-    Vector3 z = n.normalized();
-    float a = dot(Vector3(1, 0, 0), z);
-    float b = dot(Vector3(0, 1, 0), z);
-    Vector3 y;
-    if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
-    else y = Vector3(0, 1, 0).orthogonal(z).normalize();
-    Vector3 x = cross(y, z).normalize();
-    return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1-u)/M_PI);
-}
-float Lambert::emitPDF(const Vector3& n, const Vector3& v) const {
-    float z = dot(n, v);
-    if (z < 0) return 0;
-    else return z / M_PI;
+vec3pdf Phong::randEmit(const Vector3& n) const {
+    return vec3pdf(n, 1); // like a laserpointer?
 }
 
-Vector3 Lambert::radiance(const Vector3& normal, const Vector3& direction) const {
+Vector3 Phong::radiance(const Vector3& normal, const Vector3& direction) const {
     if (dot(normal, direction) < 0) return Vector3(0, 0, 0);
     return m_powerPerArea / (2.0*M_PI);
 }
 
-Vector3 Lambert::sum_L_cosTheta_dOmega() const {
-    return M_PI*radiance(Vector3(0, 0, 1), Vector3(0, 0, 1));
+Vector3 Phong::sum_L_cosTheta_dOmega() const {
+    return 2 * M_PI*radiance(Vector3(0, 0, 1), Vector3(0, 0, 1));
 }

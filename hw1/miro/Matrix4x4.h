@@ -344,7 +344,7 @@ Matrix4x4::invert()          // Converts into inverse.
     float sd43 = m11*Tbt23C24 - m12*Tbt23C14 + m14*Tbt23C12;
     float sd44 = m11*Tbt23C23 - m12*Tbt23C13 + m13*Tbt23C12;
 
-    register float detInv = 1.0/(m11*sd11 - m12*sd12 + m13*sd13 - m14*sd14);
+    register float detInv = 1.0f/(m11*sd11 - m12*sd12 + m13*sd13 - m14*sd14);
 
     m11 = sd11*detInv;
     m12 = -sd21*detInv;
@@ -557,14 +557,14 @@ operator*(float b, const Matrix4x4& A)
 inline Matrix4x4
 operator/(const Matrix4x4& A, float b)
 {
-    register float bInv = 1.0/b;
+    register float bInv = 1.0f/b;
     return (A*bInv);
 }
 
 inline Matrix4x4&
 Matrix4x4::operator/=(float b)
 {
-    register float bInv = 1.0/b;
+    register float bInv = 1.0f/b;
     return (*this *= bInv);
 }
 

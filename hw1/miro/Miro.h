@@ -34,10 +34,13 @@ class Scene;
 class Material;
 class Lambert;
 class Mirror;
-class PhotonMap;
 class RayPath;
 class EyePath;
 class LightPath;
+
+class PhotonMap;
+class PhotonDeposit;
+class SequentialPhotonMap;
 
 extern void ParseFile(FILE* fp);
 extern void initOpenGL();

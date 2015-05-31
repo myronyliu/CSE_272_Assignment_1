@@ -5,15 +5,23 @@
 #include <queue>
 #include <algorithm>
 #include <functional>
-#include "Vector3.h"
+#include "RayPath.h"
 
-struct PhotonDeposit {
-    PhotonDeposit() : m_power(Vector3(0, 0, 0)), m_location(Vector3(0, 0, 0)), m_prob(0) {}
-    PhotonDeposit(const Vector3& power, const Vector3& location, const float& prob) : m_power(power), m_location(location), m_prob(prob) {}
-    PhotonDeposit(const PhotonDeposit& copy) : m_power(copy.m_power), m_location(copy.m_location), m_prob(copy.m_prob) {}
-    Vector3 m_location;
+class PhotonDeposit {
+public:
     Vector3 m_power;
-    float m_prob;
+    LightPath* m_lightPath;
+    int m_hitIndex;
+
+    PhotonDeposit() : m_power(Vector3(0, 0, 0)), m_lightPath(NULL), m_hitIndex(-1) {}
+    PhotonDeposit(const Vector3& power) : m_power(power), m_lightPath(NULL), m_hitIndex(-1) {}
+    PhotonDeposit(const Vector3& power, LightPath* lightPath, const int& hitIndex) : m_power(power), m_lightPath(lightPath), m_hitIndex(hitIndex) {}
+    PhotonDeposit(const PhotonDeposit& copy) : m_power(copy.m_power), m_lightPath(copy.m_lightPath), m_hitIndex(copy.m_hitIndex) {}
+
+    inline Vector3 location() const {
+        if (m_hitIndex < 0) return m_lightPath->m_lightHit.P;
+        else return m_lightPath->m_hit[m_hitIndex].P;
+    }
 };
 
 struct RadiusDensityPhotons {
@@ -24,7 +32,6 @@ struct RadiusDensityPhotons {
     RadiusDensityPhotons() : m_radius(0), m_density(0), m_photons(std::vector<PhotonDeposit>(0)) {}
 };
 
-
 struct RsqrPhoton {
     float m_r2;
     PhotonDeposit m_photon;
@@ -33,12 +40,12 @@ struct RsqrPhoton {
     bool operator<(const RsqrPhoton& rhs) const {
         if (m_r2 < rhs.m_r2) return true;
         else if (m_r2 > rhs.m_r2) return false;
-        else if (m_photon.m_location[0] < rhs.m_photon.m_location[0]) return true;
-        else if (m_photon.m_location[0] > rhs.m_photon.m_location[0]) return false;
-        else if (m_photon.m_location[1] < rhs.m_photon.m_location[1]) return true;
-        else if (m_photon.m_location[1] > rhs.m_photon.m_location[1]) return false;
-        else if (m_photon.m_location[2] < rhs.m_photon.m_location[2]) return true;
-        else if (m_photon.m_location[2] > rhs.m_photon.m_location[2]) return false;
+        else if (m_photon.location()[0] < rhs.m_photon.location()[0]) return true;
+        else if (m_photon.location()[0] > rhs.m_photon.location()[0]) return false;
+        else if (m_photon.location()[1] < rhs.m_photon.location()[1]) return true;
+        else if (m_photon.location()[1] > rhs.m_photon.location()[1]) return false;
+        else if (m_photon.location()[2] < rhs.m_photon.location()[2]) return true;
+        else if (m_photon.location()[2] > rhs.m_photon.location()[2]) return false;
         else if (m_photon.m_power[0] < rhs.m_photon.m_power[0]) return true;
         else if (m_photon.m_power[0] > rhs.m_photon.m_power[0]) return false;
         else if (m_photon.m_power[1] < rhs.m_photon.m_power[1]) return true;
@@ -52,35 +59,33 @@ struct RsqrPhoton {
 
 class SequentialPhotonMap {
 protected:
-    float m_xMin;
-    float m_yMin;
-    float m_zMin;
-    float m_xMax;
-    float m_yMax;
-    float m_zMax;
-    std::vector<PhotonDeposit> m_photonDeposits;
+    Vector3 m_xyz;
+    Vector3 m_XYZ;
+    std::vector<PhotonDeposit> m_photons;
+
+    void buildBalancedTree(PhotonMap*& photonMap, std::vector<PhotonDeposit> photons, int depth = 0);
 public:
-    SequentialPhotonMap() : m_photonDeposits(std::vector<PhotonDeposit>(0)), m_xMin(0), m_yMin(0), m_zMin(0), m_xMax(0), m_yMax(0), m_zMax(0) {}
+    SequentialPhotonMap() : m_photons(std::vector<PhotonDeposit>(0)), m_xyz(Vector3(0, 0, 0)), m_XYZ(Vector3(0, 0, 0)) {}
     ~SequentialPhotonMap() {}
 
-    float xMin() { return m_xMin; }
-    float yMin() { return m_yMin; }
-    float zMin() { return m_zMin; }
-    float xMax() { return m_xMax; }
-    float yMax() { return m_yMax; }
-    float zMax() { return m_zMax; }
-    int nPhotons() { return m_photonDeposits.size(); }
-    PhotonDeposit operator[](int i) const { return m_photonDeposits[i]; }
-    PhotonDeposit& operator[](int i) { return m_photonDeposits[i]; }
+    float xMin() { return m_xyz.x; }
+    float yMin() { return m_xyz.y; }
+    float zMin() { return m_xyz.z; }
+    float xMax() { return m_XYZ.x; }
+    float yMax() { return m_XYZ.y; }
+    float zMax() { return m_XYZ.z; }
+    int nPhotons() { return m_photons.size(); }
+    PhotonDeposit operator[](int i) const { return m_photons[i]; }
+    PhotonDeposit& operator[](int i) { return m_photons[i]; }
     Vector3 powerDensity(const Vector3& x, const float& r);
     void addPhoton(const PhotonDeposit& photonDeposit);
     RadiusDensityPhotons radiusDensityPhotons(const Vector3& x, const int& n);
-    //void buildTree();
+    PhotonMap* buildTree();
+    PhotonMap* buildBalancedTree(int depth = 0);
 
-    std::vector<PhotonDeposit> getPhotons() { return m_photonDeposits; }
+    std::vector<PhotonDeposit> getPhotons() { return m_photons; }
 };
 
-// adopted from http://www.brandonpelfrey.com/blog/coding-a-simple-octree/
 class PhotonMap {
 protected:
     int m_depth;
