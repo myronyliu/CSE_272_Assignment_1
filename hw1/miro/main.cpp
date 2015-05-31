@@ -22,7 +22,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(218,218);
+    g_image->resize(512,512);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
@@ -32,7 +32,7 @@ makeRoomScene(){
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(256);
-    g_scene->setBidiSamplesPerPix(4);
+    g_scene->setBidiSamplesPerPix(8);
     g_scene->setMaxBounces(100);
     g_scene->setMaxEyePaths(8);
     g_scene->setMaxLightPaths(8);
@@ -44,7 +44,7 @@ makeRoomScene(){
     mat->setKd(0.8f);
     Mirror* mir = new Mirror(Vector3(1.0f, 1.0f, 1.0f));
     mir->setKs(0.8f);
-    Phong* pho = new Phong(0.0f, 1.0f, 10, g_camera->eye());
+    Phong* pho = new Phong(0.8f, 0.2f, 50, g_camera->eye());
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
     coverMat->setKd(0.0f);
     RefractiveInterface* waterMat = new RefractiveInterface(Vector3(1.0f, 1.0f, 1.0f), Vector3(1.0f, 1.0f, 1.0f));
@@ -75,7 +75,7 @@ makeRoomScene(){
     water_N->setMaterial(waterMat);
     
 
-    light->flip(); cover->flip(); light->setWattage(2);
+    //light->flip(); cover->flip(); light->setWattage(2);
 
     // add objects to scene
     g_scene->addObject(wall_B);
@@ -84,7 +84,7 @@ makeRoomScene(){
     g_scene->addObject(wall_R);
     g_scene->addObject(wall_T);
     g_scene->addObject(cover);
-    g_scene->addAreaLight(light, 1000);
+    g_scene->addAreaLight(light, 100000);
     //g_scene->addObject(water_T);
     //g_scene->addObject(water_N);
 

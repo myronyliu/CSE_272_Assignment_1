@@ -19,7 +19,7 @@ float Phong::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, 
     if (dot(normal, out) < 0) return 0;
     else{
         Vector3 R = 2.0 * dot(normal, in) * normal - in;
-        return 2*M_PI/(m_n+1) * (m_ks[0] + m_ks[1] + m_ks[2]) / 3 * pow(dot(R, m_v), m_n);
+        return (m_kd[0] + m_kd[1] + m_kd[2]) / 3 * 1.0f / M_PI + 2*M_PI/(m_n+1) * (m_ks[0] + m_ks[1] + m_ks[2]) / 3 * pow(dot(R, m_v), m_n);
     }
 }
 
