@@ -645,14 +645,18 @@ Vector3 Scene::estimateFlux(int i, int j, LightPath lightPath, EyePath eyePath, 
     probF[i + j] = probF[i + j - 1] * brdf[i + j - 1] * cosF[i + j - 1];
     for (int k = i - 1; k > -1; k--) probB[k] = probB[k + 1] * brdf[k + 1] * cosB[k + 1];
     //////////////////////////////////////////////////////////////////////////
-    RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, 16);
+    float nGatheredPhotons = 16;
+    RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, nGatheredPhotons);
     Vector3 flux = brdf_L*cosF_L*brdf_E*rdp.m_density;
     if (j > 1) flux *= eyePath.m_decay[j - 2];
     if (i > 1) flux *= lightPath.m_decay[i - 2];
-    float prob = probB[i + 1] * (cosF[i] / length2[i + 1])*probF[i] * (cosB[i] / length2[i]);
-    float probSum = 0;
+    float prob = probB[i + 1] * (cosF[i] / length2[i + 1])*probF[i] * (cosB[i] / length2[i])*rdp.m_density[0];
+    float probSum = prob;
     for (int k = 0; k < i + j; k++) {
-        float p = probB[k + 1] * (cosF[k] / length2[k + 1])*probF[k] * (cosB[k] / length2[k]);
+        if (k == i) continue;
+        else if (k < i) rdp = photonMap->radiusDensityPhotons(lightPath.m_hit[k].P, nGatheredPhotons);
+        else rdp = photonMap->radiusDensityPhotons(eyePath.m_hit[i + j - k - 1].P, nGatheredPhotons);
+        float p = probB[k + 1] * (cosF[k] / length2[k + 1])*probF[k] * (cosB[k] / length2[k])*rdp.m_density[0];
         probSum += p;
     }
     flux *= prob / probSum;
