@@ -95,7 +95,7 @@ protected:
     int m_maxBounces = 20;
     int m_maxEyePaths = 1;
     int m_maxLightPaths = 0;
-    int m_nGatheredPhotons = 8;
+    int m_nGatheredPhotons = 16;
 
     std::vector<int> m_emittedPhotonsPerLight;
     Lights m_lights;

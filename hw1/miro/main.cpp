@@ -22,7 +22,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(200,200);
+    g_image->resize(256,256);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
@@ -32,7 +32,7 @@ makeRoomScene(){
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(1000);
-    g_scene->setBidiSamplesPerPix(8);
+    g_scene->setBidiSamplesPerPix(64);
     g_scene->setMaxBounces(100);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);
@@ -68,14 +68,14 @@ makeRoomScene(){
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
-    //wall_F->setMaterial(mat);
-    wall_F->setMaterial(mir);
+    wall_F->setMaterial(mat);
+    //wall_F->setMaterial(mir);
     cover->setMaterial(coverMat);
     water_T->setMaterial(waterMat);
     water_N->setMaterial(waterMat);
     
 
-    //light->flip(); cover->flip(); light->setWattage(2);
+    light->flip(); cover->flip(); light->setWattage(2);
 
     // add objects to scene
     g_scene->addObject(wall_B);

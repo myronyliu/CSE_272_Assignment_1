@@ -580,17 +580,22 @@ pair<PhotonMap*, vector<LightPath*>> Scene::generatePhotonMap() {
 Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath, PhotonMap* photonMap, const bool& explicitConnection, const int& nLightPaths) {
     if (i == 0 && j == 0) return eyePath.m_hit[0].object->material()->radiance(eyePath.m_hit[0].N, -eyePath.m_ray[0].d);
     if (i < 0 || j < 1) return Vector3(0, 0, 0);
+
     HitInfo hit;
     float intersectEpsilon = 0.00001;
+
     // The following is for the explicit connection
     HitInfo hit_E = eyePath.m_hit[j - 1];
     HitInfo hit_L;
+
     if (i == 0) hit_L = lightPath.m_lightHit;
     else hit_L = lightPath.m_hit[i - 1];
+
     Material* mat_E = hit_E.object->material();
     Material* mat_L = hit_L.object->material();
     Ray shadow_LtoE(hit_L.P, (hit_E.P - hit_L.P).normalize()); // shadow ray from Light path to Eye path
     float shadowLength2 = (hit_E.P - hit_L.P).length2();
+
     if (trace(hit, shadow_LtoE, intersectEpsilon, sqrt(shadowLength2) - intersectEpsilon)) return Vector3(0, 0, 0);
     if (i == 0) {
         if (!lightPath.m_light->intersect(hit, Ray(hit_E.P, (lightPath.m_lightHit.P - hit_E.P).normalize()))) return Vector3(0, 0, 0);
@@ -606,6 +611,7 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
     if (brdf_L == 0) return Vector3(0, 0, 0);
     float dProb_EtoL = cosB_E*brdf_E;
     float dProb_LtoE = cosF_L*brdf_L;
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     vector<float> probF(i + j + 1); // forward from light to eye (excludes the const emission probability, since it's just a constant)
     vector<float> probB(i + j + 1); // backward from eye to light
@@ -645,7 +651,7 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
     probB[i + j] = eyePath.m_prob[0];
     probF[i + j] = probF[i + j - 1] * brdf[i + j - 1] * cosF[i + j - 1];
     for (int k = i - 1; k > -1; k--) probB[k] = probB[k + 1] * brdf[k + 1] * cosB[k + 1];
-    //////////////////////////////////////////////////////////////////////////
+
     Vector3 flux;
     if (explicitConnection == true) {
         float formFactor = cosF_L * cosB_E / shadowLength2; // form factor
@@ -725,7 +731,8 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
             Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
                 EyePath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hit.size() == 0) return;
-                float lightPathIndex = fmin(nLightPaths - 1, (float)nLightPaths*rand() / RAND_MAX);
+                int randIndex = (int)nLightPaths*((float)rand() / RAND_MAX);
+                int lightPathIndex = min(nLightPaths - 1, randIndex );
                 LightPath lightPath = *mapAndPaths.second[lightPathIndex];
                 Vector3 fluxSum = uniFlux(0, 0, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
                 for (int j = 1; j <= eyePath.m_hit.size(); j++) {
@@ -736,7 +743,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 }
                 fluxSumOverSamples += fluxSum;
                 if (y == h / 2 && x == w / 2){
-                    plotfile << fluxSum[0] / (k + 1) / M_PI / 0.04 << std::endl;
+                    plotfile << fluxSumOverSamples / m_bidiSamplesPerPix << std::endl;
                 }
             });
             img->setPixel(x, y, fluxSumOverSamples / m_bidiSamplesPerPix);
