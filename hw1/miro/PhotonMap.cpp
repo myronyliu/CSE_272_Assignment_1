@@ -208,8 +208,9 @@ void PhotonMap::buildBalancedTree(std::vector<PhotonDeposit>photons, int depth) 
 RadiusDensityPhotons PhotonMap::radiusDensityPhotons(const Vector3& x, const int& k) {
     RadiusDensityPhotons rdp;
     rdp.m_photons = getNearestPhotons(x, k);
+    float r = (rdp.m_photons.back().location() - x).length();
     float r2 = (rdp.m_photons.back().location() - x).length2();
-    rdp.m_radius = sqrt(r2);
+    rdp.m_radius = r;
     for (int i = 0; i < rdp.m_photons.size(); i++) rdp.m_density += rdp.m_photons[i].m_power;
     rdp.m_density /= (M_PI*r2);
     return rdp;
