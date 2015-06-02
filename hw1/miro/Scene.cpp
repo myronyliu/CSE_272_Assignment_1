@@ -647,12 +647,16 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
     for (int k = i - 1; k > -1; k--) probB[k] = probB[k + 1] * brdf[k + 1] * cosB[k + 1];
     //////////////////////////////////////////////////////////////////////////
     Vector3 flux;
+    RadiusDensityPhotons rdp;
+    float densityKernel;
+    rdp = photonMap->radiusDensityPhotons(hit_E.P, m_nGatheredPhotons);
+    densityKernel = 1.0f / (M_PI*rdp.m_radius*rdp.m_radius);
     if (explicitConnection == true) {
         float formFactor = cosF_L * cosB_E / shadowLength2; // form factor
         flux = lightPath.m_light->wattage()*brdf_L*brdf_E*formFactor; // flux for path integration (additional decay factors below)
     }
     else {
-        RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, m_nGatheredPhotons);
+        //RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, m_nGatheredPhotons);
         flux = rdp.m_density*(brdf_L*cosF_L)*brdf_E; // flux for density estimation (additional decay factors below)
     }
     if (j > 1) flux *= eyePath.m_decay[j - 2];
@@ -660,16 +664,20 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
 
     float probSum = 0;
     for (int k = 0; k < i + j; k++) {
-        RadiusDensityPhotons rdp;
         if (k < i) rdp = photonMap->radiusDensityPhotons(lightPath.m_hit[k].P, m_nGatheredPhotons);
-        else rdp = photonMap->radiusDensityPhotons(eyePath.m_hit[i + j - k - 1].P, m_nGatheredPhotons);
-        float densityKernel = 1.0f / (M_PI*rdp.m_radius*rdp.m_radius);
+        rdp = photonMap->radiusDensityPhotons(eyePath.m_hit[i + j - k - 1].P, m_nGatheredPhotons);
+        densityKernel = 1.0f / (M_PI*rdp.m_radius*rdp.m_radius);
 
         float probCommon = probB[k + 1] * (cosF[k] / length2[k + 1]);
         float probPI = probCommon*probF[k] * (cosB[k] / length2[k]);
-        float probDE = probCommon*densityKernel*nLightPaths;
+        float probDE = probCommon*probF[k - 1] * densityKernel*nLightPaths;
 
-        if (k == i) flux *= probPI + probDE;
+        //cout << probPI/probDE << endl;
+
+        if (k == i) {
+            if (explicitConnection == true) flux *= probPI;
+            else flux *= probDE;
+        }
 
         probSum += probPI + probDE;
     }
@@ -679,14 +687,13 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
 
 Vector3 Scene::uniFluxDE(const int& j, const EyePath& eyePath, PhotonMap* photonMap, const int& nLightPaths) {
     HitInfo hit_E = eyePath.m_hit[j - 1];
-    RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, m_nGatheredPhotons);
-    float densityKernel = 1.0f / (M_PI*rdp.m_radius*rdp.m_radius);
+    vector<PhotonDeposit> photons = photonMap->getNearestPhotons(hit_E.P, m_nGatheredPhotons);
 
     Vector3 flux(0,0,0);
 
     for (int k = 0; k < m_nGatheredPhotons; k++) {
-        PhotonDeposit photon = rdp.m_photons[k];
-        int i = photon.m_hitIndex + 1;
+        PhotonDeposit photon = photons[k];
+        int i = photon.m_hitIndex;
         LightPath lightPath = *photon.m_lightPath;
         flux += uniFlux(i, j, lightPath, eyePath, photonMap, false, nLightPaths);
     }
@@ -707,8 +714,8 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
     pair<PhotonMap*,vector<LightPath*>> mapAndPaths = generatePhotonMap();
     int nLightPaths = mapAndPaths.second.size();
 
-    for (int y = h - 1; y > -1; y--)
-    //for (int y = 0; y < h; y++)
+    //for (int y = h - 1; y > -1; y--)
+    for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
         {
@@ -723,6 +730,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
             Vector3 fluxSumOverSamples(0, 0, 0);
 
             Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
+            //for (int k = 0; k < m_bidiSamplesPerPix; k++) {
                 EyePath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hit.size() == 0) return;
                 float lightPathIndex = fmin(nLightPaths - 1, (float)nLightPaths*rand() / RAND_MAX);
