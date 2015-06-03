@@ -32,7 +32,7 @@ makeRoomScene(){
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(1000);
-    g_scene->setBidiSamplesPerPix(64);
+    g_scene->setBidiSamplesPerPix(4);
     g_scene->setMaxBounces(100);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);
@@ -63,8 +63,8 @@ makeRoomScene(){
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     cover->disableBack();
     
-    wall_T->setMaterial(mat);
-    //wall_T->setMaterial(pho);
+    //wall_T->setMaterial(mat);
+    wall_T->setMaterial(pho);
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
@@ -73,9 +73,8 @@ makeRoomScene(){
     cover->setMaterial(coverMat);
     water_T->setMaterial(waterMat);
     water_N->setMaterial(waterMat);
-    
 
-    light->flip(); cover->flip(); light->setWattage(2);
+    //light->flip(); cover->flip(); light->setWattage(2);
 
     // add objects to scene
     g_scene->addObject(wall_B);
