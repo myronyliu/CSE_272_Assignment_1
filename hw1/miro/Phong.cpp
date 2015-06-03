@@ -23,8 +23,7 @@ float Phong::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, 
             return 1.0f / M_PI;
         }
         else {
-            Vector3 R = 2.0 * dot(normal, in) * normal - in;
-            return  (m_n+1) / (2.0 * M_PI) * pow(dot(R, out), m_n);
+            return  (m_n+1) / (2.0 * M_PI);
         }
     }
 }
@@ -96,11 +95,16 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const bool&
 
         // get the diffuse component
         float nDotL = dot(hit.N, l);
+
+        // get the specular component
+        Vector3 R = 2.0 * dot(hit.N, ray.d) * hit.N * ray.d;
+        float alpha = pow(dot(R, randReflect(ray.d, hit.N).v), m_n);
         Vector3 result = aLight->color();
 
         L += std::max(0.0f, dot(hitLight.N, -l))*
             std::max(0.0f, nDotL / falloff*
-            aLight->wattage() / aLight->area()*brdf) * result / (vp.p);
+            aLight->wattage() / aLight->area()*brdf) * result / (vp.p)
+            + std::max(0.0f, alpha / falloff * aLight->wattage() / aLight->area() * brdf) * result / vp.p;
     }
     
     // add the ambient component
