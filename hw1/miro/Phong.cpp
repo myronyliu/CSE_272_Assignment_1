@@ -110,12 +110,44 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const bool&
 }//*/
 
 vec3pdf Phong::randReflect(const Vector3& in, const Vector3& normal, const bool& isFront) const{
-    Vector3 out = 2 * dot(normal, in)*normal - in;
-    return vec3pdf(out, 1);
+    //double phi = 2.0 * M_PI*((double)rand() / RAND_MAX);
+    //double theta = acos((double)rand() / RAND_MAX);
+    //Vector3 d = Vector3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
+    double u = ((double)rand() / RAND_MAX);
+    while (u == 1) u = ((double)rand() / RAND_MAX);
+    double v = 2.0 * M_PI*((double)rand() / RAND_MAX);
+    Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
+
+    // generate a basis with surface normal hit.N as the z-axis
+    Vector3 z = normal.normalized();
+    float a = dot(Vector3(1, 0, 0), z);
+    float b = dot(Vector3(0, 1, 0), z);
+    Vector3 y;
+    if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
+    else y = Vector3(0, 1, 0).orthogonal(z).normalize();
+    Vector3 x = cross(y, z).normalize();
+    return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1 - u) / M_PI);
 }
 
 vec3pdf Phong::randEmit(const Vector3& n) const {
-    return vec3pdf(n, 1); // like a laserpointer?
+    double u = ((double)rand() / RAND_MAX);
+    while (u == 1.0) u = ((double)rand() / RAND_MAX);
+    double v = 2.0 * M_PI*((double)rand() / RAND_MAX);
+    Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
+    Vector3 z = n.normalized();
+    float a = dot(Vector3(1, 0, 0), z);
+    float b = dot(Vector3(0, 1, 0), z);
+    Vector3 y;
+    if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
+    else y = Vector3(0, 1, 0).orthogonal(z).normalize();
+    Vector3 x = cross(y, z).normalize();
+    return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1-u)/M_PI);
+}
+
+float Phong::emitPDF(const Vector3& n, const Vector3& v) const {
+    float z = dot(n, v);
+    if (z < 0) return 0;
+    else return z / M_PI;
 }
 
 Vector3 Phong::radiance(const Vector3& normal, const Vector3& direction) const {
