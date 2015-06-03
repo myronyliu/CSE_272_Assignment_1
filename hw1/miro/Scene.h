@@ -80,7 +80,7 @@ public:
     LightPath randLightPath(Light* light = NULL, const int& bounces = -1);
     void bounceRayPath(RayPath &, const int& paths);
     Vector3 bidiFlux(int i, int j, LightPath lightPath, EyePath eyePath);
-    Vector3 uniFlux(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath, PhotonMap* photonMap, const bool& explicitConnection = true, const int& nLightPaths = 1);
+    Vector3 uniFlux(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath, PhotonMap* photonMap, const bool& explicitConnection = true, const int& nLightPaths = 1, const std::vector<PhotonDeposit>& photons = std::vector<PhotonDeposit>(0));
     Vector3 uniFluxDE(const int& j, const EyePath& eyePath, PhotonMap* photonMap, const int& nLightPaths = 1);
 
     std::pair<PhotonMap*, std::vector<LightPath*>> generatePhotonMap();
@@ -95,14 +95,14 @@ protected:
     int m_maxBounces = 20;
     int m_maxEyePaths = 1;
     int m_maxLightPaths = 0;
-    int m_nGatheredPhotons = 1;
+    int m_nGatheredPhotons = 32;
+    float m_photonGatheringRadius = 0.2f; // radius for gathering photons in the vicinity
 
     std::vector<int> m_emittedPhotonsPerLight;
     Lights m_lights;
     PointLights m_pointLights;
     AreaLights m_areaLights;
     float m_samplingHeuristic = 0.5f; // probability of sampling BRDF. Complement is for sampling light
-    float m_photonMapRadius = 0.01f; // radius for gathering photons in the vicinity
     bool m_preview = false;
 };
 

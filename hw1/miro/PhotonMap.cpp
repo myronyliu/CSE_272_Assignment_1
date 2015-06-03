@@ -100,36 +100,66 @@ void PhotonMap::getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector
     // If we're at a leaf node, just see if the current data point is inside the query bounding box
     if (m_photon != NULL) {
         const Vector3& p = m_photon->location();
-        if (p.x > bmax.x || p.y > bmax.y || p.z > bmax.z) return;
-        if (p.x < bmin.x || p.y < bmin.y || p.z < bmin.z) return;
-        photons.push_back(*m_photon);
+        if (p.x > bmax.x || p.y > bmax.y || p.z > bmax.z || p.x < bmin.x || p.y < bmin.y || p.z < bmin.z) {}
+        else photons.push_back(*m_photon);
         if (isLeafNode()) return;
         // We're at an interior node of the tree. Check to see if the query bounding box lies outside the octants of this node.
-        bool intersected = true;
         if (m_child0->m_photon == NULL ||
             m_child0->m_XYZ.x < bmin.x || m_child0->m_XYZ.y < bmin.y || m_child0->m_XYZ.z < bmin.z ||
-            m_child0->m_xyz.x > bmax.x || m_child0->m_xyz.y > bmax.y || m_child0->m_xyz.z > bmax.z) intersected = false;
-        if (intersected == true) m_child0->getPhotons(bmin, bmax, photons);
-        intersected = true;
+            m_child0->m_xyz.x > bmax.x || m_child0->m_xyz.y > bmax.y || m_child0->m_xyz.z > bmax.z) {}
+        else m_child0->getPhotons(bmin, bmax, photons);
         if (m_child1->m_photon == NULL ||
             m_child1->m_XYZ.x < bmin.x || m_child1->m_XYZ.y < bmin.y || m_child1->m_XYZ.z < bmin.z ||
-            m_child1->m_xyz.x > bmax.x || m_child1->m_xyz.y > bmax.y || m_child1->m_xyz.z > bmax.z) intersected = false;
-        if (intersected == true) m_child1->getPhotons(bmin, bmax, photons);
+            m_child1->m_xyz.x > bmax.x || m_child1->m_xyz.y > bmax.y || m_child1->m_xyz.z > bmax.z) {}
+        else m_child1->getPhotons(bmin, bmax, photons);
     }
 }
 
+
+void PhotonMap::getPhotons(const Vector3& x, const float& r, std::vector<PhotonDeposit>& photons) {
+    if (m_photon != NULL) {
+        const Vector3& p = m_photon->location();
+        if ((p - x).length2() <= r*r) photons.push_back(*m_photon);
+        if (isLeafNode()) return;
+        // We're at an interior node of the tree. Check to see if the query bounding box lies outside the octants of this node.
+        Sphere ball(x, r);
+        HitInfo hit;
+        for (int i = 0; i < 2; i++) {
+            PhotonMap* child = m_child0;
+            if (i == 1) child = m_child1;
+            if (child->m_photon == NULL ||
+                child->m_XYZ[0] < x[0] - r || child->m_XYZ[1] < x[1] - r || child->m_XYZ[2] < x[2] - r ||
+                child->m_xyz[0] > x[0] + r || child->m_xyz[1] > x[1] + r || child->m_xyz[2] > x[2] + r) continue;
+            else {
+                Vector3 corner100 = child->m_xyz;
+                Vector3 corner010 = child->m_xyz;
+                Vector3 corner001 = child->m_xyz;
+                corner100[0] = m_XYZ[0];
+                corner010[1] = m_XYZ[1];
+                corner001[2] = m_XYZ[2];
+                Vector3 boxDims = child->m_XYZ - child->m_xyz;
+                if (ball.intersect(hit, Ray(m_xyz, Vector3(1, 0, 0)), 0, boxDims[0]) ||
+                    ball.intersect(hit, Ray(m_xyz, Vector3(0, 1, 0)), 0, boxDims[1]) ||
+                    ball.intersect(hit, Ray(m_xyz, Vector3(0, 0, 1)), 0, boxDims[2]) ||
+                    ball.intersect(hit, Ray(m_XYZ, -Vector3(1, 0, 0)), 0, boxDims[0]) ||
+                    ball.intersect(hit, Ray(m_XYZ, -Vector3(0, 1, 0)), 0, boxDims[1]) ||
+                    ball.intersect(hit, Ray(m_XYZ, -Vector3(0, 0, 1)), 0, boxDims[2]) ||
+                    ball.intersect(hit, Ray(corner100, Vector3(0, 1, 0)), 0, boxDims[1]) ||
+                    ball.intersect(hit, Ray(corner100, Vector3(0, 0, 1)), 0, boxDims[2]) ||
+                    ball.intersect(hit, Ray(corner010, Vector3(0, 0, 1)), 0, boxDims[2]) ||
+                    ball.intersect(hit, Ray(corner010, Vector3(1, 0, 0)), 0, boxDims[0]) ||
+                    ball.intersect(hit, Ray(corner001, Vector3(1, 0, 0)), 0, boxDims[0]) ||
+                    ball.intersect(hit, Ray(corner001, Vector3(0, 1, 0)), 0, boxDims[1]))
+                {
+                    child->getPhotons(x, r, photons);
+                }
+            }
+        }
+    }
+}
+
+
 void PhotonMap::getNearestPhotons(const Vector3& x, const int& k, std::priority_queue<RsqrPhoton>& photons) {
-    /*std::vector<PhotonDeposit> allPhotons = getPhotons();
-    for (int i = 0; i < allPhotons.size(); i++) {
-        float rSqr = (allPhotons[i].location() - x).length2();
-        photons.push(RsqrPhoton(rSqr,allPhotons[i]));
-    }
-    while (photons.size()>k) {
-        photons.pop();
-    }
-    return;//*/
-
-
     PhotonMap* node = getLeafNode(x);
     while (node != this) {
         PhotonMap* parent = node->m_parent;

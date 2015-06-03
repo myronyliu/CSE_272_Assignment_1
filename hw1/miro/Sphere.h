@@ -8,6 +8,7 @@ class Sphere : public Object
 {
 public:
     Sphere();
+    Sphere(const Vector3& center, const float& radius) : m_center(center), m_radius(radius) {}
     virtual ~Sphere();
 
     void setCenter(const Vector3& v)    {m_center = v;}
