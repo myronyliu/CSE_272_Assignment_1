@@ -19,7 +19,7 @@ public:
     PhotonDeposit(const Vector3& power, LightPath* lightPath, const int& hitIndex) : m_power(power), m_lightPath(lightPath), m_hitIndex(hitIndex) {}
     PhotonDeposit(const PhotonDeposit& copy) : m_power(copy.m_power), m_lightPath(copy.m_lightPath), m_hitIndex(copy.m_hitIndex) {}
 
-    inline Vector3 location() const {
+    Vector3 location() const {
         if (m_hitIndex < 0) return m_lightPath->m_lightHit.P;
         else return m_lightPath->m_hit[m_hitIndex].P;
     }

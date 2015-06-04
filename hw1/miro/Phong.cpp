@@ -4,6 +4,7 @@
 #include "Scene.h"
 #include <algorithm>
 #include <random>
+#include <cfenv>
 
 Phong::Phong(const Vector3 & kd, const Vector3 & ks, const float n) :
 m_kd(kd), m_ks(ks), m_n(n)
@@ -18,7 +19,13 @@ float Phong::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, 
     if (dot(normal, out) < 0) return 0;
     Vector3 mirrorDir = 2 * dot(normal, in)*normal - in;
     float cosAlpha = fmax(0, dot(out, mirrorDir));
-    return m_kd[0] / M_PI + m_ks[0] * ((m_n + 2) / (2 * M_PI))*pow(cosAlpha, m_n);
+    float cosN = pow(cosAlpha, m_n);
+    if ((bool)std::fetestexcept(FE_UNDERFLOW))
+    {
+        cosN = 0.0f;
+    }
+    std::feclearexcept(FE_UNDERFLOW);
+    return m_kd[0] / M_PI + m_ks[0] * ((m_n + 2) / (2 * M_PI))*cosN;
 }
 
 Vector3

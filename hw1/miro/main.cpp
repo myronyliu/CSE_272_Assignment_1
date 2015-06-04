@@ -85,12 +85,12 @@ main(int argc, char*argv[])
 {
     // create a scene
     makeRoomScene();
-    //unsigned int cw;
-    //_controlfp_s(&cw, 0, 0);
-    //cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|
-    //        EM_DENORMAL|EM_INVALID);
-    //unsigned int cwOriginal;
-    //_controlfp_s(&cwOriginal,cw, _MCW_EM);
+    /*unsigned int cw;
+    _controlfp_s(&cw, 0, 0);
+    cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|
+            EM_DENORMAL|EM_INVALID);
+    unsigned int cwOriginal;
+    _controlfp_s(&cwOriginal,cw, _MCW_EM);*/
     MiroWindow miro(&argc, argv);
     miro.mainLoop();
 
