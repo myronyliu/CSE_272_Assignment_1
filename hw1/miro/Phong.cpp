@@ -5,10 +5,9 @@
 #include <algorithm>
 #include <random>
 
-Phong::Phong(const Vector3 & kd, const Vector3 & ks, const float n, const Vector3 & v) :
-m_kd(kd), m_ks(ks), m_n(n), m_v(v)
+Phong::Phong(const Vector3 & kd, const Vector3 & ks, const float n) :
+m_kd(kd), m_ks(ks), m_n(n)
 {
-    m_v.normalize();
 }
 
 Phong::~Phong()
@@ -17,15 +16,9 @@ Phong::~Phong()
 
 float Phong::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const {
     if (dot(normal, out) < 0) return 0;
-    else {
-        double diffuse = (float)rand() / RAND_MAX;
-        if (diffuse < (m_kd[0] + m_kd[1] + m_kd[2]) / 3) {
-            return 1.0f / M_PI;
-        }
-        else {
-            return  (m_n+1) / (2.0 * M_PI);
-        }
-    }
+    Vector3 mirrorDir = 2 * dot(normal, in)*normal - in;
+    float cosAlpha = fmax(0, dot(out, mirrorDir));
+    return m_kd[0] / M_PI + m_ks[0] * ((m_n + 2) / 2 * M_PI)*pow(cosAlpha, m_n);
 }
 
 Vector3
@@ -93,18 +86,12 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const bool&
         // normalize the light direction
         l /= sqrt(falloff);
 
-        // get the diffuse component
         float nDotL = dot(hit.N, l);
-
-        // get the specular component
-        Vector3 R = 2.0 * dot(hit.N, ray.d) * hit.N * ray.d;
-        float alpha = pow(dot(R, randReflect(ray.d, hit.N).v), m_n);
         Vector3 result = aLight->color();
 
         L += std::max(0.0f, dot(hitLight.N, -l))*
             std::max(0.0f, nDotL / falloff*
-            aLight->wattage() / aLight->area()*brdf) * result / (vp.p)
-            + std::max(0.0f, alpha / falloff * aLight->wattage() / aLight->area() * brdf) * result / vp.p;
+            aLight->wattage() / aLight->area()*brdf) * result / (vp.p);
     }
     
     // add the ambient component
@@ -114,14 +101,6 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const bool&
 }//*/
 
 vec3pdf Phong::randReflect(const Vector3& in, const Vector3& normal, const bool& isFront) const{
-    //double phi = 2.0 * M_PI*((double)rand() / RAND_MAX);
-    //double theta = acos((double)rand() / RAND_MAX);
-    //Vector3 d = Vector3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
-    double u = ((double)rand() / RAND_MAX);
-    while (u == 1) u = ((double)rand() / RAND_MAX);
-    double v = 2.0 * M_PI*((double)rand() / RAND_MAX);
-    Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
-
     // generate a basis with surface normal hit.N as the z-axis
     Vector3 z = normal.normalized();
     float a = dot(Vector3(1, 0, 0), z);
@@ -130,28 +109,34 @@ vec3pdf Phong::randReflect(const Vector3& in, const Vector3& normal, const bool&
     if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
     else y = Vector3(0, 1, 0).orthogonal(z).normalize();
     Vector3 x = cross(y, z).normalize();
-    return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1 - u) / M_PI);
+
+    float rn = (m_kd + m_ks)[0]*rand() / RAND_MAX;
+    if (rn < m_kd[0]) {
+        float u = ((float)rand() / RAND_MAX);
+        while (u == 1) u = ((float)rand() / RAND_MAX);
+        float v = 2.0 * M_PI*((float)rand() / RAND_MAX);
+        Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
+        return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1 - u) / M_PI);
+    }
+    else {
+        float u1 = (float)rand() / RAND_MAX;
+        float u2 = (float)rand() / RAND_MAX;
+        float cosAlpha = pow(u1, 1.0f/(m_n + 1));
+        float alpha = acos(cosAlpha);
+        float theta = acos(dot(normal, in)) - alpha;
+        float phi = 2.0f*M_PI*u2;
+        Vector3 out(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
+        float prob = (m_n + 1)*pow(cosAlpha, m_n) / (2 * M_PI);
+        return vec3pdf(out, prob);
+    }
 }
 
 vec3pdf Phong::randEmit(const Vector3& n) const {
-    double u = ((double)rand() / RAND_MAX);
-    while (u == 1.0) u = ((double)rand() / RAND_MAX);
-    double v = 2.0 * M_PI*((double)rand() / RAND_MAX);
-    Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
-    Vector3 z = n.normalized();
-    float a = dot(Vector3(1, 0, 0), z);
-    float b = dot(Vector3(0, 1, 0), z);
-    Vector3 y;
-    if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
-    else y = Vector3(0, 1, 0).orthogonal(z).normalize();
-    Vector3 x = cross(y, z).normalize();
-    return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1-u)/M_PI);
+    return vec3pdf(Vector3(0, 0, 0), 0);
 }
 
 float Phong::emitPDF(const Vector3& n, const Vector3& v) const {
-    float z = dot(n, v);
-    if (z < 0) return 0;
-    else return z / M_PI;
+    return 0;
 }
 
 Vector3 Phong::radiance(const Vector3& normal, const Vector3& direction) const {

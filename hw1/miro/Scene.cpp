@@ -55,7 +55,8 @@ Scene::raytraceImage(Camera *cam, Image *img)
     Vector3 shadeResult;
 
     // loop over all pixels in the image
-    for (int j = 0; j < img->height(); ++j)
+    //for (int j = 0; j < img->height(); ++j)
+    for (int j = img->height() - 1; j > -1; j--)
     {
         for (int i = 0; i < img->width(); ++i)
         {
@@ -116,12 +117,30 @@ Scene::pathtraceImage(Camera *cam, Image *img)
 {
     HitInfo hitInfo;
     
-    std::ofstream plotfile;
-    plotfile.open("pathtraceplot.txt");
     
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
+
+    /*
+    std::ofstream plotfile;
+    plotfile.open("pathtraceplot.txt");
+    Vector3 pixAvg = Vector3(0.0, 0.0, 0.0);
+    Ray ray(cam->eye(), (Vector3(0, 0, 0) - cam->eye()).normalize());
+    int nPlotPoints = 1000000;
+    int printStep = fmax(0, nPlotPoints / 1000);
+    for (int k = 0; k < nPlotPoints; k++) {
+        if (k%printStep == 0 || k == nPlotPoints - 1) printf("%i/%i __________\r", k, nPlotPoints);
+        if (k == 0) pixAvg = recursiveTrace_fromEye(ray, 0, m_maxBounces);
+        else pixAvg += recursiveTrace_fromEye(ray, 0, m_maxBounces) / (float)k;
+        pixAvg *= (float)k / (k + 1);
+        plotfile << pixAvg[0] << std::endl;
+    }
+    printf("done with test\n");
+    return;//*/
+
     // loop over all pixels in the image
-    for (int j = 0; j < img->height(); ++j){
+    //for (int j = 0; j < img->height(); ++j)
+    for (int j = img->height() - 1; j > -1; j--)
+    {
         for (int i = 0; i < img->width(); ++i){
             Ray ray00 = cam->eyeRay((float)i - 0.5, (float)j - 0.5, img->width(), img->height());
             Ray ray01 = cam->eyeRay((float)i - 0.5, (float)j + 0.5, img->width(), img->height());
@@ -135,11 +154,7 @@ Scene::pathtraceImage(Camera *cam, Image *img)
             for (int k = 0; k < m_samplesPerPix; k++){
                 Ray ray = cam->eyeRayJittered(i, j, img->width(), img->height());
                 if (!trace(hitInfo, ray)) continue;
-                //if (dot(hitInfo.N, Vector3(0, 0, -1)) > 0) { pixSum += Vector3(1.0, 0.0, 0.0);  }
                 pixSum += recursiveTrace_fromEye(ray, 0, m_maxBounces) / (double)m_samplesPerPix;
-                if (j == img->width() / 2 && i == img->height() / 2){
-                    plotfile << pixSum[0] / (k + 1) * m_samplesPerPix << std::endl;
-                }
             }
             img->setPixel(i, j, pixSum);
         }
@@ -200,7 +215,7 @@ void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPD
             return; // ray left scene
         }
         double rn = (double)rand() / RAND_MAX;
-        double em = hit.object->material()->emittance();
+        double reflectance = hit.object->material()->reflectance()[0];
         rayToEye.o = hit.P;
         rayToEye.d = (cam->eye() - hit.P).normalize();
         float brdf = hit.object->material()->BRDF(-rayIn.d, hit.N, rayToEye.d); // BRDF between eye-ray and incoming-ray
@@ -208,19 +223,17 @@ void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPD
             pix = cam->imgProject(hit.P, w, h); // find the pixel the onto which the current hitpoint projects
             int x = round(pix[0]);
             int y = round(pix[1]);
-            //img->setPixel(x, y, Vector3(1.0, 0.0, 0.0)); return;
             if (dot(Vector3(0, 0, -1), hit.N) != 0) {}
             if (pix[2]>0 && x >= 0 && x<w && y >= 0 && y < h) { // check that the pixel is within the viewing window
                 float cos0 = dot(hit.N, rayToEye.d);
                 float lengthSqr = (cam->eye() - hit.P).length2();
                 float cosAlpha = cam->pixelCosine(pix[0], pix[1], w, h);
-                if (em == 1.0 || rn < 0.2) {
-                    img->setPixel(x, y, img->getPixel(x, y) + (1 / 0.2) * power*brdf*cos0*cosAlpha / lengthSqr);
+                if (reflectance == 1 || rn < reflectance) {
+                    img->setPixel(x, y, img->getPixel(x, y) + (1.0f / reflectance) * power*brdf*cos0*cosAlpha / lengthSqr);
+                }
+                else {
+                    img->setPixel(x, y, img->getPixel(x, y) + (1.0f / (1.0f - reflectance)) * power*brdf*cos0*cosAlpha / lengthSqr);
                     return; // photon was absorbed
-                } // otherwise photon will be reflected
-                else
-                {
-                    img->setPixel(x, y, img->getPixel(x, y) + (1 / 0.8) * power*brdf*cos0*cosAlpha / lengthSqr);
                 }
             }
         }
@@ -241,7 +254,12 @@ Scene::photontraceImage(Camera *cam, Image *img)
     int h = img->height();
     std::ofstream plotfile;
     plotfile.open("photontraceplot.txt");
-    
+
+    Vector3 floorPoint = cam->imgProject(Vector3(0, 0, 0), w, h);
+    int floorPointPixel[] = { round(floorPoint[0]), round(floorPoint[1]) };
+    float pixelFactor = cam->pixelCosine(floorPoint[0], floorPoint[1], w, h) * cam->pixelSolidAngle(floorPoint[0], floorPoint[1], w, h);
+    printf("center-point of floor is at pixel ( %i , %i )\n", floorPointPixel[0], floorPointPixel[1]);
+
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
     for (int p = 0; p < m_photonSamples; p++) { // shoot a photon...
         LightPDF lp = randLightByWattage(); // ... off of a random light (I don't think we need the PDF here)
@@ -252,19 +270,16 @@ Scene::photontraceImage(Camera *cam, Image *img)
             printf("Rendering Progress: %.3f%%\r", p / float(m_photonSamples)*100.0f);
             fflush(stdout);
         }
-        if (((float)p / m_photonSamples)<0.8 && p>0 && p % (m_photonSamples / 3) == 0)
-        {
-            img->draw();
-        }
+        if (((float)p / m_photonSamples)<0.8 && p>0 && p % (m_photonSamples / 3) == 0) img->draw();
         if (p % 1000000 == 0) {
-            plotfile << img->getPixel(w/2, h/2)[0] *m_photonSamples << std::endl;
+            Vector3 dataPoint = img->getPixel(floorPointPixel[0], floorPointPixel[1]) / (p*pixelFactor);
+            plotfile << dataPoint[0] << std::endl;
+        }
     }
-    }
-    for (int i = 0; i < w; i++){
-        for (int j = 0; j < h; j++){
+    for (int i = 0; i < w; i++) {
+        for (int j = 0; j < h; j++) {
             Vector3 pix = img->getPixel(i, j);
-            img->setPixel(i, j,
-                pix / (cam->pixelCosine(i, j, w, h) * cam->pixelSolidAngle(i, j, w, h) * m_photonSamples));
+            img->setPixel(i, j, pix / (cam->pixelCosine(i, j, w, h) * cam->pixelSolidAngle(i, j, w, h) * m_photonSamples));
         }
     }
     img->draw();
@@ -443,8 +458,8 @@ void Scene::bounceRayPath(RayPath & raypath, const int& maxBounces) {
         raypath.m_length2.push_back(distSqr);
         raypath.m_prob.push_back(brdf*cos*raypath.m_prob.back());
         //float decay = brdf*cos / reflectance; // divide by Russian Roulette termination probability
-        //float decay = brdf / (vp.p / cos) / reflectance;
-        float decay = brdf / reflectance;
+        float decay = brdf / (vp.p / cos) / reflectance;
+        //float decay = brdf / reflectance;
         if (raypath.m_decay.size() != 0) decay*=raypath.m_decay.back();
         raypath.m_decay.push_back(decay);
 

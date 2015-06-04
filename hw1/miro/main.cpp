@@ -22,7 +22,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(256, 256);
+    g_image->resize(512, 512);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
@@ -31,12 +31,12 @@ makeRoomScene(){
     g_camera->setFOV(40);
 
     g_scene->setPreview(true);
-    g_scene->setSamplesPerPix(4);
+    g_scene->setSamplesPerPix(1000);
     g_scene->setBidiSamplesPerPix(8);
     g_scene->setMaxBounces(100);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);
-    g_scene->setPhotonSamples(10000000);
+    g_scene->setPhotonSamples(100000000);
 
     // create room geometry
 
@@ -44,7 +44,7 @@ makeRoomScene(){
     mat->setKd(0.8f);
     Mirror* mir = new Mirror(Vector3(1.0f, 1.0f, 1.0f));
     mir->setKs(0.8f);
-    Phong* pho = new Phong(0.8f, 0.2f, 50, g_camera->eye());
+    Phong* pho = new Phong(0.0f, 0.8f, 50);
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
     coverMat->setKd(0.0f);
 
@@ -59,7 +59,6 @@ makeRoomScene(){
     cover->disableBack();
     
     wall_T->setMaterial(mat);
-    //wall_T->setMaterial(pho);
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);

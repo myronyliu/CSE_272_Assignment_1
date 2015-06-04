@@ -8,8 +8,7 @@ class Phong : public Material
 public:
     Phong(const Vector3 & kd = Vector3(1),
         const Vector3 & ks = Vector3(0),
-        const float n = 1.0f,
-        const Vector3 & v = Vector3(0));
+        const float n = 1.0f);
     virtual ~Phong();
 
     const Vector3 & kd() const { return m_kd; }
@@ -39,7 +38,6 @@ protected:
     Vector3 m_kd;
     Vector3 m_ks;
     float m_n;
-    Vector3 m_v;
 };
 
 #endif // CSE168_PHONG_H_INCLUDED
