@@ -58,7 +58,7 @@ makeRoomScene(){
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     cover->disableBack();
     
-    wall_T->setMaterial(mat);
+    wall_T->setMaterial(pho);
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
@@ -85,12 +85,12 @@ main(int argc, char*argv[])
 {
     // create a scene
     makeRoomScene();
-    /*unsigned int cw;
-    _controlfp_s(&cw, 0, 0);
-    cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|
-            EM_DENORMAL|EM_INVALID);
-    unsigned int cwOriginal;
-    _controlfp_s(&cwOriginal,cw, _MCW_EM);*/
+    //unsigned int cw;
+    //_controlfp_s(&cw, 0, 0);
+    //cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|
+    //        EM_DENORMAL|EM_INVALID);
+    //unsigned int cwOriginal;
+    //_controlfp_s(&cwOriginal,cw, _MCW_EM);
     MiroWindow miro(&argc, argv);
     miro.mainLoop();
 
