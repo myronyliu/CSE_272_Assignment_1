@@ -51,21 +51,23 @@ bool comparePhotons(const std::pair<float, PhotonDeposit>& p1, const std::pair<f
 }
 
 PhotonMap* PhotonMap::getLeafNode(const Vector3& x) {
-    if (isLeafNode()) return this;
-    else {
+    PhotonMap* node = this;
+    while (true) {
+        if (node->isLeafNode()) break;
         float splitPoint = m_photon->location()[m_axis];
         if (x[m_axis] < splitPoint) {
-            if (m_child0->m_xyz[m_axis] < m_child1->m_XYZ[m_axis]) return m_child0->getLeafNode(x);
-            else if (m_child1->m_xyz[m_axis] < m_child0->m_XYZ[m_axis]) return m_child1->getLeafNode(x);
-            else return m_child0->getLeafNode(x); // otherwise both children are degenerate (story of my parent's life...)
+            if (m_child0->m_xyz[m_axis] < m_child1->m_XYZ[m_axis]) node = node->m_child0;
+            else if (m_child1->m_xyz[m_axis] < m_child0->m_XYZ[m_axis]) node = node->m_child1;
+            else node = node->m_child0; // otherwise both children are degenerate (story of my parent's life...)
         }
         else if (x[m_axis] > splitPoint) {
-            if (m_child0->m_XYZ[m_axis] > m_child1->m_xyz[m_axis]) return m_child0->getLeafNode(x);
-            else if (m_child1->m_XYZ[m_axis] > m_child0->m_xyz[m_axis]) return m_child1->getLeafNode(x);
-            else return m_child0->getLeafNode(x);
+            if (m_child0->m_XYZ[m_axis] > m_child1->m_xyz[m_axis]) node = node->m_child0;
+            else if (m_child1->m_XYZ[m_axis] > m_child0->m_xyz[m_axis]) node = node->m_child1;
+            else node = node->m_child0;
         }
-        else return m_child0->getLeafNode(x);
+        else node = node->m_child0;
     }
+    return node;
 }
 
 void PhotonMap::addPhoton(PhotonDeposit newPhotonReference) {
@@ -301,25 +303,29 @@ PhotonMap* SequentialPhotonMap::buildTree() {
     for (int i = 0; i < m_photons.size(); i++) photonMap->addPhoton(m_photons[i]);
     return photonMap;
 }
-void SequentialPhotonMap::buildBalancedTree(PhotonMap*& photonMap, std::vector<PhotonDeposit> photons, int depth) {
+void SequentialPhotonMap::buildBalancedTree(int& nPhotons, PhotonMap*& photonMap, std::vector<PhotonDeposit> photons, int depth, bool verbose) {
     if (photons.size() == 0) return;
     int medianIndex = photons.size() / 2;
     if (depth % 3 == 0) std::nth_element(photons.begin(), photons.begin() + medianIndex, photons.end(), compareX);
     else if (depth % 3 == 1) std::nth_element(photons.begin(), photons.begin() + medianIndex, photons.end(), compareY);
     else std::nth_element(photons.begin(), photons.begin() + medianIndex, photons.end(), compareZ);
     photonMap->addPhoton(photons[medianIndex]);
+    if (verbose == true && nPhotons % 100 == 0) printf("adding photon %i __________\r", nPhotons);
+    nPhotons++;
     if (medianIndex > 0) {
         std::vector<PhotonDeposit>photonsL(photons.begin(), photons.begin() + medianIndex);
-        buildBalancedTree(photonMap, photonsL, depth + 1);
+        buildBalancedTree(nPhotons, photonMap, photonsL, depth + 1, verbose);
     }
     if (medianIndex + 1 < photons.size()) {
         std::vector<PhotonDeposit>photonsR(photons.begin() + medianIndex + 1, photons.end());
-        buildBalancedTree(photonMap, photonsR, depth + 1);
+        buildBalancedTree(nPhotons, photonMap, photonsR, depth + 1, verbose);
     }
 }
-PhotonMap* SequentialPhotonMap::buildBalancedTree(int depth) {
+PhotonMap* SequentialPhotonMap::buildBalancedTree(int depth, bool verbose) {
     PhotonMap* photonMap = new PhotonMap(m_xyz, m_XYZ);
     std::vector<PhotonDeposit> photons = m_photons;
-    buildBalancedTree(photonMap, photons);
+    int nPhotons = 0;
+    if (verbose == true) buildBalancedTree(nPhotons, photonMap, photons, 0, true);
+    else buildBalancedTree(nPhotons, photonMap);
     return photonMap;
 }
