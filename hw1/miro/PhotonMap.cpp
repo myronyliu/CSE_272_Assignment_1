@@ -51,21 +51,23 @@ bool comparePhotons(const std::pair<float, PhotonDeposit>& p1, const std::pair<f
 }
 
 PhotonMap* PhotonMap::getLeafNode(const Vector3& x) {
-    if (isLeafNode()) return this;
-    else {
+    PhotonMap* node = this;
+    while (true) {
+        if (node->isLeafNode()) break;
         float splitPoint = m_photon->location()[m_axis];
         if (x[m_axis] < splitPoint) {
-            if (m_child0->m_xyz[m_axis] < m_child1->m_XYZ[m_axis]) return m_child0->getLeafNode(x);
-            else if (m_child1->m_xyz[m_axis] < m_child0->m_XYZ[m_axis]) return m_child1->getLeafNode(x);
-            else return m_child0->getLeafNode(x); // otherwise both children are degenerate (story of my parent's life...)
+            if (m_child0->m_xyz[m_axis] < m_child1->m_XYZ[m_axis]) node = node->m_child0;
+            else if (m_child1->m_xyz[m_axis] < m_child0->m_XYZ[m_axis]) node = node->m_child1;
+            else node = node->m_child0; // otherwise both children are degenerate (story of my parent's life...)
         }
         else if (x[m_axis] > splitPoint) {
-            if (m_child0->m_XYZ[m_axis] > m_child1->m_xyz[m_axis]) return m_child0->getLeafNode(x);
-            else if (m_child1->m_XYZ[m_axis] > m_child0->m_xyz[m_axis]) return m_child1->getLeafNode(x);
-            else return m_child0->getLeafNode(x);
+            if (m_child0->m_XYZ[m_axis] > m_child1->m_xyz[m_axis]) node = node->m_child0;
+            else if (m_child1->m_XYZ[m_axis] > m_child0->m_xyz[m_axis]) node = node->m_child1;
+            else node = node->m_child0;
         }
-        else return m_child0->getLeafNode(x);
+        else node = node->m_child0;
     }
+    return node;
 }
 
 void PhotonMap::addPhoton(PhotonDeposit newPhotonReference) {
