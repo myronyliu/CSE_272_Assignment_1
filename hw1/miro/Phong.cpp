@@ -24,6 +24,7 @@ float Phong::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, 
     {
         cosN = 0.0f;
     }
+    std::feclearexcept(FE_UNDERFLOW);
     return m_kd[0] / M_PI + m_ks[0] * ((m_n + 2) / (2 * M_PI))*cosN;
 }
 

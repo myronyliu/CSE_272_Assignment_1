@@ -331,7 +331,7 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
     ///////////////////////////////////////////////////////////////////////////////////
 
-    Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
+    /*Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
     printf("center-point of floor is at pixel ( %i , %i )\n", (int)floorPixel[0], (int)floorPixel[1]);
 
     std::ofstream plotfile;
@@ -356,14 +356,14 @@ Scene::biditraceImage(Camera *cam, Image *img)
     }
     printf("\ndone generating data for plot\n");
     plotfile.close();
-    return;
+    return;//*/
 
     ///////////////////////////////////////////////////////////////////////////////////
 
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
-    //for (int y = h-1; y >-1; y--)
-    for (int y = 0; y < h; y++)
+    for (int y = h-1; y >-1; y--)
+    //for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
         {
@@ -697,8 +697,6 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
     for (int k = i - 1; k > -1; k--) probB[k] = probB[k + 1] * brdf[k + 1] * cosB[k + 1];
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     Vector3 flux;
-    //RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, m_nGatheredPhotons);
-    //float diskArea = M_PI*rdp.m_radius*rdp.m_radius;
     Vector3 density = 0;
     float diskArea = M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
     for (int k = 0; k < photons.size(); k++) density += photons[k].m_power;
@@ -732,7 +730,6 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
 Vector3 Scene::uniFluxDE(const int& j, const EyePath& eyePath, PhotonMap* photonMap, const int& nLightPaths) {
     HitInfo hit_E = eyePath.m_hit[j - 1];
     vector<PhotonDeposit> photons = photonMap->getPhotons(hit_E.P, m_photonGatheringRadius);
-    //cout << photons.size() << endl;
 
     Vector3 flux(0,0,0);
 
@@ -760,7 +757,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     ///////////////////////////////////////////////////////////////////////////////////
 
-    Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
+    /*Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
     printf("center-point of floor is at pixel ( %i , %i )\n", (int)floorPixel[0], (int)floorPixel[1]);
 
     std::ofstream plotfile;
@@ -792,8 +789,8 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     ///////////////////////////////////////////////////////////////////////////////////
 
-    //for (int y = h - 1; y > -1; y--)
-    for (int y = 0; y < h; y++)
+    for (int y = h - 1; y > -1; y--)
+    //for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
         {
