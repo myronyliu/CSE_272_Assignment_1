@@ -99,21 +99,27 @@ void PhotonMap::addPhoton(PhotonDeposit newPhotonReference) {
 }
 // Results holds points within a bounding box defined by min/max points (bmin, bmax)
 void PhotonMap::getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector<PhotonDeposit>& photons) {
-    // If we're at a leaf node, just see if the current data point is inside the query bounding box
-    if (m_photon != NULL) {
-        const Vector3& p = m_photon->location();
-        if (p.x > bmax.x || p.y > bmax.y || p.z > bmax.z || p.x < bmin.x || p.y < bmin.y || p.z < bmin.z) {}
-        else photons.push_back(*m_photon);
-        if (isLeafNode()) return;
-        // We're at an interior node of the tree. Check to see if the query bounding box lies outside the octants of this node.
-        if (m_child0->m_photon == NULL ||
-            m_child0->m_XYZ.x < bmin.x || m_child0->m_XYZ.y < bmin.y || m_child0->m_XYZ.z < bmin.z ||
-            m_child0->m_xyz.x > bmax.x || m_child0->m_xyz.y > bmax.y || m_child0->m_xyz.z > bmax.z) {}
-        else m_child0->getPhotons(bmin, bmax, photons);
-        if (m_child1->m_photon == NULL ||
-            m_child1->m_XYZ.x < bmin.x || m_child1->m_XYZ.y < bmin.y || m_child1->m_XYZ.z < bmin.z ||
-            m_child1->m_xyz.x > bmax.x || m_child1->m_xyz.y > bmax.y || m_child1->m_xyz.z > bmax.z) {}
-        else m_child1->getPhotons(bmin, bmax, photons);
+    std::vector<PhotonMap*> nodes({ this });
+    while (!nodes.empty()) {
+        PhotonMap* node = nodes.back();
+        if (node->m_photon != NULL) {
+            Vector3 p = node->m_photon->location();
+            if (p.x > bmax.x || p.y > bmax.y || p.z > bmax.z || p.x < bmin.x || p.y < bmin.y || p.z < bmin.z);
+            else photons.push_back(*node->m_photon);
+            nodes.pop_back();
+            if (node->isLeafNode()) continue;
+            // We're at an interior node of the tree. Check to see if the query bounding box lies outside the octants of this node.
+            PhotonMap* child0 = node->m_child0;
+            PhotonMap* child1 = node->m_child1;
+            if (child0->m_photon == NULL ||
+                child0->m_XYZ.x < bmin.x || child0->m_XYZ.y < bmin.y || child0->m_XYZ.z < bmin.z ||
+                child0->m_xyz.x > bmax.x || child0->m_xyz.y > bmax.y || child0->m_xyz.z > bmax.z);
+            else nodes.push_back(child0);
+            if (child1->m_photon == NULL ||
+                child1->m_XYZ.x < bmin.x || child1->m_XYZ.y < bmin.y || child1->m_XYZ.z < bmin.z ||
+                child1->m_xyz.x > bmax.x || child1->m_xyz.y > bmax.y || child1->m_xyz.z > bmax.z);
+            else nodes.push_back(child1);
+        }
     }
 }
 
