@@ -135,6 +135,7 @@ Scene::pathtraceImage(Camera *cam, Image *img)
         plotfile << pixAvg[0] << std::endl;
     }
     printf("done with test\n");
+    plotfile.close();
     return;//*/
 
     // loop over all pixels in the image
@@ -178,7 +179,6 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     std::cout << "Rendering took " << ((integrationEnd - integrationStart) / 1000.0f) << "s" << std::endl;
 
     debug("done Raytracing!\n");
-    plotfile.close();
 }
 
 void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPDF& rp) {
