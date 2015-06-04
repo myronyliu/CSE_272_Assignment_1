@@ -64,7 +64,7 @@ protected:
     Vector3 m_XYZ;
     std::vector<PhotonDeposit> m_photons;
 
-    void buildBalancedTree(PhotonMap*& photonMap, std::vector<PhotonDeposit> photons, int depth = 0);
+    void buildBalancedTree(int& nPhotons, PhotonMap*& photonMap, std::vector<PhotonDeposit> photons, int depth = 0, bool verbose = false);
 public:
     SequentialPhotonMap() : m_photons(std::vector<PhotonDeposit>(0)), m_xyz(Vector3(0, 0, 0)), m_XYZ(Vector3(0, 0, 0)) {}
     ~SequentialPhotonMap() {}
@@ -82,7 +82,7 @@ public:
     void addPhoton(const PhotonDeposit& photonDeposit);
     RadiusDensityPhotons radiusDensityPhotons(const Vector3& x, const int& n);
     PhotonMap* buildTree();
-    PhotonMap* buildBalancedTree(int depth = 0);
+    PhotonMap* buildBalancedTree(int depth = 0, bool verbose = false);
 
     std::vector<PhotonDeposit> getPhotons() { return m_photons; }
 };
@@ -148,6 +148,8 @@ public:
         else if (m_parent->m_child0 == this) return m_parent->m_child1;
         else return m_parent->m_child0;
     }
+
+    PhotonMap* parent() { return m_parent; }
 };
 
 #endif // CSE168_PHOTONMAP_H_INCLUDED

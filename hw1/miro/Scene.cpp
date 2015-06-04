@@ -120,7 +120,7 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
-    /*
+    
     std::ofstream plotfile;
     plotfile.open("pathtraceplot.txt");
     Vector3 pixAvg = Vector3(0.0, 0.0, 0.0);
@@ -593,8 +593,8 @@ pair<PhotonMap*, vector<LightPath*>> Scene::generatePhotonMap() {
             for (int k = 0; k < path->m_hit.size(); k++) spm.addPhoton(PhotonDeposit(photonPower, path, k));
         }
     }
-    printf("\nPopulating photon Map ...\n");
-    return pair<PhotonMap*, vector<LightPath*>>(spm.buildBalancedTree(), paths);
+    printf("\nPopulating photon Map with %i photons...\n", spm.nPhotons());
+    return pair<PhotonMap*, vector<LightPath*>>(spm.buildBalancedTree(0, true), paths);
 }
 
 Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath, PhotonMap* photonMap, const bool& explicitConnection, const int& nLightPaths, const std::vector<PhotonDeposit>& photons) {
