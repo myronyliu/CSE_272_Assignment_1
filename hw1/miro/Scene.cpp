@@ -120,7 +120,7 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
     
-    /*std::ofstream plotfile;
+    std::ofstream plotfile;
     plotfile.open("pathtraceplot.txt");
     Vector3 pixAvg = Vector3(0.0, 0.0, 0.0);
     Ray ray(cam->eye(), (Vector3(0, 0, 0) - cam->eye()).normalize());
@@ -331,7 +331,7 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
     ///////////////////////////////////////////////////////////////////////////////////
 
-    /*Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
+    Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
     printf("center-point of floor is at pixel ( %i , %i )\n", (int)floorPixel[0], (int)floorPixel[1]);
 
     std::ofstream plotfile;
@@ -694,7 +694,7 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
     length2[i + j] = eyePath.m_length2[0];
     probB[i + j] = eyePath.m_prob[0];
     probF[i + j] = probF[i + j - 1] * brdf[i + j - 1] * cosF[i + j - 1];
-    for (int k = i - 1; k > -1; k--) probB[k] = probB[k + 1] * brdf[k + 1] * cosB[k + 1];
+    for (int k0 = i - 1; k0 > -1; k0--) probB[k0] = probB[k0 + 1] * brdf[k0 + 1] * cosB[k0 + 1];
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     Vector3 flux;
     Vector3 density = 0;

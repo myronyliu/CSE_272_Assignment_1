@@ -20,11 +20,11 @@ float Phong::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, 
     Vector3 mirrorDir = 2 * dot(normal, in)*normal - in;
     float cosAlpha = fmax(0, dot(out, mirrorDir));
     float cosN = pow(cosAlpha, m_n);
-    if ((bool)std::fetestexcept(FE_UNDERFLOW))
+    if ((bool)std::fetestexcept(FE_UNDERFLOW) || cosN < 0.000000001)
     {
         cosN = 0.0f;
+        std::feclearexcept(FE_UNDERFLOW);
     }
-    std::feclearexcept(FE_UNDERFLOW);
     return m_kd[0] / M_PI + m_ks[0] * ((m_n + 2) / (2 * M_PI))*cosN;
 }
 
