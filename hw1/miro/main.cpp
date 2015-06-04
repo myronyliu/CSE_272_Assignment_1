@@ -22,7 +22,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(512,512);
+    g_image->resize(256, 256);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
@@ -58,7 +58,7 @@ makeRoomScene(){
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     cover->disableBack();
     
-    wall_T->setMaterial(pho);
+    wall_T->setMaterial(mat);
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
@@ -74,7 +74,7 @@ makeRoomScene(){
     g_scene->addObject(wall_R);
     g_scene->addObject(wall_T);
     g_scene->addObject(cover);
-    g_scene->addAreaLight(light, 100000);
+    g_scene->addAreaLight(light, 10000);
 
     
     g_scene->preCalc();

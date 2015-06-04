@@ -331,32 +331,32 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
     ///////////////////////////////////////////////////////////////////////////////////
 
-    Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
-    printf("center-point of floor is at pixel ( %i , %i )\n", (int)floorPixel[0], (int)floorPixel[1]);
+    //Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
+    //printf("center-point of floor is at pixel ( %i , %i )\n", (int)floorPixel[0], (int)floorPixel[1]);
 
-    std::ofstream plotfile;
-    plotfile.open("biditraceplot.txt");
-    int nDataPoints = 100000;
-    int printStep = fmax(1, nDataPoints / 100);
-    Vector3 fluxAvg(0, 0, 0);
-    for (int k = 0; k < nDataPoints; k++) {
-        if (k%printStep == 0 || k == nDataPoints - 1) printf("%i/%i __________\r", k, nDataPoints);
-        EyePath eyePath = randEyePath(floorPixel[0], floorPixel[1], cam, img);
-        LightPath lightPath = randLightPath();
-        Vector3 flux(0, 0, 0);
-        for (int j = 1; j <= eyePath.m_hit.size(); j++) {
-            for (int i = 0; i <= lightPath.m_hit.size(); i++) {
-                flux += bidiFlux(i, j, lightPath, eyePath);
-            }
-        }
-        if (k == 0) fluxAvg = flux;
-        else fluxAvg += flux / (float)k;
-        fluxAvg *= (float)k / (k + 1);
-        plotfile << fluxAvg << std::endl;
-    }
-    printf("\ndone generating data for plot\n");
-    plotfile.close();
-    return;
+    //std::ofstream plotfile;
+    //plotfile.open("biditraceplot.txt");
+    //int nDataPoints = 100000;
+    //int printStep = fmax(1, nDataPoints / 100);
+    //Vector3 fluxAvg(0, 0, 0);
+    //for (int k = 0; k < nDataPoints; k++) {
+    //    if (k%printStep == 0 || k == nDataPoints - 1) printf("%i/%i __________\r", k, nDataPoints);
+    //    EyePath eyePath = randEyePath(floorPixel[0], floorPixel[1], cam, img);
+    //    LightPath lightPath = randLightPath();
+    //    Vector3 flux(0, 0, 0);
+    //    for (int j = 1; j <= eyePath.m_hit.size(); j++) {
+    //        for (int i = 0; i <= lightPath.m_hit.size(); i++) {
+    //            flux += bidiFlux(i, j, lightPath, eyePath);
+    //        }
+    //    }
+    //    if (k == 0) fluxAvg = flux;
+    //    else fluxAvg += flux / (float)k;
+    //    fluxAvg *= (float)k / (k + 1);
+    //    plotfile << fluxAvg << std::endl;
+    //}
+    //printf("\ndone generating data for plot\n");
+    //plotfile.close();
+    //return;
 
     ///////////////////////////////////////////////////////////////////////////////////
 
@@ -788,7 +788,8 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
     }
     printf("\ndone generating data for plot\n");
     plotfile.close();
-    return;//*/
+    return;
+    */
 
     ///////////////////////////////////////////////////////////////////////////////////
 
