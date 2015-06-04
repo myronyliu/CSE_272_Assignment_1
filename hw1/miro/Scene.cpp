@@ -352,7 +352,7 @@ Scene::biditraceImage(Camera *cam, Image *img)
         if (k == 0) fluxAvg = flux;
         else fluxAvg += flux / (float)k;
         fluxAvg *= (float)k / (k + 1);
-        plotfile << fluxAvg << std::endl;
+        plotfile << fluxAvg[0] << std::endl;
     }
     printf("\ndone generating data for plot\n");
     plotfile.close();
@@ -760,7 +760,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     ///////////////////////////////////////////////////////////////////////////////////
 
-    /*Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
+    Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
     printf("center-point of floor is at pixel ( %i , %i )\n", (int)floorPixel[0], (int)floorPixel[1]);
 
     std::ofstream plotfile;
@@ -784,7 +784,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
         if (k == 0) fluxAvg = flux;
         else fluxAvg += flux / (float)k;
         fluxAvg *= (float)k / (k + 1);
-        plotfile << fluxAvg << std::endl;
+        plotfile << fluxAvg[0] << std::endl;
     }
     printf("\ndone generating data for plot\n");
     plotfile.close();
