@@ -55,13 +55,15 @@ Scene::raytraceImage(Camera *cam, Image *img)
     Vector3 shadeResult;
 
     // loop over all pixels in the image
-    //for (int j = 0; j < img->height(); ++j)
-    for (int j = img->height() - 1; j > -1; j--)
+    for (int j = 0; j < img->height(); ++j)
+    //for (int j = img->height() - 1; j > -1; j--)
     {
         for (int i = 0; i < img->width(); ++i)
         {
             ray = cam->eyeRay(i, j, img->width(), img->height());
-            if (!trace(hitInfo, ray)) continue;
+            if (!trace(hitInfo, ray)) {
+                continue;
+            }
             shadeResult = hitInfo.object->material()->shade(ray, hitInfo, *this);
             img->setPixel(i, j, shadeResult);
         }
@@ -120,7 +122,7 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
     
-    std::ofstream plotfile;
+    /*std::ofstream plotfile;
     plotfile.open("pathtraceplot.txt");
     Vector3 pixAvg = Vector3(0.0, 0.0, 0.0);
     Ray ray(cam->eye(), (Vector3(0, 0, 0) - cam->eye()).normalize());
@@ -135,11 +137,11 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     }
     printf("done with test\n");
     plotfile.close();
-    return;
+    return;//*/
 
     // loop over all pixels in the image
-    //for (int j = 0; j < img->height(); ++j)
-    for (int j = img->height() - 1; j > -1; j--)
+    for (int j = 0; j < img->height(); ++j)
+    //for (int j = img->height() - 1; j > -1; j--)
     {
         for (int i = 0; i < img->width(); ++i){
             Ray ray00 = cam->eyeRay((float)i - 0.5, (float)j - 0.5, img->width(), img->height());
@@ -331,7 +333,7 @@ Scene::biditraceImage(Camera *cam, Image *img)
 
     ///////////////////////////////////////////////////////////////////////////////////
 
-    Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
+    /*Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
     printf("center-point of floor is at pixel ( %i , %i )\n", (int)floorPixel[0], (int)floorPixel[1]);
 
     std::ofstream plotfile;
@@ -356,7 +358,7 @@ Scene::biditraceImage(Camera *cam, Image *img)
     }
     printf("\ndone generating data for plot\n");
     plotfile.close();
-    return;
+    return;//*/
 
     ///////////////////////////////////////////////////////////////////////////////////
 

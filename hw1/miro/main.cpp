@@ -31,8 +31,8 @@ makeRoomScene(){
     g_camera->setFOV(40);
 
     g_scene->setPreview(true);
-    g_scene->setSamplesPerPix(1000);
-    g_scene->setBidiSamplesPerPix(256);
+    g_scene->setSamplesPerPix(64);
+    g_scene->setBidiSamplesPerPix(4);
     g_scene->setMaxBounces(100);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);
@@ -44,35 +44,49 @@ makeRoomScene(){
     mat->setKd(0.8f);
     Mirror* mir = new Mirror(Vector3(1.0f, 1.0f, 1.0f));
     mir->setKs(0.8f);
-    Phong* pho = new Phong(0.0f, 0.8f, 50);
+    Phong* pho = new Phong(0.0f, 0.8f, 200);
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
     coverMat->setKd(0.0f);
 
-    Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
+    std::vector<Vector3> corners = { Vector3(-1, -1, 0), Vector3(1, -1, 0), Vector3(1, 1, 0), Vector3(-1, 1, 0), Vector3(-1, -1, 2), Vector3(1, -1, 2), Vector3(1, 1, 2), Vector3(-1, 1, 2) };
+    std::vector<TriangleMesh::TupleI3> vertexIndices = {
+        TriangleMesh::TupleI3(0, 1, 2), TriangleMesh::TupleI3(2, 3, 0),
+        TriangleMesh::TupleI3(4, 5, 6), TriangleMesh::TupleI3(6, 7, 4),
+        TriangleMesh::TupleI3(0, 3, 7), TriangleMesh::TupleI3(7, 4, 0),
+        TriangleMesh::TupleI3(1, 2, 6), TriangleMesh::TupleI3(6, 5, 1),
+        TriangleMesh::TupleI3(2, 3, 7), TriangleMesh::TupleI3(7, 6, 2) };
+    TriangleMesh* triangleMesh = new TriangleMesh(corners, vertexIndices);
+    for (int i = 0; i < 10; i++) {
+        Triangle* triangle = new Triangle(triangleMesh, i);
+        triangle->setMaterial(mat);
+        g_scene->addObject(triangle);
+    }
+
+    /*Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
     Parallelogram * wall_R = new Parallelogram(Vector3(1, 0, 1), Vector3(0, 0, 1), Vector3(0, 1, 0), 1, 1); // right
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
     Parallelogram * wall_B = new Parallelogram(Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1); // bottom
+    wall_T->setMaterial(mat);
+    wall_B->setMaterial(mat);
+    wall_L->setMaterial(mat);
+    wall_R->setMaterial(mat);
+    wall_F->setMaterial(mat);
+    g_scene->addObject(wall_B);
+    g_scene->addObject(wall_F);
+    g_scene->addObject(wall_L);
+    g_scene->addObject(wall_R);
+    g_scene->addObject(wall_T);//*/
 
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     cover->disableBack();
     
-    wall_T->setMaterial(pho);
-    wall_B->setMaterial(mat);
-    wall_L->setMaterial(mat);
-    wall_R->setMaterial(mat);
-    wall_F->setMaterial(mir);
     cover->setMaterial(coverMat);
 
-    //light->flip(); cover->flip(); light->setWattage(2);
+    light->flip(); cover->flip(); light->setWattage(2);
 
     // add objects to scene
-    g_scene->addObject(wall_B);
-    g_scene->addObject(wall_F);
-    g_scene->addObject(wall_L);
-    g_scene->addObject(wall_R);
-    g_scene->addObject(wall_T);
     g_scene->addObject(cover);
     g_scene->addAreaLight(light, 10000);
 

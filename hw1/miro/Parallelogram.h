@@ -19,6 +19,13 @@ public:
         const bool& front, const bool& back);
     virtual ~Parallelogram();
 
+    virtual void disableBack() { m_back = false; }
+    virtual void enableBack() { m_back = true; }
+    virtual void disableFront() { m_front = false; }
+    virtual void enableFront() { m_front = true; }
+    virtual void enable() { m_front = true; m_back = true; }
+    virtual void disable() { m_front = false; m_back = false; }
+
     void setCenter(const float x, const float y, const float z) { m_center = Vector3(x, y, z); }
     void setCenter(const Vector3& v) { m_center = v; }
     void setSpanX(const float f) { m_spanX = f; }
@@ -32,12 +39,6 @@ public:
         m_vecX = m_vecY;
         m_vecY = v;
     }
-    virtual void disableBack() { m_back = false; }
-    virtual void enableBack() { m_back = true; }
-    virtual void disableFront() { m_front = false; }
-    virtual void enableFront() { m_front = true; }
-    virtual void enable() { m_front = true; m_back = true; }
-    virtual void disable() { m_front = false; m_back = false; }
 
     const Vector3 center() const { return m_center; }
     const float spanX() const { return m_spanX; }
@@ -74,6 +75,7 @@ protected:
     float m_spanY;
     Vector3 m_vecX; // note these not be perpendicular unless one desires a rectangle
     Vector3 m_vecY;
+
     bool m_back;
     bool m_front;
 };

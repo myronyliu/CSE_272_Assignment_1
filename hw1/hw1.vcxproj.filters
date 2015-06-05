@@ -176,6 +176,9 @@
     <ClInclude Include="miro\Phong.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="miro\PlanarObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="miro\Makedefs" />

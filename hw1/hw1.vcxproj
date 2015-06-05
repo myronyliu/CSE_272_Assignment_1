@@ -110,6 +110,7 @@
     <ClInclude Include="miro\OpenGL.h" />
     <ClInclude Include="miro\Phong.h" />
     <ClInclude Include="miro\PhotonMap.h" />
+    <ClInclude Include="miro\PlanarObject.h" />
     <ClInclude Include="miro\PointLight.h" />
     <ClInclude Include="miro\Ray.h" />
     <ClInclude Include="miro\Parallelogram.h" />

@@ -11,9 +11,9 @@
 void
 TriangleMesh::createSingleTriangle()
 {
-    m_normals = new Vector3[3];
-    m_vertices = new Vector3[3];
-    m_texCoords = new VectorR2[3];
+    m_normals.resize(3);
+    m_vertices.resize(3);
+    m_texCoords.resize(3);
 
     m_texCoords[0].x = 0.0f;
     m_texCoords[0].y = 0.0f;
@@ -22,21 +22,21 @@ TriangleMesh::createSingleTriangle()
     m_texCoords[2].x = 0.0f;
     m_texCoords[2].y = 1.0f;
 
-    m_normalIndices = new TupleI3[1];
-    m_vertexIndices = new TupleI3[1];
-    m_texCoordIndices = new TupleI3[1];
+    m_normalIndices.resize(1);
+    m_vertexIndices.resize(1);
+    m_texCoordIndices.resize(1);
 
-    m_vertexIndices[0].x = 0;
-    m_vertexIndices[0].y = 1;
-    m_vertexIndices[0].z = 2;
+    m_vertexIndices[0].m_x = 0;
+    m_vertexIndices[0].m_y = 1;
+    m_vertexIndices[0].m_z = 2;
 
-    m_normalIndices[0].x = 0;
-    m_normalIndices[0].y = 1;
-    m_normalIndices[0].z = 2;
+    m_normalIndices[0].m_x = 0;
+    m_normalIndices[0].m_y = 1;
+    m_normalIndices[0].m_z = 2;
 
-    m_texCoordIndices[0].x = 0;
-    m_texCoordIndices[0].y = 1;
-    m_texCoordIndices[0].z = 2;
+    m_texCoordIndices[0].m_x = 0;
+    m_texCoordIndices[0].m_y = 1;
+    m_texCoordIndices[0].m_z = 2;
 
     m_numTris = 1;
 }
@@ -122,16 +122,16 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
     fseek(fp, 0, 0);
 
 
-    m_normals = new Vector3[std::max(nv,nf)];
-    m_vertices = new Vector3[nv];
+    m_normals.resize(std::max(nv,nf));
+    m_vertices.resize(nv);
 
     if (nt)
     {   // got texture coordinates
-        m_texCoords = new VectorR2[nt];
-        m_texCoordIndices = new TupleI3[nf];
+        m_texCoords.resize(nt);
+        m_texCoordIndices.resize(nf);
     }
-    m_normalIndices = new TupleI3[nf]; // always make normals
-    m_vertexIndices = new TupleI3[nf]; // always have vertices
+    m_normalIndices.resize(nf); // always make normals
+    m_vertexIndices.resize(nf); // always have vertices
 
     m_numTris = 0;
     int nvertices = 0;
@@ -180,35 +180,35 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
             sscanf_s(&line[1], "%s %s %s\n", s1, s2, s3);
 
             getIndices(s1, &v, &t, &n);
-            m_vertexIndices[m_numTris].x = v-1;
+            m_vertexIndices[m_numTris].m_x = v-1;
             if (n)
-                m_normalIndices[m_numTris].x = n-1;
+                m_normalIndices[m_numTris].m_x = n-1;
             if (t)
-                m_texCoordIndices[m_numTris].x = t-1;
+                m_texCoordIndices[m_numTris].m_x = t-1;
             getIndices(s2, &v, &t, &n);
-            m_vertexIndices[m_numTris].y = v-1;
+            m_vertexIndices[m_numTris].m_y = v-1;
             if (n)
-                m_normalIndices[m_numTris].y = n-1;
+                m_normalIndices[m_numTris].m_y = n-1;
             if (t)
-                m_texCoordIndices[m_numTris].y = t-1;
+                m_texCoordIndices[m_numTris].m_y = t-1;
             getIndices(s3, &v, &t, &n);
-            m_vertexIndices[m_numTris].z = v-1;
+            m_vertexIndices[m_numTris].m_z = v-1;
             if (n)
-                m_normalIndices[m_numTris].z = n-1;
+                m_normalIndices[m_numTris].m_z = n-1;
             if (t)
-                m_texCoordIndices[m_numTris].z = t-1;
+                m_texCoordIndices[m_numTris].m_z = t-1;
 
             if (!n)
             {   // if no normal was supplied
-                Vector3 e1 = m_vertices[m_vertexIndices[m_numTris].y] -
-                             m_vertices[m_vertexIndices[m_numTris].x];
-                Vector3 e2 = m_vertices[m_vertexIndices[m_numTris].z] -
-                             m_vertices[m_vertexIndices[m_numTris].x];
+                Vector3 e1 = m_vertices[m_vertexIndices[m_numTris].m_y] -
+                             m_vertices[m_vertexIndices[m_numTris].m_x];
+                Vector3 e2 = m_vertices[m_vertexIndices[m_numTris].m_z] -
+                             m_vertices[m_vertexIndices[m_numTris].m_x];
 
                 m_normals[nn] = cross(e1, e2);
-                m_normalIndices[nn].x = nn;
-                m_normalIndices[nn].y = nn;
-                m_normalIndices[nn].z = nn;
+                m_normalIndices[nn].m_x = nn;
+                m_normalIndices[nn].m_y = nn;
+                m_normalIndices[nn].m_z = nn;
                 nn++;
             }
 
