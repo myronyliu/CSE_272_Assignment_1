@@ -35,6 +35,17 @@ Parallelogram::~Parallelogram()
 {
 }
 
+
+vec3pdf Parallelogram::randPt() const {
+    double rx = 1.0 - 2.0*(double)rand() / (double)RAND_MAX;
+    double ry = 1.0 - 2.0*(double)rand() / (double)RAND_MAX;
+    Vector3 vx = rx*spanX()*vecX();
+    Vector3 vy = ry*spanY()*vecY();
+    double area = 4.0*m_spanX*m_spanY*cross(m_vecX, m_vecY).length();
+    return vec3pdf(m_center + vx + vy, 1.0 / area);
+}
+
+
 void
 Parallelogram::renderGL() {
     glColor3f(1, 1, 1);

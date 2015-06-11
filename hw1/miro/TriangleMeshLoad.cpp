@@ -145,7 +145,6 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
 
     while (fgets(line, 80, fp) != 0)
     {
-        std::cout << line << std::endl;
         if (line[0] == 'v')
         {
             if (line[1] == 'n')

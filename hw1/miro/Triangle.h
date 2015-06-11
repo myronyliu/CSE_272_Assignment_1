@@ -12,7 +12,7 @@
 class Triangle : public virtual Object
 {
 public:
-    Triangle(TriangleMesh * m = 0, unsigned int i = 0);
+    Triangle(TriangleMesh * m = 0, unsigned int i = 0, const bool& front = true, const bool& back = true);
     virtual ~Triangle();
 
     void setIndex(unsigned int i) {m_index = i;}
@@ -20,28 +20,40 @@ public:
     inline Vector3 corner0() const { return m_mesh->vertex(m_mesh->vIndex(m_index).m_x); }
     inline Vector3 corner1() const { return m_mesh->vertex(m_mesh->vIndex(m_index).m_y); }
     inline Vector3 corner2() const { return m_mesh->vertex(m_mesh->vIndex(m_index).m_z); }
-    virtual Vector3 normal() const { return cross(corner1() - corner0(), corner2() - corner0()); }
+    virtual Vector3 barycentric(const Vector3& pt) const;
+    virtual Vector3 normal(const Vector3& pt) const;
+    virtual float area() const { return cross(corner1() - corner0(), corner2() - corner0()).length() / 2; }
+    virtual vec3pdf randPt() const;
+
+    virtual void disableBack() { m_back = false; }
+    virtual void enableBack() { m_back = true; }
+    virtual void disableFront() { m_front = false; }
+    virtual void enableFront() { m_front = true; }
+    virtual void enable() { m_front = true; m_back = true; }
+    virtual void disable() { m_front = false; m_back = false; }
 
     virtual void renderGL();
     virtual bool intersect(HitInfo& result, const Ray& ray,
                            float tMin = 0.0f, float tMax = MIRO_TMAX);
 
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const Vector3& point = Vector3(0, 0, 0)) const {
-        bool isFront = dot(hit.N, normal()) > 0;
+        bool isFront = dot(hit.N, normal(point)) > 0;
         return m_material->shade(ray, hit, scene, isFront);
     }
     virtual float BRDF(const Vector3& in, const Vector3& n, const Vector3& out, Vector3& point = Vector3(0, 0, 0)) const {
-        bool isFront = dot(n, normal()) > 0;
+        bool isFront = dot(n, normal(point)) > 0;
         return m_material->BRDF(in, n, out, isFront);
     }
     virtual vec3pdf randReflect(const Vector3& in, const Vector3& n, const Vector3& point = Vector3(0, 0, 0)) const  {
-        bool isFront = dot(n, normal()) > 0;
+        bool isFront = dot(n, normal(point)) > 0;
         return m_material->randReflect(in, n, isFront);
     }
     
 protected:
     TriangleMesh* m_mesh;
     unsigned int m_index;
+    bool m_back;
+    bool m_front;
 };
 
 #endif // CSE168_TRIANGLE_H_INCLUDED

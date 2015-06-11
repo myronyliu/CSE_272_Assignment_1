@@ -47,12 +47,13 @@ public:
     const Vector3 vecY() const { return m_vecY; }
     virtual Vector3 normal() const { return cross(m_vecX, m_vecY).normalize(); }
     virtual Vector3 normal(const Vector3& v) const { return cross(m_vecX, m_vecY).normalize(); }
-    //virtual float area() const { return 4.0*m_spanX*m_spanY*cross(m_vecX, m_vecY).length(); }
+    virtual float area() const { return 4.0*m_spanX*m_spanY*cross(m_vecX, m_vecY).length(); }
 
     virtual void renderGL();
     virtual bool intersect(HitInfo& result, const Ray& ray,
                            float tMin = 0.000001f, float tMax = MIRO_TMAX);
 
+    virtual vec3pdf randPt() const;
 
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const Vector3& point = Vector3(0, 0, 0)) const {
         bool isFront = dot(hit.N, normal()) > 0;

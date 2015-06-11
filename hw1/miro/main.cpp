@@ -6,6 +6,7 @@
 #include "Console.h"
 
 #include "ParallelogramLight.h"
+#include "TriangleLight.h"
 #include "PointLight.h"
 #include "Sphere.h"
 #include "Parallelogram.h"
@@ -26,7 +27,7 @@ makeRoomScene(){
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
-    g_camera->setLookAt(Vector3(0, -3, 1));
+    g_camera->setLookAt(Vector3(0, 0, 1));
     g_camera->setUp(Vector3(0, 0, 1));
     g_camera->setFOV(40);
 
@@ -48,26 +49,37 @@ makeRoomScene(){
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
     coverMat->setKd(0.0f);
 
-    TriangleMesh* triangles = new TriangleMesh();
-    triangles->load("models/geometry.obj");
-    triangles->addMeshToScene(g_scene);
+    //TriangleMesh* triangles = new TriangleMesh();
+    //triangles->load("models/geometry.obj");
+    //triangles->addMeshToScene(g_scene);
 
 
-    /*std::vector<Vector3> corners = { Vector3(-1, -1, 0), Vector3(1, -1, 0), Vector3(1, 1, 0), Vector3(-1, 1, 0), Vector3(-1, -1, 2), Vector3(1, -1, 2), Vector3(1, 1, 2), Vector3(-1, 1, 2) };
+    /*std::vector<Vector3> corners = {
+        Vector3(-1, -1, 0), Vector3(1, -1, 0), Vector3(1, 1, 0), Vector3(-1, 1, 0), Vector3(-1, -1, 2), Vector3(1, -1, 2), Vector3(1, 1, 2), Vector3(-1, 1, 2),
+        Vector3(-0.1, 0.1, 1.98), Vector3(0.1, 0.1, 1.98), Vector3(0.1, -0.1, 1.98), Vector3(-0.1, -0.1, 1.98)
+    };
     std::vector<TriangleMesh::TupleI3> vertexIndices = {
         TriangleMesh::TupleI3(0, 1, 2), TriangleMesh::TupleI3(2, 3, 0),
         TriangleMesh::TupleI3(4, 5, 6), TriangleMesh::TupleI3(6, 7, 4),
         TriangleMesh::TupleI3(0, 3, 7), TriangleMesh::TupleI3(7, 4, 0),
         TriangleMesh::TupleI3(1, 2, 6), TriangleMesh::TupleI3(6, 5, 1),
-        TriangleMesh::TupleI3(2, 3, 7), TriangleMesh::TupleI3(7, 6, 2) };
+        TriangleMesh::TupleI3(2, 3, 7), TriangleMesh::TupleI3(7, 6, 2),
+        TriangleMesh::TupleI3(8, 9, 10), TriangleMesh::TupleI3(10, 11, 8) };
     TriangleMesh* triangleMesh = new TriangleMesh(corners, vertexIndices);
     for (int i = 0; i < 10; i++) {
         Triangle* triangle = new Triangle(triangleMesh, i);
         triangle->setMaterial(mat);
-        //g_scene->addObject(triangle);
-    }//*/
+        g_scene->addObject(triangle);
+    }
+    TriangleLight* triangleLight0 = new TriangleLight(triangleMesh, 10);
+    TriangleLight* triangleLight1 = new TriangleLight(triangleMesh, 11);
+    triangleLight0->setWattage(5);
+    triangleLight1->setWattage(5);
+    g_scene->addAreaLight(triangleLight0);
+    g_scene->addAreaLight(triangleLight1);
+    //*/
 
-    /*Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
+    Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
     Parallelogram * wall_R = new Parallelogram(Vector3(1, 0, 1), Vector3(0, 0, 1), Vector3(0, 1, 0), 1, 1); // right
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
@@ -84,13 +96,14 @@ makeRoomScene(){
     g_scene->addObject(wall_T);//*/
 
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
+    g_scene->addAreaLight(light, 10000);
+
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
-    //g_scene->addObject(cover);
-    //g_scene->addAreaLight(light, 10000);
+    g_scene->addObject(cover);
     cover->disableBack();
     cover->setMaterial(coverMat);
 
-    light->flip(); cover->flip(); light->setWattage(2);
+    light->flip(); cover->flip(); light->setWattage(5);
 
     
 

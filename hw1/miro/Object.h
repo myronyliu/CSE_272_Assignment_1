@@ -22,9 +22,12 @@ public:
     virtual bool intersect(HitInfo& result, const Ray& ray,
                            float tMin = 0.0f, float tMax = MIRO_TMAX) = 0;
 
+    virtual float area() const { return 1; }
+
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const Vector3& point = Vector3(0, 0, 0)) const { return Vector3(0, 0, 0); }
     virtual float BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, Vector3& point = Vector3(0, 0, 0)) const { return 0; }
     virtual vec3pdf randReflect(const Vector3& in, const Vector3& normal, const Vector3& point = Vector3(0,0,0)) const { return vec3pdf(); }
+    virtual vec3pdf randPt() const { return vec3pdf(Vector3(0, 0, 0), 1); }
 
     virtual std::pair<Vector3, Vector3> axisAlignedBounds() { return std::pair<Vector3, Vector3>(Vector3(0, 0, 0), Vector3(0, 0, 0)); }
 protected:

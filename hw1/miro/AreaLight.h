@@ -12,7 +12,6 @@ class AreaLight : public Light
 {
 public:
 
-    virtual Vector3 normal(const Vector3& point) { return Vector3(0, 0, 1); }
     void preCalc() {} // use this if you need to
 
 protected:

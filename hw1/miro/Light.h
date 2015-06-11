@@ -23,11 +23,8 @@ public:
     Vector3 color() const { return m_color; }
     void preCalc() {} // use this if you need to
 
-    //virtual bool intersect(HitInfo& result, const Ray& ray, float tMin = 0.0f, float tMax = MIRO_TMAX) { return false; }
-    virtual float area() const { return 1; }
     virtual RayPDF randRay() const { return RayPDF(); }
     virtual float rayPDF(const Ray& ray) const { return 0; }
-    virtual vec3pdf randPt() const { return vec3pdf(Vector3(0, 0, 0), 1); }
 
 protected:
     Vector3 m_color;
