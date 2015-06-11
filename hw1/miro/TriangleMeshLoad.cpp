@@ -53,13 +53,13 @@ TriangleMesh::load(char* file, const Matrix4x4& ctm)
     fopen_s(&fp, file, "rb");
     if (!fp)
     {
-        error("Cannot open \"%s\" for reading\n",file);
+        error("Cannot open \"%s\" for reading\n", file);
         return false;
     }
     debug("Loading \"%s\"...\n", file);
 
     loadObj(fp, ctm);
-    debug("Loaded \"%s\" with %d triangles\n",file,m_numTris);
+    debug("Loaded \"%s\" with %d triangles\n", file, m_numTris);
     fclose(fp);
 
     return true;
@@ -92,16 +92,16 @@ getIndices(char *word, int *vindex, int *tindex, int *nindex)
         }
     }
 
-    *vindex = atoi (word);
-    *tindex = atoi (tp);
-    *nindex = atoi (np);
+    *vindex = atoi(word);
+    *tindex = atoi(tp);
+    *nindex = atoi(np);
 }
 
 
 void
 TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
 {
-    int nv=0, nt=0, nn=0, nf=0;
+    int nv = 0, nt = 0, nn = 0, nf = 0;
     char line[81];
     while (fgets(line, 80, fp) != 0)
     {
@@ -122,7 +122,7 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
     fseek(fp, 0, 0);
 
 
-    m_normals.resize(std::max(nv,nf));
+    m_normals.resize(std::max(nv, nf));
     m_vertices.resize(nv);
 
     if (nt)
@@ -145,6 +145,7 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
 
     while (fgets(line, 80, fp) != 0)
     {
+        std::cout << line << std::endl;
         if (line[0] == 'v')
         {
             if (line[1] == 'n')
@@ -177,33 +178,33 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
         {
             char s1[32], s2[32], s3[32];
             int v, t, n;
-            sscanf_s(&line[1], "%s %s %s\n", s1, s2, s3);
+            sscanf_s(&line[2], "%s %s %s\r\n", s1, sizeof(s1), s2, sizeof(s2), s3, sizeof(s3));
 
             getIndices(s1, &v, &t, &n);
-            m_vertexIndices[m_numTris].m_x = v-1;
+            m_vertexIndices[m_numTris].m_x = v - 1;
             if (n)
-                m_normalIndices[m_numTris].m_x = n-1;
+                m_normalIndices[m_numTris].m_x = n - 1;
             if (t)
-                m_texCoordIndices[m_numTris].m_x = t-1;
+                m_texCoordIndices[m_numTris].m_x = t - 1;
             getIndices(s2, &v, &t, &n);
-            m_vertexIndices[m_numTris].m_y = v-1;
+            m_vertexIndices[m_numTris].m_y = v - 1;
             if (n)
-                m_normalIndices[m_numTris].m_y = n-1;
+                m_normalIndices[m_numTris].m_y = n - 1;
             if (t)
-                m_texCoordIndices[m_numTris].m_y = t-1;
+                m_texCoordIndices[m_numTris].m_y = t - 1;
             getIndices(s3, &v, &t, &n);
-            m_vertexIndices[m_numTris].m_z = v-1;
+            m_vertexIndices[m_numTris].m_z = v - 1;
             if (n)
-                m_normalIndices[m_numTris].m_z = n-1;
+                m_normalIndices[m_numTris].m_z = n - 1;
             if (t)
-                m_texCoordIndices[m_numTris].m_z = t-1;
+                m_texCoordIndices[m_numTris].m_z = t - 1;
 
             if (!n)
             {   // if no normal was supplied
                 Vector3 e1 = m_vertices[m_vertexIndices[m_numTris].m_y] -
-                             m_vertices[m_vertexIndices[m_numTris].m_x];
+                    m_vertices[m_vertexIndices[m_numTris].m_x];
                 Vector3 e2 = m_vertices[m_vertexIndices[m_numTris].m_z] -
-                             m_vertices[m_vertexIndices[m_numTris].m_x];
+                    m_vertices[m_vertexIndices[m_numTris].m_x];
 
                 m_normals[nn] = cross(e1, e2);
                 m_normalIndices[nn].m_x = nn;

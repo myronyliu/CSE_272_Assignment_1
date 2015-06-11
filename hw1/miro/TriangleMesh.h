@@ -2,6 +2,7 @@
 #define CSE168_TRIANGLE_MESH_H_INCLUDED
 
 #include "Matrix4x4.h"
+#include "Scene.h"
 #include <vector>
 
 class TriangleMesh
@@ -35,8 +36,6 @@ public:
     inline void setN2(const Vector3& n) {m_normals[1] = n;}
     inline void setN3(const Vector3& n) {m_normals[2] = n;}
 
-    
-
     std::vector<Vector3> vertices()     {return m_vertices;}
     std::vector<Vector3> normals()      {return m_normals;}
     std::vector<TupleI3> vIndices()     {return m_vertexIndices;}
@@ -62,6 +61,7 @@ public:
             m_normalIndices.push_back(normalIndices[i]);
         }
     }
+    void addMeshToScene(Scene* scene);
 
 protected:
     void loadObj(FILE* fp, const Matrix4x4& ctm);

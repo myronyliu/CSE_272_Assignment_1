@@ -1,6 +1,5 @@
 #include "TriangleMesh.h"
 #include "Triangle.h"
-#include "Scene.h"
 
 
 TriangleMesh::TriangleMesh() :
@@ -29,4 +28,11 @@ TriangleMesh::~TriangleMesh()
     delete [] m_normalIndices;
     delete [] m_vertexIndices;
     delete [] m_texCoordIndices;*/
+}
+
+void TriangleMesh::addMeshToScene(Scene* scene) {
+    for (int i = 0; i < m_vertexIndices.size(); i++) {
+        Triangle* triangle = new Triangle(this, i);
+        scene->addObject(triangle);
+    }
 }

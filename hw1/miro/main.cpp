@@ -39,7 +39,7 @@ makeRoomScene(){
     g_scene->setPhotonSamples(100000000);
 
     // create room geometry
-
+    
     Lambert* mat = new Lambert(Vector3(1.0f, 1.0f, 1.0f));
     mat->setKd(0.8f);
     Mirror* mir = new Mirror(Vector3(1.0f, 1.0f, 1.0f));
@@ -48,7 +48,12 @@ makeRoomScene(){
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
     coverMat->setKd(0.0f);
 
-    std::vector<Vector3> corners = { Vector3(-1, -1, 0), Vector3(1, -1, 0), Vector3(1, 1, 0), Vector3(-1, 1, 0), Vector3(-1, -1, 2), Vector3(1, -1, 2), Vector3(1, 1, 2), Vector3(-1, 1, 2) };
+    TriangleMesh* triangles = new TriangleMesh();
+    triangles->load("models/geometry.obj");
+    triangles->addMeshToScene(g_scene);
+
+
+    /*std::vector<Vector3> corners = { Vector3(-1, -1, 0), Vector3(1, -1, 0), Vector3(1, 1, 0), Vector3(-1, 1, 0), Vector3(-1, -1, 2), Vector3(1, -1, 2), Vector3(1, 1, 2), Vector3(-1, 1, 2) };
     std::vector<TriangleMesh::TupleI3> vertexIndices = {
         TriangleMesh::TupleI3(0, 1, 2), TriangleMesh::TupleI3(2, 3, 0),
         TriangleMesh::TupleI3(4, 5, 6), TriangleMesh::TupleI3(6, 7, 4),
@@ -59,8 +64,8 @@ makeRoomScene(){
     for (int i = 0; i < 10; i++) {
         Triangle* triangle = new Triangle(triangleMesh, i);
         triangle->setMaterial(mat);
-        g_scene->addObject(triangle);
-    }
+        //g_scene->addObject(triangle);
+    }//*/
 
     /*Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
@@ -80,15 +85,14 @@ makeRoomScene(){
 
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
+    //g_scene->addObject(cover);
+    //g_scene->addAreaLight(light, 10000);
     cover->disableBack();
-    
     cover->setMaterial(coverMat);
 
     light->flip(); cover->flip(); light->setWattage(2);
 
-    // add objects to scene
-    g_scene->addObject(cover);
-    g_scene->addAreaLight(light, 10000);
+    
 
     
     g_scene->preCalc();
