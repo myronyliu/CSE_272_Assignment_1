@@ -36,7 +36,7 @@ makeTestScene() {
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(64);
-    g_scene->setBidiSamplesPerPix(128);
+    g_scene->setBidiSamplesPerPix(8);
     g_scene->setMaxBounces(100);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);
@@ -54,7 +54,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(256, 256);
+    g_image->resize(180, 180);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
