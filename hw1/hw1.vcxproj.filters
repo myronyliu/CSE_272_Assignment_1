@@ -72,9 +72,6 @@
     <ClCompile Include="miro\Mirror.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="miro\PhotonMap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="miro\RefractiveInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -94,6 +91,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="miro\QuadLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="miro\PhotonMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -173,9 +173,6 @@
     <ClInclude Include="miro\Mirror.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="miro\PhotonMap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="miro\RefractiveInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -195,6 +192,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="miro\QuadLight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="miro\PhotonMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

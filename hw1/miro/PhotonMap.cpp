@@ -54,15 +54,16 @@ PhotonMap* PhotonMap::getLeafNode(const Vector3& x) {
     PhotonMap* node = this;
     while (true) {
         if (node->isLeafNode()) break;
-        float splitPoint = m_photon->location()[m_axis];
-        if (x[m_axis] < splitPoint) {
-            if (m_child0->m_xyz[m_axis] < m_child1->m_XYZ[m_axis]) node = node->m_child0;
-            else if (m_child1->m_xyz[m_axis] < m_child0->m_XYZ[m_axis]) node = node->m_child1;
-            else node = node->m_child0; // otherwise both children are degenerate (story of my parent's life...)
+        int splitAxis = node->m_axis;
+        float splitPoint = node->m_photon->location()[splitAxis];
+        if (x[splitAxis] < splitPoint) {
+            if (node->m_child0->m_xyz[splitAxis] < node->m_child1->m_XYZ[splitAxis]) node = node->m_child0;
+            else if (node->m_child1->m_xyz[splitAxis] < node->m_child0->m_XYZ[splitAxis]) node = node->m_child1;
+            else node = node->m_child0;
         }
-        else if (x[m_axis] > splitPoint) {
-            if (m_child0->m_XYZ[m_axis] > m_child1->m_xyz[m_axis]) node = node->m_child0;
-            else if (m_child1->m_XYZ[m_axis] > m_child0->m_xyz[m_axis]) node = node->m_child1;
+        else if (x[splitAxis] > splitPoint) {
+            if (node->m_child0->m_XYZ[splitAxis] > node->m_child1->m_xyz[splitAxis]) node = node->m_child0;
+            else if (node->m_child1->m_XYZ[splitAxis] > node->m_child0->m_xyz[splitAxis]) node = node->m_child1;
             else node = node->m_child0;
         }
         else node = node->m_child0;
@@ -77,16 +78,17 @@ void PhotonMap::addPhoton(PhotonDeposit newPhotonReference) {
     else {
         Vector3 xyz = leafNode->m_xyz;
         Vector3 XYZ = leafNode->m_XYZ;
-        float splitPoint = newPhoton->location()[m_axis];
-        XYZ[m_axis] = splitPoint;
-        xyz[m_axis] = splitPoint;
-        if (newPhoton->location()[m_axis] <= splitPoint) {
-            leafNode->m_child0 = new PhotonMap(xyz, leafNode->m_XYZ, newPhoton, leafNode); // LEFT balanced tree (m_child0 gets filled first always)
-            leafNode->m_child1 = new PhotonMap(leafNode->m_xyz, XYZ, NULL, leafNode);
+        int splitAxis = leafNode->m_axis;
+        float splitPoint = leafNode->m_photon->location()[splitAxis];
+        XYZ[splitAxis] = splitPoint;
+        xyz[splitAxis] = splitPoint;
+        if (newPhoton->location()[splitAxis] <= splitPoint) {
+            leafNode->m_child0 = new PhotonMap(leafNode->m_xyz, XYZ, newPhoton, leafNode); // LEFT balanced tree (m_child0 gets filled first always)
+            leafNode->m_child1 = new PhotonMap(xyz, leafNode->m_XYZ, NULL, leafNode);
         }
         else {
-            leafNode->m_child0 = new PhotonMap(leafNode->m_xyz, XYZ, newPhoton, leafNode);
-            leafNode->m_child1 = new PhotonMap(xyz, leafNode->m_XYZ, NULL, leafNode);
+            leafNode->m_child0 = new PhotonMap(xyz, leafNode->m_XYZ, newPhoton, leafNode);
+            leafNode->m_child1 = new PhotonMap(leafNode->m_xyz, XYZ, NULL, leafNode);
         }
         PhotonMap* parent = leafNode->m_parent;
         if (parent != NULL) {
@@ -94,8 +96,8 @@ void PhotonMap::addPhoton(PhotonDeposit newPhotonReference) {
             if (parent->m_child0->isLeafNode() == false) return; // sibling is child0, but it already has children, so we are done
             parent->m_child1 = parent->m_child0; // otherwise swap to make tree LEFT balanced
             parent->m_child0 = leafNode;
+        }
     }
-}
 }
 // Results holds points within a bounding box defined by min/max points (bmin, bmax)
 std::vector<PhotonDeposit> PhotonMap::getPhotons(const Vector3& bmin, const Vector3& bmax) {
@@ -123,49 +125,6 @@ std::vector<PhotonDeposit> PhotonMap::getPhotons(const Vector3& bmin, const Vect
         }
     }
     return photons;
-}
-
-
-void PhotonMap::getPhotons(const Vector3& x, const float& r, std::vector<PhotonDeposit>& photons) {
-    if (m_photon != NULL) {
-        const Vector3& p = m_photon->location();
-        if ((p - x).length2() <= r*r) photons.push_back(*m_photon);
-        if (isLeafNode()) return;
-        // We're at an interior node of the tree. Check to see if the query bounding box lies outside the octants of this node.
-        Sphere ball(x, r);
-        HitInfo hit;
-        for (int i = 0; i < 2; i++) {
-            PhotonMap* child = m_child0;
-            if (i == 1) child = m_child1;
-            if (child->m_photon == NULL ||
-                child->m_XYZ[0] < x[0] - r || child->m_XYZ[1] < x[1] - r || child->m_XYZ[2] < x[2] - r ||
-                child->m_xyz[0] > x[0] + r || child->m_xyz[1] > x[1] + r || child->m_xyz[2] > x[2] + r) continue;
-            else {
-                Vector3 corner100 = child->m_xyz;
-                Vector3 corner010 = child->m_xyz;
-                Vector3 corner001 = child->m_xyz;
-                corner100[0] = m_XYZ[0];
-                corner010[1] = m_XYZ[1];
-                corner001[2] = m_XYZ[2];
-                Vector3 boxDims = child->m_XYZ - child->m_xyz;
-                if (ball.intersect(hit, Ray(m_xyz, Vector3(1, 0, 0)), 0, boxDims[0]) ||
-                    ball.intersect(hit, Ray(m_xyz, Vector3(0, 1, 0)), 0, boxDims[1]) ||
-                    ball.intersect(hit, Ray(m_xyz, Vector3(0, 0, 1)), 0, boxDims[2]) ||
-                    ball.intersect(hit, Ray(m_XYZ, -Vector3(1, 0, 0)), 0, boxDims[0]) ||
-                    ball.intersect(hit, Ray(m_XYZ, -Vector3(0, 1, 0)), 0, boxDims[1]) ||
-                    ball.intersect(hit, Ray(m_XYZ, -Vector3(0, 0, 1)), 0, boxDims[2]) ||
-                    ball.intersect(hit, Ray(corner100, Vector3(0, 1, 0)), 0, boxDims[1]) ||
-                    ball.intersect(hit, Ray(corner100, Vector3(0, 0, 1)), 0, boxDims[2]) ||
-                    ball.intersect(hit, Ray(corner010, Vector3(0, 0, 1)), 0, boxDims[2]) ||
-                    ball.intersect(hit, Ray(corner010, Vector3(1, 0, 0)), 0, boxDims[0]) ||
-                    ball.intersect(hit, Ray(corner001, Vector3(1, 0, 0)), 0, boxDims[0]) ||
-                    ball.intersect(hit, Ray(corner001, Vector3(0, 1, 0)), 0, boxDims[1]))
-                {
-                    child->getPhotons(x, r, photons);
-                }
-            }
-        }
-    }
 }
 
 

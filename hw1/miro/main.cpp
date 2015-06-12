@@ -122,7 +122,8 @@ makeRoomScene(){
     cover->disableBack();
     cover->setMaterial(coverMat);
 
-    //light->flip(); cover->flip(); light->setWattage(5);
+    //light->flip(); cover->flip(); light->setWattage(2);
+    light->setWattage(50);
 
     g_scene->preCalc();
 
