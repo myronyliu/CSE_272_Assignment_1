@@ -314,7 +314,8 @@ LightPDF Scene::randLightByWattage() {
         float w = m_lights[i]->wattage();
         wattageConcattage[i + 1] = wattageConcattage[i] + w;
     }
-    float r = wattageConcattage[n] * (float)rand() / RAND_MAX;
+    float random = (float)rand() / RAND_MAX;
+    float r = wattageConcattage[n] * random;
     for (int i = 0; i < n; i++){ // find the interval in which r lies and return the light along with PDF;
         if (r < wattageConcattage[i] || r > wattageConcattage[i + 1]) continue;
         rlbw.l = m_lights[i];
@@ -426,7 +427,9 @@ EyePath Scene::randEyePath(float x, float y, Camera* cam, Image* img, const int&
 LightPath Scene::randLightPath(Light* lightInput, const int& bounces) {
     HitInfo hit;
     Light* light;
-    if (lightInput==NULL) light = randLightByWattage().l;
+    if (lightInput == NULL) {
+        light = randLightByWattage().l;
+    }
     else light = lightInput;
 
     RayPDF rp = light->randRay();
