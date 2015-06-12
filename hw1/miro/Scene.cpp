@@ -555,7 +555,8 @@ Vector3 Scene::bidiFlux(int i, int j, LightPath lightPath, EyePath eyePath) {
         brdf[k] = eyePath.m_brdf[u-1];
         length2[k] = eyePath.m_length2[u];
         probB[k] = eyePath.m_prob[u];
-        probF[k] = probF[k - 1] * brdf[k] * cosF[k] * (cosB[k + 1] / length2[k]);
+        probF[k] = probF[k - 1] * brdf[k] * cosF[k];
+        if (k < i + j - 1) probF[k] *= (cosB[k + 1] / length2[k]);
     }
     length2[i + j] = eyePath.m_length2[0];
     probB[i + j] = eyePath.m_prob[0];
@@ -689,7 +690,8 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
         brdf[k] = eyePath.m_brdf[u - 1];
         length2[k] = eyePath.m_length2[u];
         probB[k] = eyePath.m_prob[u];
-        probF[k] = probF[k - 1] * brdf[k] * cosF[k] * (cosB[k + 1] / length2[k]);
+        probF[k] = probF[k - 1] * brdf[k] * cosF[k];
+        if (k < i + j - 1) probF[k] *= (cosB[k + 1] / length2[k]);
     }
     length2[i + j] = eyePath.m_length2[0];
     probB[i + j] = eyePath.m_prob[0];
@@ -698,7 +700,8 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     Vector3 flux;
     Vector3 density = 0;
-    float diskArea = M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
+    //float diskArea = M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
+    float diskArea = M_PI*radiusInput*radiusInput;
     for (int k = 0; k < photons.size(); k++) density += photons[k].m_power;
     density /= diskArea;
     if (explicitConnection == true) {
@@ -719,7 +722,7 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
         float probPI = probB[k + 1];
         if (k > 0) probPI *= probF[k - 1];
         float probDE = 0;
-        if (k > 1 && k < i + j - 1) probDE = probB[k + 1] * lightPath.m_prob[k] * diskArea*nLightPaths;
+        if (k > 1 && k < i + j - 1) probDE = probB[k + 1] * probF[k] * diskArea*nLightPaths;
 
         probPI = 0; // just for testing photonmapping only
 
@@ -736,8 +739,12 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
 
 Vector3 Scene::uniFluxDE(const int& j, const EyePath& eyePath, PhotonMap* photonMap, const int& nLightPaths) {
     HitInfo hit_E = eyePath.m_hit[j - 1];
-    vector<PhotonDeposit> photons = photonMap->getPhotons(hit_E.P, m_photonGatheringRadius);
-    //vector<PhotonDeposit> photons = photonMap->getNearestPhotons(hit_E.P, 1);
+    //vector<PhotonDeposit> photons = photonMap->getPhotons(hit_E.P, m_photonGatheringRadius);
+    RadiusDensityPhotons rdp = photonMap->radiusDensityPhotons(hit_E.P, 1);
+    vector<PhotonDeposit> photons = rdp.m_photons;
+
+    //cout << hit_E.P << endl;
+    //cout << "radius  " << rdp.m_radius << endl;
 
     Vector3 flux(0,0,0);
 
@@ -749,12 +756,14 @@ Vector3 Scene::uniFluxDE(const int& j, const EyePath& eyePath, PhotonMap* photon
         // the extra vertex (which is treated as not actually existent and merged with it's neighbor) is handled in uniFlux(...)
         if (i > 1) {
             LightPath lightPath = *photon.m_lightPath;
-            flux += uniFlux(i, j, lightPath, eyePath, photonMap, false, nLightPaths, photons);
+            flux += uniFlux(i, j, lightPath, eyePath, photonMap, false, nLightPaths, photons,rdp.m_radius);
         }
     }
-    //return flux;
+    
+    //if (flux[0] > 1) cout << flux[0] << endl;
+    return flux/100;
 
-    return flux / nLightPaths;
+    //return flux / nLightPaths;
 }
 
 void
@@ -805,8 +814,8 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
     for (int y = h - 1; y > -1; y--)
     //for (int y = 0; y < h; y++)
     {
-        for (int x = w / 2 - 1; x < w / 2 + 1; x++)
-        //for (int x = 0; x < w; x++)
+        //for (int x = w / 2 - 1; x < w / 2 + 1; x++)
+        for (int x = 0; x < w; x++)
         {
             Ray ray00 = cam->eyeRay((float)x - 0.5, (float)y - 0.5, img->width(), img->height());
             Ray ray01 = cam->eyeRay((float)x - 0.5, (float)y + 0.5, img->width(), img->height());
@@ -818,7 +827,17 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 !trace(hitInfo, ray11)) continue;
             Vector3 fluxSumOverSamples(0, 0, 0);
 
-            Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
+            Ray ray = cam->eyeRay(x, y, img->width(), img->height());
+            trace(hitInfo, ray00);
+            vector<PhotonDeposit> photons = mapAndPaths.first->getPhotons(hitInfo.P, m_photonGatheringRadius);
+            Vector3 density(0, 0, 0);
+            for (int k = 0; k<photons.size(); k++) {
+                density += photons[k].m_power;
+            }
+            density /= M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
+            img->setPixel(x, y, density);
+
+            /*Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
                 EyePath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hit.size() == 0) return;
                 int randIndex = (int)nLightPaths*((float)rand() / RAND_MAX);
@@ -833,14 +852,14 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 }
                 fluxSumOverSamples += fluxSum;
             });
-            img->setPixel(x, y, fluxSumOverSamples / m_bidiSamplesPerPix);
+            img->setPixel(x, y, fluxSumOverSamples / m_bidiSamplesPerPix);*/
         }
         if (preview())
         {
             img->drawScanline(y);
         }
         glFinish();
-        printf("Rendering Progress: %.3f%%\r", y / float(img->height())*100.0f);
+        //printf("Rendering Progress: %.3f%%\r", y / float(img->height())*100.0f);
         fflush(stdout);
     }
     if (!preview())

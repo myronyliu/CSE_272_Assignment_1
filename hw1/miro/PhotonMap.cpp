@@ -98,7 +98,8 @@ void PhotonMap::addPhoton(PhotonDeposit newPhotonReference) {
 }
 }
 // Results holds points within a bounding box defined by min/max points (bmin, bmax)
-void PhotonMap::getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector<PhotonDeposit>& photons) {
+std::vector<PhotonDeposit> PhotonMap::getPhotons(const Vector3& bmin, const Vector3& bmax) {
+    std::vector<PhotonDeposit> photons(0);
     std::vector<PhotonMap*> nodes({ this });
     while (!nodes.empty()) {
         PhotonMap* node = nodes.back();
@@ -121,6 +122,7 @@ void PhotonMap::getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector
             else nodes.push_back(child1);
         }
     }
+    return photons;
 }
 
 

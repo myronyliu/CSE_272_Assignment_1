@@ -99,7 +99,6 @@ protected:
     PhotonDeposit* m_photon; // the photon associated with this octant if this is a leaf node
 
     void setAxis() { m_axis = m_depth % 3; } // this is just here in case one wishes to define a different splitting convention
-    void getPhotons(const Vector3& bmin, const Vector3& bmax, std::vector<PhotonDeposit>& photons);
     void getNearestPhotons(const Vector3& x, const int& k, std::priority_queue<RsqrPhoton>& photons);
     void getPhotons(const Vector3& x, const float& r, std::vector<PhotonDeposit>& photons);
 public:
@@ -122,14 +121,9 @@ public:
     PhotonMap* getLeafNode(const Vector3& x);
     inline bool isLeafNode() const { return m_child0 == NULL; }
     void addPhoton(PhotonDeposit photon);
-    std::vector<PhotonDeposit> getPhotons(const Vector3& bmin, const Vector3& bmax) {
-        std::vector<PhotonDeposit> photons;
-        getPhotons(bmin, bmax, photons);
-        return photons;
-    }
+    std::vector<PhotonDeposit> getPhotons(const Vector3& bmin, const Vector3& bmax);
     std::vector<PhotonDeposit> getPhotons(const Vector3& x, const float& r) {
         std::vector<PhotonDeposit> candidatePhotons = getPhotons(x-Vector3(r,r,r),x+Vector3(r,r,r));
-        return candidatePhotons;
         std::vector<PhotonDeposit> photons;
         for (int i = 0; i < candidatePhotons.size(); i++) {
             if ((candidatePhotons[i].location() - x).length2() < r*r) photons.push_back(candidatePhotons[i]);
