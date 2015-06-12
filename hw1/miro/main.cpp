@@ -25,7 +25,7 @@ makeTestScene() {
     g_image = new Image;
     g_image->resize(512, 256);
 
-    g_camera->setEye(Vector3(0, 128, 512));
+    g_camera->setEye(Vector3(0, -128, 512));
     g_camera->setLookAt(Vector3(0, 0, 0));
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(40);

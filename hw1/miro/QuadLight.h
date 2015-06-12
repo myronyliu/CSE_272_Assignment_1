@@ -16,6 +16,7 @@ public:
     virtual RayPDF randRay() const;
     virtual float rayPDF(const Ray& ray) const;
     void preCalc() {} // use this if you need to
+    void renderGL();
 
 protected:
 

@@ -12,13 +12,13 @@ class PolygonMesh
 public:
     struct TupleI4
     {
-        unsigned int m_a, m_b, m_c, m_d;
+        int m_a, m_b, m_c, m_d;
         TupleI4() : m_a(0), m_b(0), m_c(0), m_d(0) {}
         TupleI4(int a, int b, int c, int d) : m_a(a), m_b(b), m_c(c), m_d(d) {}
     };
     struct TupleI3
     {
-        unsigned int m_a, m_b, m_c;
+        int m_a, m_b, m_c;
         TupleI3() : m_a(0), m_b(0), m_c(0) {}
         TupleI3(int a, int b, int c) : m_a(a), m_b(b), m_c(c) {}
         TupleI3(TupleI4 tuple4) : m_a(tuple4.m_a), m_b(tuple4.m_b), m_c(tuple4.m_c) {}

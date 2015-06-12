@@ -168,6 +168,7 @@ PolygonMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
                     Vector3 e2 = m_vertices[vIndices.m_b] - m_vertices[vIndices.m_a];
                     m_normals.push_back(cross(e1, e2).normalize());
                     m_quadNormalIndices.push_back(TupleI4(m_normals.size() - 1, m_normals.size() - 1, m_normals.size() - 1, m_normals.size() - 1));
+                    std::cout << std::endl;
                 }
                 if (material == 0) {
                     m_quadMaterials.push_back(m_diffuse50);
