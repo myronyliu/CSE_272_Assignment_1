@@ -88,8 +88,8 @@
     <ClCompile Include="miro\Sphere.cpp" />
     <ClCompile Include="miro\Triangle.cpp" />
     <ClCompile Include="miro\TriangleLight.cpp" />
-    <ClCompile Include="miro\TriangleMesh.cpp" />
-    <ClCompile Include="miro\TriangleMeshLoad.cpp" />
+    <ClCompile Include="miro\PolygonMesh.cpp" />
+    <ClCompile Include="miro\PolygonMeshLoad.cpp" />
     <ClCompile Include="miro\Vector3.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -121,7 +121,7 @@
     <ClInclude Include="miro\Sphere.h" />
     <ClInclude Include="miro\Triangle.h" />
     <ClInclude Include="miro\TriangleLight.h" />
-    <ClInclude Include="miro\TriangleMesh.h" />
+    <ClInclude Include="miro\PolygonMesh.h" />
     <ClInclude Include="miro\Vector3.h" />
     <ClInclude Include="miro\Vector4.h" />
   </ItemGroup>

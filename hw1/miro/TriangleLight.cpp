@@ -1,7 +1,7 @@
 #define _USE_MATH_DEFINES
 #include "TriangleLight.h"
 
-TriangleLight::TriangleLight(TriangleMesh * m, unsigned int i)
+TriangleLight::TriangleLight(PolygonMesh * m, unsigned int i)
 {
     m_mesh = m;
     m_index = i;
@@ -10,7 +10,7 @@ TriangleLight::TriangleLight(TriangleMesh * m, unsigned int i)
     m_color = Vector3(1, 1, 1);
     m_wattage = 100;
     Lambert * mat = new Lambert(Vector3(1.0, 1.0, 1.0));
-    mat->setKd(1);
+    mat->setKd(0);
     mat->setEmittance(1.0);
     mat->setPowerPerArea(m_wattage*m_color / area());
     setMaterial(mat);

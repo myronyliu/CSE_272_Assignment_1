@@ -2,7 +2,7 @@
 #define CSE168_TRIANGLE_H_INCLUDED
 
 #include "PlanarObject.h"
-#include "TriangleMesh.h"
+#include "PolygonMesh.h"
 #include "Vector3.h"
 
 /*
@@ -12,14 +12,14 @@
 class Triangle : public virtual Object
 {
 public:
-    Triangle(TriangleMesh * m = 0, unsigned int i = 0, const bool& front = true, const bool& back = true);
+    Triangle(PolygonMesh * m = 0, unsigned int i = 0, const bool& front = true, const bool& back = true);
     virtual ~Triangle();
 
     void setIndex(unsigned int i) {m_index = i;}
-    void setMesh(TriangleMesh* m) { m_mesh = m; }
-    inline Vector3 corner0() const { return m_mesh->vertex(m_mesh->vIndex(m_index).m_x); }
-    inline Vector3 corner1() const { return m_mesh->vertex(m_mesh->vIndex(m_index).m_y); }
-    inline Vector3 corner2() const { return m_mesh->vertex(m_mesh->vIndex(m_index).m_z); }
+    void setMesh(PolygonMesh* m) { m_mesh = m; }
+    inline Vector3 corner0() const { return m_mesh->vertex(m_mesh->triangleVertexIndex(m_index).m_x); }
+    inline Vector3 corner1() const { return m_mesh->vertex(m_mesh->triangleVertexIndex(m_index).m_y); }
+    inline Vector3 corner2() const { return m_mesh->vertex(m_mesh->triangleVertexIndex(m_index).m_z); }
     virtual Vector3 barycentric(const Vector3& pt) const;
     virtual Vector3 normal(const Vector3& pt) const;
     virtual float area() const { return cross(corner1() - corner0(), corner2() - corner0()).length() / 2; }
@@ -50,7 +50,7 @@ public:
     }
     
 protected:
-    TriangleMesh* m_mesh;
+    PolygonMesh* m_mesh;
     unsigned int m_index;
     bool m_back;
     bool m_front;

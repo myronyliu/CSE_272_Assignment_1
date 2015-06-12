@@ -707,9 +707,11 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
         float formFactor = cosF_L * cosB_E / shadowLength2; // form factor
         flux = lightPath.m_light->wattage()*brdf_L*brdf_E*formFactor; // flux for path integration (additional decay factors below)
     }
-    else flux = density*brdf_E;
+    else flux = density*mat_E->BRDF(-lightPath.m_ray[i].d, hit_E.N, -eyePath.m_ray[j - 1].d);
     if (j > 1) flux *= eyePath.m_decay[j - 2];
     if (i > 1) flux *= lightPath.m_decay[i - 2];
+
+    //return flux;
 
     float probSum = 0;
     for (int k = 0; k < i + j; k++) {
@@ -717,6 +719,8 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
         if (k > 0) probPI *= probF[k - 1] * (cosB[k - 1] / length2[k - 1]);
         float probDE = 0;
         if (k > 1 && k < i + j - 1) probDE = probPI * (probF[k] / probF[k - 1]) * (cosB[k] / length2[k])*diskArea*nLightPaths;
+
+        //probPI = 0; // just for testing photonmapping only
 
         if (k == i) {
             if (explicitConnection == true) flux *= probPI;
@@ -737,12 +741,14 @@ Vector3 Scene::uniFluxDE(const int& j, const EyePath& eyePath, PhotonMap* photon
 
     for (int k = 0; k < photons.size(); k++) {
         PhotonDeposit photon = photons[k];
-        int i = photon.m_hitIndex;
+        int i = photon.m_hitIndex; // we do one less than usual because we make the explicit connection (for weighting) with the second to last hit
         if (i > 1) {
             LightPath lightPath = *photon.m_lightPath;
             flux += uniFlux(i, j, lightPath, eyePath, photonMap, false, nLightPaths, photons);
         }
     }
+    //if (!(flux[0] >= 0)) cout << "negative flux\n" << endl;
+    //return flux / fmax(1,count);
     return flux / nLightPaths;
 }
 
@@ -791,8 +797,8 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     ///////////////////////////////////////////////////////////////////////////////////
 
-    for (int y = h - 1; y > -1; y--)
-    //for (int y = 0; y < h; y++)
+    //for (int y = h - 1; y > -1; y--)
+    for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
         {
@@ -807,7 +813,6 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
             Vector3 fluxSumOverSamples(0, 0, 0);
 
             Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
-            //for (int k = 0; k < m_bidiSamplesPerPix; k++) {
                 EyePath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hit.size() == 0) return;
                 int randIndex = (int)nLightPaths*((float)rand() / RAND_MAX);

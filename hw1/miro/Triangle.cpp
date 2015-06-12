@@ -2,7 +2,7 @@
 #include "Ray.h"
 
 
-Triangle::Triangle(TriangleMesh * m, unsigned int i, const bool& front, const bool& back) : m_mesh(m), m_index(i), m_front(front), m_back(back) {}
+Triangle::Triangle(PolygonMesh * m, unsigned int i, const bool& front, const bool& back) : m_mesh(m), m_index(i), m_front(front), m_back(back) {}
 
 Triangle::~Triangle() {}
 
@@ -18,7 +18,7 @@ vec3pdf Triangle::randPt() const {
 
 Vector3 Triangle::barycentric(const Vector3& ptInput) const {
     // get 3d coordinates of the vertices along with "cross-product normal"
-    TriangleMesh::TupleI3 ti3 = m_mesh->vIndex(m_index);
+    PolygonMesh::TupleI3 ti3 = m_mesh->triangleVertexIndex(m_index);
     Vector3 v1 = m_mesh->vertex(ti3.m_x);
     Vector3 v2 = m_mesh->vertex(ti3.m_y);
     Vector3 v3 = m_mesh->vertex(ti3.m_z);
@@ -46,9 +46,9 @@ Vector3 Triangle::barycentric(const Vector3& ptInput) const {
 }
 
 Vector3 Triangle::normal(const Vector3& pt) const {
-    Vector3 n0 = m_mesh->normal(m_mesh->nIndex(m_index).m_x);
-    Vector3 n1 = m_mesh->normal(m_mesh->nIndex(m_index).m_y);
-    Vector3 n2 = m_mesh->normal(m_mesh->nIndex(m_index).m_z);
+    Vector3 n0 = m_mesh->normal(m_mesh->triangleNormalIndex(m_index).m_x);
+    Vector3 n1 = m_mesh->normal(m_mesh->triangleNormalIndex(m_index).m_y);
+    Vector3 n2 = m_mesh->normal(m_mesh->triangleNormalIndex(m_index).m_z);
     Vector3 b = barycentric(pt);
     return b[0] * n0 + b[1] * n1 + b[2] * n2;
 }
@@ -56,7 +56,7 @@ Vector3 Triangle::normal(const Vector3& pt) const {
 void
 Triangle::renderGL()
 {
-    TriangleMesh::TupleI3 ti3 = m_mesh->vIndex(m_index);
+    PolygonMesh::TupleI3 ti3 = m_mesh->triangleVertexIndex(m_index);
     Vector3 v0 = m_mesh->vertex(ti3.m_x); //vertex a of triangle
     Vector3 v1 = m_mesh->vertex(ti3.m_y); //vertex b of triangle
     Vector3 v2 = m_mesh->vertex(ti3.m_z); //vertex c of triangle
@@ -74,7 +74,7 @@ Triangle::renderGL()
 bool
 Triangle::intersect(HitInfo& result, const Ray& r,float tMin, float tMax)
 {
-    TriangleMesh::TupleI3 ti3 = m_mesh->vIndex(m_index);
+    PolygonMesh::TupleI3 ti3 = m_mesh->triangleVertexIndex(m_index);
     Vector3 A = m_mesh->vertex(ti3.m_x); //vertex a of triangle
     Vector3 B = m_mesh->vertex(ti3.m_y); //vertex b of triangle
     Vector3 C = m_mesh->vertex(ti3.m_z); //vertex c of triangle

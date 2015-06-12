@@ -1,4 +1,4 @@
-#include "TriangleMesh.h"
+#include "PolygonMesh.h"
 #include "Console.h"
 #include <algorithm>
 
@@ -9,7 +9,7 @@
 
 
 void
-TriangleMesh::createSingleTriangle()
+PolygonMesh::createSingleTriangle()
 {
     m_normals.resize(3);
     m_vertices.resize(3);
@@ -22,21 +22,21 @@ TriangleMesh::createSingleTriangle()
     m_texCoords[2].x = 0.0f;
     m_texCoords[2].y = 1.0f;
 
-    m_normalIndices.resize(1);
-    m_vertexIndices.resize(1);
-    m_texCoordIndices.resize(1);
+    m_triangleNormalIndices.resize(1);
+    m_triangleVertexIndices.resize(1);
+    m_triangleTexCoordIndices.resize(1);
 
-    m_vertexIndices[0].m_x = 0;
-    m_vertexIndices[0].m_y = 1;
-    m_vertexIndices[0].m_z = 2;
+    m_triangleVertexIndices[0].m_x = 0;
+    m_triangleVertexIndices[0].m_y = 1;
+    m_triangleVertexIndices[0].m_z = 2;
 
-    m_normalIndices[0].m_x = 0;
-    m_normalIndices[0].m_y = 1;
-    m_normalIndices[0].m_z = 2;
+    m_triangleNormalIndices[0].m_x = 0;
+    m_triangleNormalIndices[0].m_y = 1;
+    m_triangleNormalIndices[0].m_z = 2;
 
-    m_texCoordIndices[0].m_x = 0;
-    m_texCoordIndices[0].m_y = 1;
-    m_texCoordIndices[0].m_z = 2;
+    m_triangleTexCoordIndices[0].m_x = 0;
+    m_triangleTexCoordIndices[0].m_y = 1;
+    m_triangleTexCoordIndices[0].m_z = 2;
 
     m_numTris = 1;
 }
@@ -47,7 +47,7 @@ TriangleMesh::createSingleTriangle()
 //************************************************************************
 
 bool
-TriangleMesh::load(char* file, const Matrix4x4& ctm)
+PolygonMesh::load(char* file, const Matrix4x4& ctm)
 {
     FILE* fp;
     fopen_s(&fp, file, "rb");
@@ -99,7 +99,7 @@ getIndices(char *word, int *vindex, int *tindex, int *nindex)
 
 
 void
-TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
+PolygonMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
 {
     int nv = 0, nt = 0, nn = 0, nf = 0;
     char line[81];
@@ -128,10 +128,10 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
     if (nt)
     {   // got texture coordinates
         m_texCoords.resize(nt);
-        m_texCoordIndices.resize(nf);
+        m_triangleTexCoordIndices.resize(nf);
     }
-    m_normalIndices.resize(nf); // always make normals
-    m_vertexIndices.resize(nf); // always have vertices
+    m_triangleNormalIndices.resize(nf); // always make normals
+    m_triangleVertexIndices.resize(nf); // always have vertices
 
     m_numTris = 0;
     int nvertices = 0;
@@ -180,35 +180,35 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
             sscanf_s(&line[2], "%s %s %s\r\n", s1, sizeof(s1), s2, sizeof(s2), s3, sizeof(s3));
 
             getIndices(s1, &v, &t, &n);
-            m_vertexIndices[m_numTris].m_x = v - 1;
+            m_triangleVertexIndices[m_numTris].m_x = v - 1;
             if (n)
-                m_normalIndices[m_numTris].m_x = n - 1;
+                m_triangleNormalIndices[m_numTris].m_x = n - 1;
             if (t)
-                m_texCoordIndices[m_numTris].m_x = t - 1;
+                m_triangleTexCoordIndices[m_numTris].m_x = t - 1;
             getIndices(s2, &v, &t, &n);
-            m_vertexIndices[m_numTris].m_y = v - 1;
+            m_triangleVertexIndices[m_numTris].m_y = v - 1;
             if (n)
-                m_normalIndices[m_numTris].m_y = n - 1;
+                m_triangleNormalIndices[m_numTris].m_y = n - 1;
             if (t)
-                m_texCoordIndices[m_numTris].m_y = t - 1;
+                m_triangleTexCoordIndices[m_numTris].m_y = t - 1;
             getIndices(s3, &v, &t, &n);
-            m_vertexIndices[m_numTris].m_z = v - 1;
+            m_triangleVertexIndices[m_numTris].m_z = v - 1;
             if (n)
-                m_normalIndices[m_numTris].m_z = n - 1;
+                m_triangleNormalIndices[m_numTris].m_z = n - 1;
             if (t)
-                m_texCoordIndices[m_numTris].m_z = t - 1;
+                m_triangleTexCoordIndices[m_numTris].m_z = t - 1;
 
             if (!n)
             {   // if no normal was supplied
-                Vector3 e1 = m_vertices[m_vertexIndices[m_numTris].m_y] -
-                    m_vertices[m_vertexIndices[m_numTris].m_x];
-                Vector3 e2 = m_vertices[m_vertexIndices[m_numTris].m_z] -
-                    m_vertices[m_vertexIndices[m_numTris].m_x];
+                Vector3 e1 = m_vertices[m_triangleVertexIndices[m_numTris].m_y] -
+                    m_vertices[m_triangleVertexIndices[m_numTris].m_x];
+                Vector3 e2 = m_vertices[m_triangleVertexIndices[m_numTris].m_z] -
+                    m_vertices[m_triangleVertexIndices[m_numTris].m_x];
 
                 m_normals[nn] = cross(e1, e2);
-                m_normalIndices[nn].m_x = nn;
-                m_normalIndices[nn].m_y = nn;
-                m_normalIndices[nn].m_z = nn;
+                m_triangleNormalIndices[nn].m_x = nn;
+                m_triangleNormalIndices[nn].m_y = nn;
+                m_triangleNormalIndices[nn].m_z = nn;
                 nn++;
             }
 

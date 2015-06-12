@@ -11,7 +11,7 @@ class TriangleLight : public Triangle, public AreaLight
 {
 public:
     TriangleLight();
-    TriangleLight(TriangleMesh * m = 0, unsigned int i = 0);
+    TriangleLight(PolygonMesh * m = 0, unsigned int i = 0);
 
     virtual void disableFront() { printf("disableFront() not available for lights\n"); }
     virtual void disableBack() { printf("disableBack() not available for lights\n"); }
