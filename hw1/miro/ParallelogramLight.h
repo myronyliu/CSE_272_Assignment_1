@@ -15,12 +15,7 @@ public:
         const Vector3& center,
         const Vector3& vecX, const Vector3& vecY,
         const float& spanX, const float& spanY);
-    //~ParallelogramLight();
-
-    virtual void disableFront() { printf("disableFront() not available for lights\n"); }
-    virtual void disableBack() { printf("disableBack() not available for lights\n"); }
-    virtual void enableFront() { printf("enableFront() not available for lights\n"); }
-    virtual void enableBack() { printf("enableBack() not available for lights\n"); }
+    
     virtual void renderGL();
 
     virtual RayPDF randRay() const;

@@ -3,27 +3,31 @@
 
 #include "Matrix4x4.h"
 #include "Scene.h"
+#include "Lambert.h"
+#include "Mirror.h"
 #include <vector>
 
 class PolygonMesh
 {
 public:
-    struct TupleI3
-    {
-        unsigned int m_x, m_y, m_z;
-        TupleI3() : m_x(0), m_y(0), m_z(0) {}
-        TupleI3(int x, int y, int z) : m_x(x), m_y(y), m_z(z) {}
-    };
     struct TupleI4
     {
-        unsigned int m_w, m_x, m_y, m_z;
-        TupleI4() : m_w(0), m_x(0), m_y(0), m_z(0) {}
-        TupleI4(int w, int x, int y, int z) : m_w(w), m_x(x), m_y(y), m_z(z) {}
+        unsigned int m_a, m_b, m_c, m_d;
+        TupleI4() : m_a(0), m_b(0), m_c(0), m_d(0) {}
+        TupleI4(int a, int b, int c, int d) : m_a(a), m_b(b), m_c(c), m_d(d) {}
     };
-
+    struct TupleI3
+    {
+        unsigned int m_a, m_b, m_c;
+        TupleI3() : m_a(0), m_b(0), m_c(0) {}
+        TupleI3(int a, int b, int c) : m_a(a), m_b(b), m_c(c) {}
+        TupleI3(TupleI4 tuple4) : m_a(tuple4.m_a), m_b(tuple4.m_b), m_c(tuple4.m_c) {}
+    };
     struct VectorR2
     {
-        float x, y;
+        float m_x, m_y;
+        VectorR2() : m_x(0), m_y(0) {}
+        VectorR2(float x, float y) : m_x(x), m_y(y) {}
     };
 
     PolygonMesh();
@@ -45,8 +49,9 @@ public:
     std::vector<Vector3> vertices()     {return m_vertices;}
     std::vector<Vector3> normals()      {return m_normals;}
     std::vector<TupleI3> triangleVertexIndices()     {return m_triangleVertexIndices;}
-    std::vector<TupleI3> triangleNormalIndices()     {return m_triangleNormalIndices;}
-    int numTris()           {return m_numTris;}
+    std::vector<TupleI3> triangleNormalIndices()     { return m_triangleNormalIndices; }
+    int numTriangles()           { return m_triangleVertexIndices.size(); }
+    int numQuads()           { return m_quadVertexIndices.size(); }
 
     Vector3 vertex(const int& i) { return m_vertices[i]; }
     Vector3 normal(const int& i) { return m_normals[i]; }
@@ -86,7 +91,15 @@ protected:
     std::vector<TupleI4> m_quadVertexIndices;
     std::vector<TupleI4> m_quadTexCoordIndices;
 
-    unsigned int m_numTris;
+    std::vector<Material*> m_triangleMaterials;
+    std::vector<Material*> m_quadMaterials;
+    std::vector<bool> m_triangleIsLight;
+    std::vector<bool> m_quadIsLight;
+
+    Material* m_diffuse50 = new Lambert(Vector3(0.5, 0.5, 0.5), Vector3(0, 0, 0));
+    Material* m_mirror = new Mirror(Vector3(1, 1, 1), Vector3(0, 0, 0));
+    Material* m_absorbing = new Lambert(Vector3(0, 0, 0), Vector3(0, 0, 0));
+
 };
 
 

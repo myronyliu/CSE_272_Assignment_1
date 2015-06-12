@@ -140,8 +140,8 @@ Scene::pathtraceImage(Camera *cam, Image *img)
     return;//*/
 
     // loop over all pixels in the image
-    for (int j = 0; j < img->height(); ++j)
-    //for (int j = img->height() - 1; j > -1; j--)
+    //for (int j = 0; j < img->height(); ++j)
+    for (int j = img->height() - 1; j > -1; j--)
     {
         for (int i = 0; i < img->width(); ++i){
             Ray ray00 = cam->eyeRay((float)i - 0.5, (float)j - 0.5, img->width(), img->height());

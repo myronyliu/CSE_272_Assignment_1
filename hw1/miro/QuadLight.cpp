@@ -1,7 +1,7 @@
 #define _USE_MATH_DEFINES
-#include "TriangleLight.h"
+#include "QuadLight.h"
 
-TriangleLight::TriangleLight(PolygonMesh * m, unsigned int i)
+QuadLight::QuadLight(PolygonMesh * m, unsigned int i)
 {
     m_mesh = m;
     m_index = i;
@@ -17,14 +17,12 @@ TriangleLight::TriangleLight(PolygonMesh * m, unsigned int i)
 }
 
 
-RayPDF TriangleLight::randRay() const {
+RayPDF QuadLight::randRay() const {
     vec3pdf o = randPt();
     vec3pdf d = m_material->randEmit(normal(o.v));
     return RayPDF(Ray(o.v, d.v),o.p,d.p);
 }
 
-float TriangleLight::rayPDF(const Ray& ray) const {
-    Vector3 b = barycentric(ray.o);
-    if (b[0] < 0 || b[1] < 0 || b[2] < 0 || b[0]>1 || b[1]>1 || b[2]>1) return 0;
-    else return m_material->emitPDF(normal(ray.o), ray.d) / area();
+float QuadLight::rayPDF(const Ray& ray) const {
+    return m_material->emitPDF(normal(ray.o), ray.d) / area();
 }

@@ -84,6 +84,7 @@
     <ClCompile Include="miro\PhotonMap.cpp" />
     <ClCompile Include="miro\PointLight.cpp" />
     <ClCompile Include="miro\Quad.cpp" />
+    <ClCompile Include="miro\QuadLight.cpp" />
     <ClCompile Include="miro\RefractiveInterface.cpp" />
     <ClCompile Include="miro\Scene.cpp" />
     <ClCompile Include="miro\Sphere.cpp" />
@@ -115,6 +116,7 @@
     <ClInclude Include="miro\PlanarObject.h" />
     <ClInclude Include="miro\PointLight.h" />
     <ClInclude Include="miro\Quad.h" />
+    <ClInclude Include="miro\QuadLight.h" />
     <ClInclude Include="miro\Ray.h" />
     <ClInclude Include="miro\Parallelogram.h" />
     <ClInclude Include="miro\RayPath.h" />

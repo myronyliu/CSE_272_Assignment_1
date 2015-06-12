@@ -9,19 +9,16 @@ Triangle::~Triangle() {}
 vec3pdf Triangle::randPt() const {
     float r1 = (float)rand() / RAND_MAX;
     float r2 = (float)rand() / RAND_MAX;
-    Vector3 A = corner0();
-    Vector3 B = corner1();
-    Vector3 C = corner2();
-    Vector3 pt = (1 - sqrt(r1))*A + (sqrt(r1)*(1 - r2))*B + r2*sqrt(r1)*C;
-    return vec3pdf(pt, 1.0 / Triangle::area());
+    Vector3 pt = (1 - sqrt(r1))*A() + (sqrt(r1)*(1 - r2))*B() + r2*sqrt(r1)*C();
+    return vec3pdf(pt, 1.0 / area());
 }
 
 Vector3 Triangle::barycentric(const Vector3& ptInput) const {
     // get 3d coordinates of the vertices along with "cross-product normal"
     PolygonMesh::TupleI3 ti3 = m_mesh->triangleVertexIndex(m_index);
-    Vector3 v1 = m_mesh->vertex(ti3.m_x);
-    Vector3 v2 = m_mesh->vertex(ti3.m_y);
-    Vector3 v3 = m_mesh->vertex(ti3.m_z);
+    Vector3 v1 = m_mesh->vertex(ti3.m_a);
+    Vector3 v2 = m_mesh->vertex(ti3.m_b);
+    Vector3 v3 = m_mesh->vertex(ti3.m_c);
     Vector3 crossNormal = cross(v2 - v1, v3 - v1).normalize();
     // project ptInput onto the plane of the triangle
     Vector3 pt = ptInput - dot(ptInput - v1, crossNormal)*crossNormal;
@@ -46,9 +43,9 @@ Vector3 Triangle::barycentric(const Vector3& ptInput) const {
 }
 
 Vector3 Triangle::normal(const Vector3& pt) const {
-    Vector3 n0 = m_mesh->normal(m_mesh->triangleNormalIndex(m_index).m_x);
-    Vector3 n1 = m_mesh->normal(m_mesh->triangleNormalIndex(m_index).m_y);
-    Vector3 n2 = m_mesh->normal(m_mesh->triangleNormalIndex(m_index).m_z);
+    Vector3 n0 = m_mesh->normal(m_mesh->triangleNormalIndex(m_index).m_a);
+    Vector3 n1 = m_mesh->normal(m_mesh->triangleNormalIndex(m_index).m_b);
+    Vector3 n2 = m_mesh->normal(m_mesh->triangleNormalIndex(m_index).m_c);
     Vector3 b = barycentric(pt);
     return b[0] * n0 + b[1] * n1 + b[2] * n2;
 }
@@ -57,9 +54,9 @@ void
 Triangle::renderGL()
 {
     PolygonMesh::TupleI3 ti3 = m_mesh->triangleVertexIndex(m_index);
-    Vector3 v0 = m_mesh->vertex(ti3.m_x); //vertex a of triangle
-    Vector3 v1 = m_mesh->vertex(ti3.m_y); //vertex b of triangle
-    Vector3 v2 = m_mesh->vertex(ti3.m_z); //vertex c of triangle
+    Vector3 v0 = m_mesh->vertex(ti3.m_a); //vertex a of triangle
+    Vector3 v1 = m_mesh->vertex(ti3.m_b); //vertex b of triangle
+    Vector3 v2 = m_mesh->vertex(ti3.m_c); //vertex c of triangle
     
     glColor3f(1, 1, 1);
     glPushMatrix();
@@ -75,9 +72,9 @@ bool
 Triangle::intersect(HitInfo& result, const Ray& r,float tMin, float tMax)
 {
     PolygonMesh::TupleI3 ti3 = m_mesh->triangleVertexIndex(m_index);
-    Vector3 A = m_mesh->vertex(ti3.m_x); //vertex a of triangle
-    Vector3 B = m_mesh->vertex(ti3.m_y); //vertex b of triangle
-    Vector3 C = m_mesh->vertex(ti3.m_z); //vertex c of triangle
+    Vector3 A = m_mesh->vertex(ti3.m_a); //vertex a of triangle
+    Vector3 B = m_mesh->vertex(ti3.m_b); //vertex b of triangle
+    Vector3 C = m_mesh->vertex(ti3.m_c); //vertex c of triangle
     Vector3 AB = B - A;
     Vector3 AC = C - A;
     Vector3 ABxAC = cross(AB, AC); // un-normalized surface normal

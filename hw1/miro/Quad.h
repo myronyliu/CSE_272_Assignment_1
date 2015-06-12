@@ -1,7 +1,6 @@
 #ifndef CSE168_Quad_H_INCLUDED
 #define CSE168_Quad_H_INCLUDED
 
-#include "PlanarObject.h"
 #include "PolygonMesh.h"
 #include "Vector3.h"
 
@@ -17,12 +16,12 @@ public:
 
     void setIndex(unsigned int i) {m_index = i;}
     void setMesh(PolygonMesh* m) { m_mesh = m; }
-    inline Vector3 corner0() const { return m_mesh->vertex(m_mesh->quadVertexIndex(m_index).m_w); }
-    inline Vector3 corner1() const { return m_mesh->vertex(m_mesh->quadVertexIndex(m_index).m_x); }
-    inline Vector3 corner2() const { return m_mesh->vertex(m_mesh->quadVertexIndex(m_index).m_y); }
-    inline Vector3 corner3() const { return m_mesh->vertex(m_mesh->quadVertexIndex(m_index).m_z); }
+    inline Vector3 A() const { return m_mesh->vertex(m_mesh->quadVertexIndex(m_index).m_a); }
+    inline Vector3 B() const { return m_mesh->vertex(m_mesh->quadVertexIndex(m_index).m_b); }
+    inline Vector3 C() const { return m_mesh->vertex(m_mesh->quadVertexIndex(m_index).m_c); }
+    inline Vector3 D() const { return m_mesh->vertex(m_mesh->quadVertexIndex(m_index).m_d); }
     virtual Vector3 normal(const Vector3& pt) const;
-    virtual float area() const { return cross(corner1() - corner0(), corner2() - corner0()).length(); }
+    virtual float area() const { return cross(B() - A(), D() - A()).length(); }
     virtual vec3pdf randPt() const;
 
     virtual void disableBack() { m_back = false; }

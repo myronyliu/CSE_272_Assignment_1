@@ -19,6 +19,33 @@
 #include "MiroWindow.h"
 
 void
+makeTestScene() {
+    g_camera = new Camera;
+    g_scene = new Scene;
+    g_image = new Image;
+    g_image->resize(512, 256);
+
+    g_camera->setEye(Vector3(0, 128, 512));
+    g_camera->setLookAt(Vector3(0, 0, 0));
+    g_camera->setUp(Vector3(0, 1, 0));
+    g_camera->setFOV(40);
+
+    g_scene->setPreview(true);
+    g_scene->setSamplesPerPix(64);
+    g_scene->setBidiSamplesPerPix(4);
+    g_scene->setMaxBounces(100);
+    g_scene->setMaxEyePaths(64);
+    g_scene->setMaxLightPaths(64);
+    g_scene->setPhotonSamples(100000000);
+
+    PolygonMesh* mesh = new PolygonMesh();
+    mesh->load("models/caustic.obj");
+    mesh->addMeshToScene(g_scene);
+    g_scene->preCalc();
+}
+
+
+void
 makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
@@ -105,9 +132,6 @@ makeRoomScene(){
 
     light->flip(); cover->flip(); light->setWattage(5);
 
-    
-
-    
     g_scene->preCalc();
 }
 
@@ -115,7 +139,7 @@ int
 main(int argc, char*argv[])
 {
     // create a scene
-    makeRoomScene();
+    makeTestScene();
     //unsigned int cw;
     //_controlfp_s(&cw, 0, 0);
     //cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|

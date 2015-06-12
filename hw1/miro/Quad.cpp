@@ -11,15 +11,11 @@ Quad::~Quad() {}
 vec3pdf Quad::randPt() const {
     float r1 = (float)rand() / RAND_MAX;
     float r2 = (float)rand() / RAND_MAX;
-    Vector3 A = corner0();
-    Vector3 B = corner1();
-    Vector3 C = corner2();
-    Vector3 pt = (1 - sqrt(r1))*A + (sqrt(r1)*(1 - r2))*B + r2*sqrt(r1)*C;
-    return vec3pdf(pt, 1.0 / Quad::area());
+    return vec3pdf(r1*(B() - A()) + r2*(D() - A()), 1.0f / area());
 }
 
 Vector3 Quad::normal(const Vector3& ptInput) const {
-    return cross(corner1() - corner0(), corner3() - corner0()).normalize(); // blargh, just do this for now
+    return cross(B() - A(), D() - A()).normalize(); // blargh, just do this for now
 
     /*Vector3 v0 = m_mesh->vertex(m_mesh->quadVertexIndex(m_index).m_w);
     Vector3 v1 = m_mesh->vertex(m_mesh->quadVertexIndex(m_index).m_x);
@@ -41,10 +37,10 @@ void
 Quad::renderGL()
 {
     PolygonMesh::TupleI4 ti4 = m_mesh->quadVertexIndex(m_index);
-    Vector3 v0 = m_mesh->vertex(ti4.m_w); //vertex a of Quad
-    Vector3 v1 = m_mesh->vertex(ti4.m_x); //vertex b of Quad
-    Vector3 v2 = m_mesh->vertex(ti4.m_y); //vertex c of Quad
-    Vector3 v3 = m_mesh->vertex(ti4.m_z); //vertex c of Quad
+    Vector3 v0 = m_mesh->vertex(ti4.m_a); //vertex a of Quad
+    Vector3 v1 = m_mesh->vertex(ti4.m_b); //vertex b of Quad
+    Vector3 v2 = m_mesh->vertex(ti4.m_c); //vertex c of Quad
+    Vector3 v3 = m_mesh->vertex(ti4.m_d); //vertex c of Quad
     
     glColor3f(1, 1, 1);
     glPushMatrix();
@@ -61,10 +57,10 @@ bool
 Quad::intersect(HitInfo& result, const Ray& r,float tMin, float tMax)
 {
     PolygonMesh::TupleI4 ti4 = m_mesh->quadVertexIndex(m_index);
-    Vector3 A = m_mesh->vertex(ti4.m_w); //vertex a of Quad
-    Vector3 B = m_mesh->vertex(ti4.m_x); //vertex b of Quad
-    Vector3 C = m_mesh->vertex(ti4.m_y); //vertex c of Quad
-    Vector3 D = m_mesh->vertex(ti4.m_z); //vertex c of Quad
+    Vector3 A = m_mesh->vertex(ti4.m_a); //vertex a of Quad
+    Vector3 B = m_mesh->vertex(ti4.m_b); //vertex b of Quad
+    Vector3 C = m_mesh->vertex(ti4.m_c); //vertex c of Quad
+    Vector3 D = m_mesh->vertex(ti4.m_d); //vertex c of Quad
     
     Vector3 center = A + C / 2;
     Vector3 vecX = (B - A).normalize();
