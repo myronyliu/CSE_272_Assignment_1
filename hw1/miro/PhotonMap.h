@@ -129,11 +129,9 @@ public:
         }
         return photons;
     }
-    std::vector<PhotonDeposit> getPhotons() { return getPhotons(m_xyz, m_XYZ); }
+    std::vector<PhotonDeposit> getAllPhotons() { return getPhotons(m_xyz, m_XYZ); }
     std::vector<PhotonDeposit> getNearestPhotons(const Vector3& x, const int& n); // returns the n nearest neighbors of input location x
-    void buildTree(SequentialPhotonMap spm);
     void buildBalancedTree(std::vector<PhotonDeposit> spm, int depth = 0);
-    void buildBalancedTree(SequentialPhotonMap spm);
     RadiusDensityPhotons radiusDensityPhotons(const Vector3& x, const int& n);
 
     inline PhotonMap* getSibling() {
@@ -141,8 +139,6 @@ public:
         else if (m_parent->m_child0 == this) return m_parent->m_child1;
         else return m_parent->m_child0;
     }
-
-    PhotonMap* parent() { return m_parent; }
 };
 
 #endif // CSE168_PHOTONMAP_H_INCLUDED

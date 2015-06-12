@@ -176,16 +176,7 @@ std::vector<PhotonDeposit> PhotonMap::getNearestPhotons(const Vector3& x, const 
     return photons;
 }
 
-void PhotonMap::buildTree(SequentialPhotonMap spm) {
-    m_xyz = Vector3(spm.xMin(), spm.yMin(), spm.zMin());
-    m_XYZ = Vector3(spm.xMax(), spm.yMax(), spm.zMax());
-    for (int i = 0; i < spm.nPhotons(); i++) addPhoton(spm[i]);
-}
-void PhotonMap::buildBalancedTree(SequentialPhotonMap spm) {
-    m_xyz = Vector3(spm.xMin(), spm.yMin(), spm.zMin());
-    m_XYZ = Vector3(spm.xMax(), spm.yMax(), spm.zMax());
-    buildBalancedTree(spm.getPhotons(), 0);
-}
+
 void PhotonMap::buildBalancedTree(std::vector<PhotonDeposit>photons, int depth) {
     if (photons.size() == 0) return;
     int medianIndex = photons.size() / 2;

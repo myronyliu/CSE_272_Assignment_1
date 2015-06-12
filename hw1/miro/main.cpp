@@ -80,23 +80,6 @@ makeRoomScene(){
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
     coverMat->setKd(0.0f);
 
-    /*std::vector<Vector3> corners = {
-        Vector3(-1, -1, 0), Vector3(1, -1, 0), Vector3(1, 1, 0), Vector3(-1, 1, 0), Vector3(-1, -1, 2), Vector3(1, -1, 2), Vector3(1, 1, 2), Vector3(-1, 1, 2),
-        Vector3(-0.1, 0.1, 1.98), Vector3(0.1, 0.1, 1.98), Vector3(0.1, -0.1, 1.98), Vector3(-0.1, -0.1, 1.98)
-    };
-    std::vector<PolygonMesh::TupleI4> quadVertexIndices = {
-        PolygonMesh::TupleI4(0, 1, 2, 3),
-        PolygonMesh::TupleI4(4, 5, 6, 7),
-        PolygonMesh::TupleI4(0, 3, 7, 4),
-        PolygonMesh::TupleI4(1, 2, 6, 5),
-        PolygonMesh::TupleI4(2, 3, 7, 6)};
-    PolygonMesh* mesh = new PolygonMesh(corners, std::vector<PolygonMesh::TupleI3>(0), quadVertexIndices);
-    for (int i = 0; i < 5; i++) {
-        Quad* quad = new Quad(mesh, i);
-        quad->setMaterial(mat);
-        g_scene->addObject(quad);
-    }
-    //*/
 
     Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
@@ -115,7 +98,7 @@ makeRoomScene(){
     g_scene->addObject(wall_T);//*/
 
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
-    g_scene->addAreaLight(light, 10000);
+    g_scene->addAreaLight(light, 200000);
 
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     g_scene->addObject(cover);
@@ -123,18 +106,9 @@ makeRoomScene(){
     cover->setMaterial(coverMat);
 
     //light->flip(); cover->flip(); light->setWattage(2);
-    light->setWattage(50);
+    light->setWattage(20);
 
     g_scene->preCalc();
-
-    /*PhotonMap* photonMap = g_scene->generatePhotonMap().first;
-    std::vector<PhotonDeposit> asdf = photonMap->getPhotons(Vector3(0, 0, 1), 0.2);
-    asdf = photonMap->getPhotons(Vector3(0, 0, 2), 0.2);
-    asdf = photonMap->getPhotons(Vector3(0, 0, 0), 0.2);
-    std::vector<PhotonDeposit> photons = photonMap->getPhotons();
-    for (int i = 0; i < photons.size(); i++) {
-        g_scene->addObject(new Sphere(photons[i].location(), 0.0001));
-    }//*/
 }
 
 int
