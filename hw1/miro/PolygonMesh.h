@@ -52,6 +52,8 @@ public:
     Vector3 normal(const int& i) { return m_normals[i]; }
     TupleI3 triangleVertexIndex(const int& i) { return m_triangleVertexIndices[i]; }
     TupleI3 triangleNormalIndex(const int& i) { return m_triangleNormalIndices[i]; }
+    TupleI4 quadVertexIndex(const int& i) { return m_quadVertexIndices[i]; }
+    TupleI4 quadNormalIndex(const int& i) { return m_quadNormalIndices[i]; }
 
     void addVertex(const Vector3& v) { m_vertices.push_back(v); }
     void addVertices(const std::vector<Vector3>& v) {
@@ -80,9 +82,9 @@ protected:
     std::vector<TupleI3> m_triangleVertexIndices;
     std::vector<TupleI3> m_triangleTexCoordIndices;
 
-    std::vector<TupleI3> m_quadNormalIndices;
-    std::vector<TupleI3> m_quadVertexIndices;
-    std::vector<TupleI3> m_quadTexCoordIndices;
+    std::vector<TupleI4> m_quadNormalIndices;
+    std::vector<TupleI4> m_quadVertexIndices;
+    std::vector<TupleI4> m_quadTexCoordIndices;
 
     unsigned int m_numTris;
 };
