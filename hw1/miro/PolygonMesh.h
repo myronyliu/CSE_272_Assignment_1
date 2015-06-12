@@ -31,7 +31,7 @@ public:
     };
 
     PolygonMesh();
-    PolygonMesh(const std::vector<Vector3>& vertices, const std::vector<TupleI3>& vertexIndices);
+    PolygonMesh(const std::vector<Vector3>& vertices, const std::vector<TupleI3>& vertexIndices, const std::vector<TupleI4>& quadVertexIndices);
     ~PolygonMesh();
 
     // load from an OBJ file

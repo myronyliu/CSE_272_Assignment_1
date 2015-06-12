@@ -12,6 +12,7 @@
 #include "Parallelogram.h"
 #include "PolygonMesh.h"
 #include "Triangle.h"
+#include "Quad.h"
 #include "Lambert.h"
 #include "Mirror.h"
 #include "Phong.h"
@@ -25,10 +26,10 @@ makeTestScene() {
     g_image = new Image;
     g_image->resize(512, 256);
 
-    g_camera->setEye(Vector3(0, -128, 512));
+    g_camera->setEye(Vector3(0, 128, 512));
     g_camera->setLookAt(Vector3(0, 0, 0));
     g_camera->setUp(Vector3(0, 1, 0));
-    g_camera->setFOV(40);
+    g_camera->setFOV(30);
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(64);
@@ -85,25 +86,18 @@ makeRoomScene(){
         Vector3(-1, -1, 0), Vector3(1, -1, 0), Vector3(1, 1, 0), Vector3(-1, 1, 0), Vector3(-1, -1, 2), Vector3(1, -1, 2), Vector3(1, 1, 2), Vector3(-1, 1, 2),
         Vector3(-0.1, 0.1, 1.98), Vector3(0.1, 0.1, 1.98), Vector3(0.1, -0.1, 1.98), Vector3(-0.1, -0.1, 1.98)
     };
-    std::vector<PolygonMesh::TupleI3> vertexIndices = {
-        PolygonMesh::TupleI3(0, 1, 2), PolygonMesh::TupleI3(2, 3, 0),
-        PolygonMesh::TupleI3(4, 5, 6), PolygonMesh::TupleI3(6, 7, 4),
-        PolygonMesh::TupleI3(0, 3, 7), PolygonMesh::TupleI3(7, 4, 0),
-        PolygonMesh::TupleI3(1, 2, 6), PolygonMesh::TupleI3(6, 5, 1),
-        PolygonMesh::TupleI3(2, 3, 7), PolygonMesh::TupleI3(7, 6, 2),
-        PolygonMesh::TupleI3(8, 9, 10), PolygonMesh::TupleI3(10, 11, 8) };
-    PolygonMesh* mesh = new PolygonMesh(corners, vertexIndices);
-    for (int i = 0; i < 10; i++) {
-        Triangle* triangle = new Triangle(mesh, i);
-        triangle->setMaterial(mat);
-        g_scene->addObject(triangle);
+    std::vector<PolygonMesh::TupleI4> quadVertexIndices = {
+        PolygonMesh::TupleI4(0, 1, 2, 3),
+        PolygonMesh::TupleI4(4, 5, 6, 7),
+        PolygonMesh::TupleI4(0, 3, 7, 4),
+        PolygonMesh::TupleI4(1, 2, 6, 5),
+        PolygonMesh::TupleI4(2, 3, 7, 6)};
+    PolygonMesh* mesh = new PolygonMesh(corners, std::vector<PolygonMesh::TupleI3>(0), quadVertexIndices);
+    for (int i = 0; i < 5; i++) {
+        Quad* quad = new Quad(mesh, i);
+        quad->setMaterial(mat);
+        g_scene->addObject(quad);
     }
-    TriangleLight* triangleLight0 = new TriangleLight(mesh, 10);
-    TriangleLight* triangleLight1 = new TriangleLight(mesh, 11);
-    triangleLight0->setWattage(5);
-    triangleLight1->setWattage(5);
-    //g_scene->addAreaLight(triangleLight0);
-    //g_scene->addAreaLight(triangleLight1);
     //*/
 
     /*Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far

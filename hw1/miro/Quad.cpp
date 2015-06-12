@@ -62,12 +62,14 @@ Quad::intersect(HitInfo& result, const Ray& r,float tMin, float tMax)
     Vector3 C = m_mesh->vertex(ti4.m_c); //vertex c of Quad
     Vector3 D = m_mesh->vertex(ti4.m_d); //vertex c of Quad
     
-    Vector3 center = A + C / 2;
+    Vector3 center = (A + C) / 2;
     Vector3 vecX = (B - A).normalize();
     Vector3 vecY = (D - A).normalize();
     float spanX = (B - A).length() / 2;
     float spanY = (D - A).length() / 2;
 
     Parallelogram parallelogram(center, vecX, vecY, spanX, spanY, m_front, m_back);
-    return parallelogram.intersect(result, r, tMin, tMax);
+    bool hitCheck = parallelogram.intersect(result, r, tMin, tMax);
+    result.object = this;
+    return hitCheck;
 }
