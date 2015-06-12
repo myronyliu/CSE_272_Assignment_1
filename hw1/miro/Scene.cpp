@@ -485,7 +485,10 @@ void Scene::bounceRayPath(RayPath & raypath, const int& maxBounces) {
         raypath.m_ray.push_back(newRay);
         raypath.m_length2.push_back(distSqr);
         raypath.m_prob.push_back(brdf*cos*raypath.m_prob.back()*(cosPrime / distSqr));
-        float decay = brdf / (vp.p / cos) / reflectance;
+        float decay = 0.0f;
+        if (reflectance != 0.0f) {
+            decay = brdf / (vp.p / cos) / reflectance;
+        }
         if (raypath.m_decay.size() != 0) decay*=raypath.m_decay.back();
         raypath.m_decay.push_back(decay);
 
@@ -711,7 +714,7 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
     }
     else {
         flux = density*mat_E->BRDF(-lightPath.m_ray[i].d, hit_E.N, -eyePath.m_ray[j - 1].d);
-        flux *= lightPath.m_decay[i - 1] * flux *= eyePath.m_decay[j - 2];
+        flux *= lightPath.m_decay[i - 1] * flux * eyePath.m_decay[j - 2];
     }
 
     float probSum = 0;
@@ -719,7 +722,14 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
         float probPI = probB[k + 1];
         if (k > 0) probPI *= probF[k - 1];
         float probDE = 0;
-        if (k > 1 && k < i + j - 1) probDE = probB[k + 1] * probF[k] * diskArea*nLightPaths;
+        if (k > 1 && k < i + j - 1) {
+            if (!isfinite(probB[k + 1] * probF[k])) {
+                probDE = 0.0f;
+            }
+            else {
+                probDE = probB[k + 1] * probF[k] * diskArea*nLightPaths;
+            }
+        }
 
         probPI = 0; // just for testing photonmapping only
 
@@ -730,7 +740,12 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
 
         probSum += probPI + probDE;
     }
-    return flux / probSum;
+    if (isfinite(probSum)) {
+        return flux / probSum;
+    }
+    else {
+        return Vector3(0, 0, 0);
+    }
 }
 
 
@@ -824,9 +839,9 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 density += photons[k].m_power;
             }
             density /= M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
-            img->setPixel(x, y, density);//*/
+            img->setPixel(x, y, density);
 
-            /*Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
+            Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
                 EyePath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hit.size() == 0) return;
                 int randIndex = (int)nLightPaths*((float)rand() / RAND_MAX);
@@ -836,12 +851,12 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 for (int j = 1; j <= eyePath.m_hit.size(); j++) {
                     if (j>1) fluxSum += uniFluxDE(j, eyePath, mapAndPaths.first, nLightPaths);
                     for (int i = 0; i <= lightPath.m_hit.size(); i++) {
-                        //fluxSum += uniFlux(i, j, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
+                //        fluxSum += uniFlux(i, j, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
                     }
                 }
                 fluxSumOverSamples += fluxSum;
             });
-            img->setPixel(x, y, fluxSumOverSamples / m_bidiSamplesPerPix);//*/
+            img->setPixel(x, y, fluxSumOverSamples / m_bidiSamplesPerPix);
         }
         if (preview())
         {

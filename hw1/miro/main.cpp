@@ -54,7 +54,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(180, 180);
+    g_image->resize(256,256);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
@@ -106,7 +106,7 @@ makeRoomScene(){
     cover->setMaterial(coverMat);
 
     //light->flip(); cover->flip(); light->setWattage(2);
-    light->setWattage(20);
+    light->setWattage(100);
 
     g_scene->preCalc();
 }
@@ -116,12 +116,12 @@ main(int argc, char*argv[])
 {
     // create a scene
     makeRoomScene();
-    //unsigned int cw;
-    //_controlfp_s(&cw, 0, 0);
-    //cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|
-    //        EM_DENORMAL|EM_INVALID);
-    //unsigned int cwOriginal;
-    //_controlfp_s(&cwOriginal,cw, _MCW_EM);
+    unsigned int cw;
+    _controlfp_s(&cw, 0, 0);
+    cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|
+            EM_DENORMAL|EM_INVALID);
+    unsigned int cwOriginal;
+    _controlfp_s(&cwOriginal,cw, _MCW_EM);
     MiroWindow miro(&argc, argv);
     miro.mainLoop();
 
