@@ -24,16 +24,19 @@ makeTestScene() {
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(512, 256);
+    g_image->resize(256, 256);
 
-    g_camera->setEye(Vector3(0, 128, 512));
-    g_camera->setLookAt(Vector3(0, 0, 0));
+    //Vector3 eye = Vector3(-0.5, 2.75, 1.5).rotate(-60, Vector3(1, 0, 0)) + Vector3(30.661);
+    //g_camera->setEye(eye);
+    
+    g_camera->setEye(Vector3(-100, 100, 200));
+    g_camera->setLookAt(Vector3(-64, 0, 0));
     g_camera->setUp(Vector3(0, 1, 0));
-    g_camera->setFOV(30);
+    g_camera->setFOV(40);
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(64);
-    g_scene->setBidiSamplesPerPix(4);
+    g_scene->setBidiSamplesPerPix(128);
     g_scene->setMaxBounces(100);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);
@@ -77,12 +80,7 @@ makeRoomScene(){
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
     coverMat->setKd(0.0f);
 
-    //PolygonMesh* triangles = new PolygonMesh();
-    //triangles->load("models/geometry.obj");
-    //triangles->addMeshToScene(g_scene);
-
-
-    std::vector<Vector3> corners = {
+    /*std::vector<Vector3> corners = {
         Vector3(-1, -1, 0), Vector3(1, -1, 0), Vector3(1, 1, 0), Vector3(-1, 1, 0), Vector3(-1, -1, 2), Vector3(1, -1, 2), Vector3(1, 1, 2), Vector3(-1, 1, 2),
         Vector3(-0.1, 0.1, 1.98), Vector3(0.1, 0.1, 1.98), Vector3(0.1, -0.1, 1.98), Vector3(-0.1, -0.1, 1.98)
     };
@@ -100,7 +98,7 @@ makeRoomScene(){
     }
     //*/
 
-    /*Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
+    Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
     Parallelogram * wall_R = new Parallelogram(Vector3(1, 0, 1), Vector3(0, 0, 1), Vector3(0, 1, 0), 1, 1); // right
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
@@ -124,16 +122,25 @@ makeRoomScene(){
     cover->disableBack();
     cover->setMaterial(coverMat);
 
-    light->flip(); cover->flip(); light->setWattage(5);
+    //light->flip(); cover->flip(); light->setWattage(5);
 
     g_scene->preCalc();
+
+    /*PhotonMap* photonMap = g_scene->generatePhotonMap().first;
+    std::vector<PhotonDeposit> asdf = photonMap->getPhotons(Vector3(0, 0, 1), 0.2);
+    asdf = photonMap->getPhotons(Vector3(0, 0, 2), 0.2);
+    asdf = photonMap->getPhotons(Vector3(0, 0, 0), 0.2);
+    std::vector<PhotonDeposit> photons = photonMap->getPhotons();
+    for (int i = 0; i < photons.size(); i++) {
+        g_scene->addObject(new Sphere(photons[i].location(), 0.0001));
+    }//*/
 }
 
 int
 main(int argc, char*argv[])
 {
     // create a scene
-    makeTestScene();
+    makeRoomScene();
     //unsigned int cw;
     //_controlfp_s(&cw, 0, 0);
     //cw &=~(EM_OVERFLOW|EM_UNDERFLOW|EM_ZERODIVIDE|

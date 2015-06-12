@@ -426,8 +426,9 @@ EyePath Scene::randEyePath(float x, float y, Camera* cam, Image* img, const int&
 LightPath Scene::randLightPath(Light* lightInput, const int& bounces) {
     HitInfo hit;
     Light* light;
-    if (lightInput==NULL) light = randLightByWattage().l;
-    else light = lightInput;
+    //if (lightInput==NULL) light = randLightByWattage().l;
+    //else light = lightInput;
+    light = m_lights[0];
 
     RayPDF rp = light->randRay();
     Ray rayInit = rp.m_ray;
@@ -614,7 +615,7 @@ pair<PhotonMap*, vector<LightPath*>> Scene::generatePhotonMap() {
             *path = randLightPath(light, m_maxLightPaths);
             paths[pathCount] = path;
             pathCount++;
-            spm.addPhoton(PhotonDeposit(photonPower, path, -1));
+            //spm.addPhoton(PhotonDeposit(photonPower, path, -1));
             for (int k = 0; k < path->m_hit.size(); k++) spm.addPhoton(PhotonDeposit(photonPower, path, k));
         }
     }
@@ -706,12 +707,16 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
     if (explicitConnection == true) {
         float formFactor = cosF_L * cosB_E / shadowLength2; // form factor
         flux = lightPath.m_light->wattage()*brdf_L*brdf_E*formFactor; // flux for path integration (additional decay factors below)
+        if (i > 1) flux *= lightPath.m_decay[i - 2];
+        if (j > 1) flux *= eyePath.m_decay[j - 2];
     }
-    else flux = density*mat_E->BRDF(-lightPath.m_ray[i].d, hit_E.N, -eyePath.m_ray[j - 1].d);
-    if (j > 1) flux *= eyePath.m_decay[j - 2];
-    if (i > 1) flux *= lightPath.m_decay[i - 2];
+    else {
+        flux = density*mat_E->BRDF(-lightPath.m_ray[i].d, hit_E.N, -eyePath.m_ray[j - 1].d);
+        if (i > 0) flux *= lightPath.m_decay[i - 1];
+        if (j > 1) flux *= eyePath.m_decay[j - 2];
+    }
 
-    //return flux;
+    return flux;
 
     float probSum = 0;
     for (int k = 0; k < i + j; k++) {
@@ -720,7 +725,7 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
         float probDE = 0;
         if (k > 1 && k < i + j - 1) probDE = probPI * (probF[k] / probF[k - 1]) * (cosB[k] / length2[k])*diskArea*nLightPaths;
 
-        //probPI = 0; // just for testing photonmapping only
+        probPI = 0; // just for testing photonmapping only
 
         if (k == i) {
             if (explicitConnection == true) flux *= probPI;
@@ -736,19 +741,23 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
 Vector3 Scene::uniFluxDE(const int& j, const EyePath& eyePath, PhotonMap* photonMap, const int& nLightPaths) {
     HitInfo hit_E = eyePath.m_hit[j - 1];
     vector<PhotonDeposit> photons = photonMap->getPhotons(hit_E.P, m_photonGatheringRadius);
+    //vector<PhotonDeposit> photons = photonMap->getNearestPhotons(hit_E.P, 1);
 
     Vector3 flux(0,0,0);
 
     for (int k = 0; k < photons.size(); k++) {
         PhotonDeposit photon = photons[k];
-        int i = photon.m_hitIndex; // we do one less than usual because we make the explicit connection (for weighting) with the second to last hit
+        int i = photon.m_hitIndex;
+        // usually with explicit connection we would make i = photon.m_hitIndex +1
+        // we do one less than usual because we make the explicit connection (for weighting) with the second to last hit
+        // the extra vertex (which is treated as not actually existent and merged with it's neighbor) is handled in uniFlux(...)
         if (i > 1) {
             LightPath lightPath = *photon.m_lightPath;
             flux += uniFlux(i, j, lightPath, eyePath, photonMap, false, nLightPaths, photons);
         }
     }
-    //if (!(flux[0] >= 0)) cout << "negative flux\n" << endl;
-    //return flux / fmax(1,count);
+    //return flux;
+
     return flux / nLightPaths;
 }
 
@@ -797,8 +806,8 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     ///////////////////////////////////////////////////////////////////////////////////
 
-    //for (int y = h - 1; y > -1; y--)
-    for (int y = 0; y < h; y++)
+    for (int y = h - 1; y > -1; y--)
+    //for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
         {
@@ -822,7 +831,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 for (int j = 1; j <= eyePath.m_hit.size(); j++) {
                     if (j>1) fluxSum += uniFluxDE(j, eyePath, mapAndPaths.first, nLightPaths);
                     for (int i = 0; i <= lightPath.m_hit.size(); i++) {
-                        fluxSum += uniFlux(i, j, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
+                        //fluxSum += uniFlux(i, j, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
                     }
                 }
                 fluxSumOverSamples += fluxSum;

@@ -96,7 +96,7 @@ protected:
     std::vector<bool> m_triangleIsLight;
     std::vector<bool> m_quadIsLight;
 
-    Material* m_diffuse50 = new Lambert(Vector3(0.5, 0.5, 0.5), Vector3(0, 0, 0));
+    Material* m_diffuse50 = new Lambert(Vector3(1, 1, 1), Vector3(0, 0, 0));
     Material* m_mirror = new Mirror(Vector3(1, 1, 1), Vector3(0, 0, 0));
     Material* m_absorbing = new Lambert(Vector3(0, 0, 0), Vector3(0, 0, 0));
 
