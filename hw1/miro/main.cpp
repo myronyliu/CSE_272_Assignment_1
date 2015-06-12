@@ -98,7 +98,7 @@ makeRoomScene(){
     g_scene->addObject(wall_T);//*/
 
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
-    g_scene->addAreaLight(light, 200000);
+    g_scene->addAreaLight(light, 50000);
 
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     g_scene->addObject(cover);
@@ -106,7 +106,7 @@ makeRoomScene(){
     cover->setMaterial(coverMat);
 
     //light->flip(); cover->flip(); light->setWattage(2);
-    light->setWattage(20);
+    light->setWattage(50);
 
     g_scene->preCalc();
 }

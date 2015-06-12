@@ -625,9 +625,6 @@ pair<PhotonMap*, vector<LightPath*>> Scene::generatePhotonMap() {
 }
 
 Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath, PhotonMap* photonMap, const bool& explicitConnection, const int& nLightPaths, const std::vector<PhotonDeposit>& photons, const float& radiusInput) {
-    if (explicitConnection == false) {
-        if (photons.size() == 0 || i < 2 || j < 2) return Vector3(0, 0, 0);
-    }
     if (i == 0 && j == 0) return eyePath.m_hit[0].object->material()->radiance(eyePath.m_hit[0].N, -eyePath.m_ray[0].d);
     if (i < 0 || j < 1) return Vector3(0, 0, 0);
 
@@ -711,17 +708,19 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
     }
     else {
         flux = density*mat_E->BRDF(-lightPath.m_ray[i].d, hit_E.N, -eyePath.m_ray[j - 1].d);
-        flux *= lightPath.m_decay[i - 1] * flux *= eyePath.m_decay[j - 2];
+        if (i > 0) flux *= lightPath.m_decay[i - 1];
+        if (j > 1) flux *= eyePath.m_decay[j - 2];
     }
+
+    //return flux;
 
     float probSum = 0;
     for (int k = 0; k < i + j; k++) {
         float probPI = probB[k + 1];
         if (k > 0) probPI *= probF[k - 1];
-        float probDE = 0;
-        if (k > 1 && k < i + j - 1) probDE = probB[k + 1] * probF[k] * diskArea*nLightPaths;
+        float probDE = probB[k + 1] * probF[k] * diskArea*nLightPaths;
 
-        probPI = 0; // just for testing photonmapping only
+        //probPI = 0; // just for testing photonmapping only
 
         if (k == i) {
             if (explicitConnection == true) flux *= probPI;
@@ -746,12 +745,9 @@ Vector3 Scene::uniFluxDE(const int& j, const EyePath& eyePath, PhotonMap* photon
         // usually with explicit connection we would make i = photon.m_hitIndex +1
         // we do one less than usual because we make the explicit connection (for weighting) with the second to last hit
         // the extra vertex (which is treated as not actually existent and merged with it's neighbor) is handled in uniFlux(...)
-        if (i > 1) {
-            LightPath lightPath = *photon.m_lightPath;
-            flux += uniFlux(i, j, lightPath, eyePath, photonMap, false, nLightPaths, photons);
-        }
+        LightPath lightPath = *photon.m_lightPath;
+        flux += uniFlux(i, j, lightPath, eyePath, photonMap, false, nLightPaths, photons);
     }
-
     return flux / nLightPaths;
 }
 
@@ -765,40 +761,6 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
     pair<PhotonMap*,vector<LightPath*>> mapAndPaths = generatePhotonMap();
     int nLightPaths = mapAndPaths.second.size();
-
-    ///////////////////////////////////////////////////////////////////////////////////
-
-    //Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
-    //printf("center-point of floor is at pixel ( %i , %i )\n", (int)floorPixel[0], (int)floorPixel[1]);
-
-    //std::ofstream plotfile;
-    //plotfile.open("unifiedpathtraceplot.txt");
-    //int nDataPoints = 100000;
-    //int printStep = fmax(1, nDataPoints / 100);
-    //Vector3 fluxAvg(0, 0, 0);
-    //for (int k = 0; k < nDataPoints; k++) {
-    //    if (k%printStep == 0 || k == nDataPoints - 1) printf("%i/%i __________\r", k, nDataPoints);
-    //    EyePath eyePath = randEyePath(floorPixel[0], floorPixel[1], cam, img);
-    //    int randIndex = (int)nLightPaths*((float)rand() / RAND_MAX);
-    //    int lightPathIndex = min(nLightPaths - 1, randIndex);
-    //    LightPath lightPath = *mapAndPaths.second[lightPathIndex];
-    //    Vector3 flux(0, 0, 0);
-    //    for (int j = 1; j <= eyePath.m_hit.size(); j++) {
-    //        if (j>1) flux += uniFluxDE(j, eyePath, mapAndPaths.first, nLightPaths);
-    //        for (int i = 0; i <= lightPath.m_hit.size(); i++) {
-    //            flux += uniFlux(i, j, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
-    //        }
-    //    }
-    //    if (k == 0) fluxAvg = flux;
-    //    else fluxAvg += flux / (float)k;
-    //    fluxAvg *= (float)k / (k + 1);
-    //    plotfile << fluxAvg[0] << std::endl;
-    //}
-    //printf("\ndone generating data for plot\n");
-    //plotfile.close();
-    //return;
-
-    ///////////////////////////////////////////////////////////////////////////////////
 
     for (int y = h - 1; y > -1; y--)
     //for (int y = 0; y < h; y++)
@@ -816,7 +778,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 !trace(hitInfo, ray11)) continue;
             Vector3 fluxSumOverSamples(0, 0, 0);
 
-            Ray ray = cam->eyeRay(x, y, img->width(), img->height());
+            /*Ray ray = cam->eyeRay(x, y, img->width(), img->height());
             trace(hitInfo, ray00);
             vector<PhotonDeposit> photons = mapAndPaths.first->getPhotons(hitInfo.P, m_photonGatheringRadius);
             Vector3 density(0, 0, 0);
@@ -826,7 +788,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
             density /= M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
             img->setPixel(x, y, density);//*/
 
-            /*Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
+            Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
                 EyePath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hit.size() == 0) return;
                 int randIndex = (int)nLightPaths*((float)rand() / RAND_MAX);
@@ -834,7 +796,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 LightPath lightPath = *mapAndPaths.second[lightPathIndex];
                 Vector3 fluxSum = uniFlux(0, 0, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
                 for (int j = 1; j <= eyePath.m_hit.size(); j++) {
-                    if (j>1) fluxSum += uniFluxDE(j, eyePath, mapAndPaths.first, nLightPaths);
+                    fluxSum += uniFluxDE(j, eyePath, mapAndPaths.first, nLightPaths);
                     for (int i = 0; i <= lightPath.m_hit.size(); i++) {
                         //fluxSum += uniFlux(i, j, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
                     }
@@ -848,7 +810,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
             img->drawScanline(y);
         }
         glFinish();
-        //printf("Rendering Progress: %.3f%%\r", y / float(img->height())*100.0f);
+        printf("Rendering Progress: %.3f%%\r", y / float(img->height())*100.0f);
         fflush(stdout);
     }
     if (!preview())
