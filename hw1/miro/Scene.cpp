@@ -443,7 +443,14 @@ LightPath Scene::randLightPath(Light* lightInput, const int& bounces) {
     lightPath.m_originProb = rp.m_oProb;
 
     if (!trace(hit, rayInit)) return lightPath;
-    else lightPath.m_prob.push_back(rp.m_dProb*std::max(0.0f, dot(hit.N, -rayInit.d)));
+    else {
+        float cosPrime = std::max(0.0f, dot(hit.N, -rayInit.d));
+        float distSqr = (hit.P - lightHit.P).length2();
+        lightPath.m_hit.push_back(hit);
+        lightPath.m_cosB.push_back(cosPrime);
+        lightPath.m_length2.push_back(distSqr);
+        lightPath.m_prob.push_back(rp.m_dProb*cosPrime);
+    }
 
     if (bounces < 0) bounceRayPath(lightPath, m_maxLightPaths);
     else bounceRayPath(lightPath, bounces);
@@ -453,11 +460,13 @@ LightPath Scene::randLightPath(Light* lightInput, const int& bounces) {
 void Scene::bounceRayPath(RayPath & raypath, const int& maxBounces) {
     if (maxBounces < 1) return;
     HitInfo hit;
-    Ray rayInit = raypath.m_ray[0];
-    if (!trace(hit, rayInit)) return;
-    raypath.m_hit.push_back(hit);
-    raypath.m_cosB.push_back(std::max(0.0f, dot(hit.N, -rayInit.d)));
-    raypath.m_length2.push_back((hit.P - rayInit.o).length2());
+    if (raypath.m_hit.size() == 0) {
+        Ray rayInit = raypath.m_ray[0];
+        if (!trace(hit, rayInit)) return;
+        raypath.m_hit.push_back(hit);
+        raypath.m_cosB.push_back(std::max(0.0f, dot(hit.N, -rayInit.d)));
+        raypath.m_length2.push_back((hit.P - rayInit.o).length2());
+    }
 
     int bounce = 1;
     while (bounce < maxBounces)
