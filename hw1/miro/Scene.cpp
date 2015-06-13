@@ -118,28 +118,9 @@ void
 Scene::pathtraceImage(Camera *cam, Image *img)
 {
     HitInfo hitInfo;
-    
-    
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
     
-    /*std::ofstream plotfile;
-    plotfile.open("pathtraceplot.txt");
-    Vector3 pixAvg = Vector3(0.0, 0.0, 0.0);
-    Ray ray(cam->eye(), (Vector3(0, 0, 0) - cam->eye()).normalize());
-    int nPlotPoints = 1000000;
-    int printStep = fmax(0, nPlotPoints / 1000);
-    for (int k = 0; k < nPlotPoints; k++) {
-        if (k%printStep == 0 || k == nPlotPoints - 1) printf("%i/%i __________\r", k, nPlotPoints);
-        if (k == 0) pixAvg = recursiveTrace_fromEye(ray, 0, m_maxBounces);
-        else pixAvg += recursiveTrace_fromEye(ray, 0, m_maxBounces) / (float)k;
-        pixAvg *= (float)k / (k + 1);
-        plotfile << pixAvg[0] << std::endl;
-    }
-    printf("done with test\n");
-    plotfile.close();
-    return;//*/
-
-    // loop over all pixels in the image
+       // loop over all pixels in the image
     //for (int j = 0; j < img->height(); ++j)
     for (int j = img->height() - 1; j > -1; j--)
     {
@@ -331,38 +312,6 @@ Scene::biditraceImage(Camera *cam, Image *img)
     int w = img->width();
     int h = img->height();
     HitInfo hitInfo;
-
-    ///////////////////////////////////////////////////////////////////////////////////
-
-    /*Vector3 floorPixel = cam->imgProject(Vector3(0, 0, 0), w, h);
-    printf("center-point of floor is at pixel ( %i , %i )\n", (int)floorPixel[0], (int)floorPixel[1]);
-
-    std::ofstream plotfile;
-    plotfile.open("biditraceplot.txt");
-    int nDataPoints = 100000;
-    int printStep = fmax(1, nDataPoints / 100);
-    Vector3 fluxAvg(0, 0, 0);
-    for (int k = 0; k < nDataPoints; k++) {
-        if (k%printStep == 0 || k == nDataPoints - 1) printf("%i/%i __________\r", k, nDataPoints);
-        EyePath eyePath = randEyePath(floorPixel[0], floorPixel[1], cam, img);
-        LightPath lightPath = randLightPath();
-        Vector3 flux(0, 0, 0);
-        for (int j = 1; j <= eyePath.m_hit.size(); j++) {
-            for (int i = 0; i <= lightPath.m_hit.size(); i++) {
-                flux += bidiFlux(i, j, lightPath, eyePath);
-            }
-        }
-        if (k == 0) fluxAvg = flux;
-        else fluxAvg += flux / (float)k;
-        fluxAvg *= (float)k / (k + 1);
-        plotfile << fluxAvg << std::endl;
-    }
-    printf("\ndone generating data for plot\n");
-    plotfile.close();
-    return;//*/
-
-    ///////////////////////////////////////////////////////////////////////////////////
-
     int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
     for (int y = h-1; y >-1; y--)
@@ -537,9 +486,9 @@ Vector3 Scene::bidiFlux(int i, int j, LightPath lightPath, EyePath eyePath) {
     float dProb_EtoL = cosB_E*brdf_E*(cosF_L / shadowLength2);
     float dProb_LtoE = cosF_L*brdf_L*(cosB_E / shadowLength2);
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    vector<float> probF(i + j + 1); // forward from light to eye (excludes the const emission probability, since it's just a constant)
-    vector<float> probB(i + j + 1); // backward from eye to light
-    vector<float> length2(i + j + 1);
+    vector<float> probF(i + j); // forward from light to eye (excludes the const emission probability, since it's just a constant)
+    vector<float> probB(i + j); // backward from eye to light
+    vector<float> length2(i + j);
     vector<float> cosF(i + j);
     vector<float> cosB(i + j);
     vector<float> brdf(i + j);
@@ -564,18 +513,15 @@ Vector3 Scene::bidiFlux(int i, int j, LightPath lightPath, EyePath eyePath) {
     brdf[i] = brdf_E;
     for (int k = i + 1; k < i + j; k++) {
         int u = i + j - k;
-        cosF[k] = eyePath.m_cosB[u-1]; // note the swap
-        cosB[k] = eyePath.m_cosF[u-1];
-        brdf[k] = eyePath.m_brdf[u-1];
+        cosF[k] = eyePath.m_cosB[u - 1]; // note the swap
+        cosB[k] = eyePath.m_cosF[u - 1];
+        brdf[k] = eyePath.m_brdf[u - 1];
         length2[k] = eyePath.m_length2[u];
         probB[k] = eyePath.m_prob[u];
-        probF[k] = probF[k - 1] * brdf[k] * cosF[k];
-        if (k < i + j - 1) probF[k] *= (cosB[k + 1] / length2[k]);
+        probF[k] = probF[k - 1] * brdf[k - 1] * cosF[k - 1] * (cosB[k] / length2[k]);
     }
-    length2[i + j] = eyePath.m_length2[0];
-    probB[i + j] = eyePath.m_prob[0];
-    probF[i + j] = probF[i + j - 1] * brdf[i + j - 1] * cosF[i + j - 1];
-    for (int k = i - 1; k > -1; k--) probB[k] = probB[k + 1] * brdf[k + 1] * cosB[k + 1] * (cosF[k] / length2[k]);
+    for (int k = i - 1; k > 0; k--) probB[k] = probB[k + 1] * brdf[k] * cosB[k] * (cosF[k - 1] / length2[k]);
+    probB[0] = probB[1] * brdf[0] * cosB[0] * (std::max(0.0f, dot(lightPath.m_lightHit.N, lightPath.m_ray[0].d) / length2[0]));
     //////////////////////////////////////////////////////////////////////////
     float formFactor = cosF_L * cosB_E / shadowLength2; // form factor
     Vector3 flux = lightPath.m_light->wattage()*brdf_L* brdf_E * formFactor;
@@ -669,9 +615,9 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
     float dProb_EtoL = cosB_E*brdf_E*(cosF_L / shadowLength2);
     float dProb_LtoE = cosF_L*brdf_L*(cosB_E / shadowLength2);
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    vector<float> probF(i + j + 1); // forward from light to eye (excludes the const emission probability, since it's just a constant)
-    vector<float> probB(i + j + 1); // backward from eye to light
-    vector<float> length2(i + j + 1);
+    vector<float> probF(i + j); // forward from light to eye (excludes the const emission probability, since it's just a constant)
+    vector<float> probB(i + j); // backward from eye to light
+    vector<float> length2(i + j);
     vector<float> cosF(i + j);
     vector<float> cosB(i + j);
     vector<float> brdf(i + j);
@@ -701,13 +647,10 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
         brdf[k] = eyePath.m_brdf[u - 1];
         length2[k] = eyePath.m_length2[u];
         probB[k] = eyePath.m_prob[u];
-        probF[k] = probF[k - 1] * brdf[k] * cosF[k];
-        if (k < i + j - 1) probF[k] *= (cosB[k + 1] / length2[k]);
+        probF[k] = probF[k - 1] * brdf[k - 1] * cosF[k - 1] * (cosB[k] / length2[k]);
     }
-    length2[i + j] = eyePath.m_length2[0];
-    probB[i + j] = eyePath.m_prob[0];
-    probF[i + j] = probF[i + j - 1] * brdf[i + j - 1] * cosF[i + j - 1];
-    for (int k = i - 1; k > -1; k--) probB[k] = probB[k + 1] * brdf[k + 1] * cosB[k + 1] * (cosF[k] / length2[k]);
+    for (int k = i - 1; k > 0; k--) probB[k] = probB[k + 1] * brdf[k] * cosB[k] * (cosF[k - 1] / length2[k]);
+    probB[0] = probB[1] * brdf[0] * cosB[0] * (std::max(0.0f, dot(lightPath.m_lightHit.N, lightPath.m_ray[0].d) / length2[0]));
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     Vector3 flux;
     Vector3 density = 0;
