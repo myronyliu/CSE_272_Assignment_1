@@ -483,7 +483,7 @@ void Scene::bounceRayPath(RayPath & raypath, const int& maxBounces) {
         vec3pdf vp = lastHit.object->material()->randReflect(-lastRay.d, lastHit.N);
         Ray newRay(lastHit.P, vp.v);
         if (!trace(hit, newRay)) return;
-        float brdf = lastHit.object->material()->BRDF(-lastRay.d, lastHit.N, vp.v);
+        float brdf = lastHit.object->material()->BRDF(-lastRay.d, lastHit.N, newRay.d);
         float cos = std::max(0.0f, dot(lastHit.N, newRay.d));
         float cosPrime = std::max(0.0f, dot(hit.N, -newRay.d));
         float distSqr = (hit.P - lastHit.P).length2();
@@ -535,7 +535,7 @@ Vector3 Scene::bidiFlux(int i, int j, LightPath lightPath, EyePath eyePath) {
     if (i > 0) brdf_L = mat_L->BRDF(shadow_LtoE.d, hit_L.N, -lightPath.m_ray[i - 1].d);
     if (brdf_L == 0) return Vector3(0, 0, 0);
     float dProb_EtoL = cosB_E*brdf_E*(cosF_L / shadowLength2);
-    float dProb_LtoE = dProb_EtoL;
+    float dProb_LtoE = cosF_L*brdf_L*(cosB_E / shadowLength2);
     ///////////////////////////////////////////////////////////////////////////////////////////////
     vector<float> probF(i + j + 1); // forward from light to eye (excludes the const emission probability, since it's just a constant)
     vector<float> probB(i + j + 1); // backward from eye to light
@@ -667,7 +667,7 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
     if (i > 0) brdf_L = mat_L->BRDF(shadow_LtoE.d, hit_L.N, -lightPath.m_ray[i - 1].d);
     if (brdf_L == 0) return Vector3(0, 0, 0);
     float dProb_EtoL = cosB_E*brdf_E*(cosF_L / shadowLength2);
-    float dProb_LtoE = dProb_EtoL;
+    float dProb_LtoE = cosF_L*brdf_L*(cosB_E / shadowLength2);
     ///////////////////////////////////////////////////////////////////////////////////////////////
     vector<float> probF(i + j + 1); // forward from light to eye (excludes the const emission probability, since it's just a constant)
     vector<float> probB(i + j + 1); // backward from eye to light
