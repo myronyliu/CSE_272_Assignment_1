@@ -24,7 +24,7 @@ makeTestScene() {
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(256, 256);
+    g_image->resize(128, 128);
 
     //Vector3 eye = Vector3(-0.5, 2.75, 1.5).rotate(-60, Vector3(1, 0, 0)) + Vector3(30.661);
     //g_camera->setEye(eye);
@@ -98,7 +98,7 @@ makeRoomScene(){
     g_scene->addObject(wall_T);//*/
 
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
-    g_scene->addAreaLight(light, 200000);
+    g_scene->addAreaLight(light, 10000);
 
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     g_scene->addObject(cover);
