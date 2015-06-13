@@ -64,6 +64,8 @@ public:
     void photontraceImage(Camera *cam, Image *img);
     void biditraceImage(Camera *cam, Image *img);
     void unifiedpathtraceImage(Camera *cam, Image *img);
+    Ray forwardShadowRay(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath);
+    std::pair<std::vector<float>, std::vector<float>> forwardBackwardProbs(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath);
 
     bool trace(HitInfo& minHit, const Ray& ray,
         float tMin = 0.0f, float tMax = MIRO_TMAX) const;
@@ -96,7 +98,7 @@ protected:
     int m_maxEyePaths = 1;
     int m_maxLightPaths = 0;
     int m_nGatheredPhotons = 32;
-    float m_photonGatheringRadius = 0.1f; // radius for gathering photons in the vicinity
+    float m_photonGatheringRadius = 0.2f; // radius for gathering photons in the vicinity
 
     std::vector<int> m_emittedPhotonsPerLight;
     Lights m_lights;

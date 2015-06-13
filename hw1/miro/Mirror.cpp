@@ -97,6 +97,11 @@ vec3pdf Mirror::randReflect(const Vector3& in, const Vector3& normal, const bool
     return vec3pdf(out, 1);
 }
 
+float Mirror::reflectPDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const {
+    if (dot((in + out).normalize(), normal) > 0.99999) return 1;
+    else return 0;
+}
+
 vec3pdf Mirror::randEmit(const Vector3& n) const {
     return vec3pdf(n, 1); // like a laserpointer?
 }

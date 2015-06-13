@@ -118,6 +118,11 @@ vec3pdf Lambert::randReflect(const Vector3& in, const Vector3& normal, const boo
     return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1 - u) / M_PI);
 }
 
+float Lambert::reflectPDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const {
+    return std::max(0.0f, dot(out, normal)) / M_PI;
+}
+
+
 vec3pdf Lambert::randEmit(const Vector3& n) const {
     double u = ((double)rand() / RAND_MAX);
     while (u == 1.0) u = ((double)rand() / RAND_MAX);

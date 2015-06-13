@@ -63,7 +63,7 @@ makeRoomScene(){
     g_camera->setFOV(40);
 
     g_scene->setPreview(true);
-    g_scene->setSamplesPerPix(64);
+    g_scene->setSamplesPerPix(16);
     g_scene->setBidiSamplesPerPix(4);
     g_scene->setMaxBounces(100);
     g_scene->setMaxEyePaths(64);
@@ -98,7 +98,7 @@ makeRoomScene(){
     g_scene->addObject(wall_T);//*/
 
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
-    g_scene->addAreaLight(light, 10000);
+    g_scene->addAreaLight(light, 50000);
 
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     g_scene->addObject(cover);
