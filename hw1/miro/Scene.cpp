@@ -715,8 +715,6 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
         if (j > 1) flux *= eyePath.m_decay[j - 2];
     }
 
-    //return flux;
-
     float probSum = 0;
     for (int k = 0; k < i + j; k++) {
         float probPI = probB[k + 1];
@@ -735,9 +733,10 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
 
         probSum += probPI + probDE;
     }
-    if (isfinite(probSum)) {
-    return flux / probSum;
-}
+    if (isfinite(1 / probSum)) {
+
+        return flux / probSum;
+    }
     else {
         return Vector3(0, 0, 0);
     }
@@ -809,7 +808,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 for (int j = 1; j <= eyePath.m_hit.size(); j++) {
                     fluxSum += uniFluxDE(j, eyePath, mapAndPaths.first, nLightPaths);
                     for (int i = 0; i <= lightPath.m_hit.size(); i++) {
-                //        fluxSum += uniFlux(i, j, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
+                        fluxSum += uniFlux(i, j, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
                     }
                 }
                 fluxSumOverSamples += fluxSum;
