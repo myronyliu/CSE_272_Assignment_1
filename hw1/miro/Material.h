@@ -16,7 +16,6 @@ class Material
 {
 public:
     Material();
-    Material(const bool& interacting);
     virtual ~Material();
 
     virtual void preCalc() {}
@@ -39,13 +38,9 @@ public:
     virtual Vector3 radiance(const Vector3&normal, const Vector3& direction) const;
     virtual Vector3 sum_L_cosTheta_dOmega() const;
 
-    bool isInteracting() const { return m_interacting; }
-    void disableInteraction() { m_interacting = false; }
-    void enableInteraction() { m_interacting = true; }
 protected:
     Vector3 m_powerPerArea = Vector3(0, 0, 0); // emitted power per unit dx.dy patch area
     float m_emittance = 0; // probability of emitting light
-    bool m_interacting;
     Vector3 m_ka = 0;
 };
 

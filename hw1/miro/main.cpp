@@ -90,7 +90,7 @@ makeRoomScene(){
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
-    wall_F->setMaterial(mat);
+    wall_F->setMaterial(mir);
     g_scene->addObject(wall_B);
     g_scene->addObject(wall_F);
     g_scene->addObject(wall_L);

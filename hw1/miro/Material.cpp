@@ -5,8 +5,7 @@
 #include <algorithm>
 #include <random>
 
-Material::Material() : m_interacting(true) {}
-Material::Material(const bool& interacting) : m_interacting(interacting) {}
+Material::Material() {}
 Material::~Material() {}
 
 

@@ -6,7 +6,8 @@
 class RefractiveInterface : public Material
 {
 public:
-    RefractiveInterface(const Vector3& kr = Vector3(1), const Vector3& kt = Vector3(1), const Vector3& ka = Vector3(0), const float& n0 = 1, const float& n1 = 1);
+    RefractiveInterface();
+    RefractiveInterface(const Vector3& kr = Vector3(1), const Vector3& kt = Vector3(1), const Vector3& ka = Vector3(0), const float& n = 1);
     virtual ~RefractiveInterface();
 
     const Vector3 & kr() const { return m_kr; }
@@ -16,8 +17,7 @@ public:
     void setKr(const Vector3 & kr) { m_kr = kr; }
     void setKt(const Vector3 & kt) { m_kt = kt; }
     void setKa(const Vector3 & ka) { m_ka = ka; }
-    void setRefractiveIndexFront(const float& n0) { m_n0 = n0; }
-    void setRefractiveIndexBack(const float& n1) { m_n1 = n1; }
+    void setRefractiveIndex(const float& n) { m_n = n; }
 
     virtual void preCalc() {}
 
@@ -35,11 +35,12 @@ public:
     virtual Vector3 reflectance() const { return m_kr; }
     virtual Vector3 transmittance() const { return m_kt; }
 protected:
-    float m_n0; // index of refraction of the medium on the FRONT side
-    float m_n1;
-    Vector3 m_kt;
-    Vector3 m_kr;
-    Vector3 m_ka;
+    float m_n; // ratio of index of refractions BACK/FRONT
+    float m_rhoPara; // Derived quantities from m_n0 and m_n1 for use in the Fresnel equations
+    float m_rhoPerp;
+    Vector3 m_kt; // transmitted component
+    Vector3 m_kr; // reflected component
+    Vector3 m_ka; // ambient component
 };
 
 #endif // CSE168_REFRACTIVEINTERFACE_H_INCLUDED

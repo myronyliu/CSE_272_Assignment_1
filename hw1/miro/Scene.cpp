@@ -110,8 +110,7 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     Vector3 brdf = hit.object->BRDF(-ray.d, hit.N, newRay.d, hit.P);
     float cos = fabs(dot(hit.N, newDir)); // changed this to fabs for transmissible materials such as RefractiveInterface
     Vector3 gather = hit.object->shade(ray, hit, *this, hit.P); // gathered direct lighting
-    if (hit.object->material()->isInteracting() == false) return gather + (1.0 / (1.0 - em)) / vp.p*brdf*cos*recursiveTrace_fromEye(newRay, bounces, maxbounces);
-    else return gather + (1.0 / (1.0 - em)) / vp.p*brdf*cos*recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
+    return gather + (1.0 / (1.0 - em)) / vp.p*brdf*cos*recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
 }
 
 void
@@ -493,9 +492,9 @@ void Scene::bounceRayPath(RayPath & rayPath, const int& maxBounces) {
 
         Vector3 estimator;
         if (!terminate)
-            estimator = brdf / (vp.p / cos) / lastReflectance;
+            estimator = brdf*cos / vp.p / lastReflectance;
         else
-            estimator = brdf / (vp.p / cos) / (1.0f - lastReflectance);
+            estimator = brdf*cos / vp.p / (1.0f - lastReflectance);
         if (rayPath.m_estimator.size() != 0) estimator *= rayPath.m_estimator.back();
 
         rayPath.m_estimator.push_back(estimator);
@@ -565,12 +564,12 @@ Vector3 Scene::uniRadiance(const int& i, const int& j, const LightPath& lightPat
     float diskArea = M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
     if (explicitConnection == true) {
         flux = lightPath.m_light->wattage()*estimatorLink;
-        if (i > 1) flux *= lightPath.m_estimator[i - 1];
+        if (i > 1) flux *= lightPath.m_estimator[i - 2];
         if (j > 1) flux *= eyePath.m_estimator[j - 2];
     }
     else {
         flux = density*estimatorLink;
-        if (i > 0) flux *= lightPath.m_estimator[i - 1];
+        if (i > 0) flux *= lightPath.m_estimator[i - 1]; // note the extra segment i-1 as opposed to i-2
         if (j > 1) flux *= eyePath.m_estimator[j - 2];
     }
 
@@ -785,9 +784,9 @@ bool Scene::forwardBackwardProbs(const int& i, const int& j, const LightPath& li
         probB[k] = eyePath.m_prob[u];
         float reverseReflectProb = 0;
         if (u == j - 1) { // This needs to handled specially since the incoming direction is the shadow ray
-            reverseReflectProb = eyePath.m_hit[u - 1].object->material()->reflectPDF(-shadow_LtoE.d, eyePath.m_hit[u - 1].N, -eyePath.m_ray[u - 1].d);
+            reverseReflectProb = eyePath.m_hit[u].object->material()->reflectPDF(-shadow_LtoE.d, eyePath.m_hit[u].N, -eyePath.m_ray[u].d);
         } else {
-            reverseReflectProb = eyePath.m_hit[u - 1].object->material()->reflectPDF(eyePath.m_ray[u].d, eyePath.m_hit[u - 1].N, -eyePath.m_ray[u - 1].d);
+            reverseReflectProb = eyePath.m_hit[u].object->material()->reflectPDF(eyePath.m_ray[u+1].d, eyePath.m_hit[u].N, -eyePath.m_ray[u].d);
         }
         probF[k] = probF[k - 1] * reverseReflectProb * (cosB[k] / length2[k]);
     }
