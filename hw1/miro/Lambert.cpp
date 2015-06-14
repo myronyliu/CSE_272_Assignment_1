@@ -129,12 +129,14 @@ vec3pdf Lambert::randEmit(const Vector3& n) const {
     double v = 2.0 * M_PI*((double)rand() / RAND_MAX);
     Vector3 d = Vector3(cos(v)*sqrt(u), sin(v)*sqrt(u), sqrt(1 - u));
     Vector3 z = n.normalized();
+
     float a = dot(Vector3(1, 0, 0), z);
     float b = dot(Vector3(0, 1, 0), z);
     Vector3 y;
     if (fabs(a) < fabs(b)) y = Vector3(1, 0, 0).orthogonal(z).normalize();
     else y = Vector3(0, 1, 0).orthogonal(z).normalize();
     Vector3 x = cross(y, z).normalize();
+
     return vec3pdf(d[0] * x + d[1] * y + d[2] * z, sqrt(1-u)/M_PI);
 }
 
