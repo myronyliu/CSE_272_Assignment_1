@@ -89,7 +89,7 @@ public:
     std::pair<PhotonMap*, std::vector<LightPath*>> generatePhotonMap();
 
     bool forwardBackwardProbs(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath, const bool& explicitConnection,
-        std::vector<float>& probF, std::vector<float>& probB, float& estimatorLink);
+        std::vector<float>& probF, std::vector<float>& probB, Vector3& estimatorLink);
 
 protected:
     Objects m_objects;

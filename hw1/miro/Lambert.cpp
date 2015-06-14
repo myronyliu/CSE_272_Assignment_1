@@ -14,9 +14,9 @@ Lambert::~Lambert()
 {
 }
 
-float Lambert::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const {
+Vector3 Lambert::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const {
     if (dot(normal, out) < 0) return 0;
-    else return (m_kd[0] + m_kd[1] + m_kd[2]) / 3 * 1.0f / M_PI;
+    else return m_kd / M_PI;
 }
 
 Vector3 Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, const bool& isFront) const
@@ -36,7 +36,7 @@ Vector3 Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, c
         Vector3 l = pLight->position() - hit.P;
         rayLight.o = hit.P;
         rayLight.d = l.normalized();
-        float brdf = BRDF(rayLight.d, hit.N, -ray.d);
+        Vector3 brdf = BRDF(rayLight.d, hit.N, -ray.d);
         if (brdf == 0) continue;
         if (scene.trace(hitLight, rayLight, 0.0001, l.length())) continue;
 
@@ -47,10 +47,10 @@ Vector3 Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, c
         l /= sqrt(falloff);
 
         // get the diffuse component
-        float nDotL = dot(hit.N, l);
+        float nDotL = std::max(0.0f,dot(hit.N, l));
         Vector3 result = pLight->color();
 
-        L += std::max(0.0f, nDotL / falloff * pLight->wattage()*brdf) * result;
+        L += nDotL / falloff * pLight->wattage()*brdf * result;
     }
 
     const AreaLights *alightlist = scene.areaLights();
@@ -64,7 +64,7 @@ Vector3 Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, c
         rayLight.o = hit.P;
         rayLight.d = l.normalized();
 
-        float brdf = BRDF(rayLight.d, hit.N, -ray.d);
+        Vector3 brdf = BRDF(rayLight.d, hit.N, -ray.d);
         if (brdf == 0) continue;
         // if the shadow ray hits the "backside of the light" continue to the next area light
         if (!aLight->intersect(hitLight, rayLight)){
@@ -84,12 +84,11 @@ Vector3 Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene, c
         l /= sqrt(falloff);
 
         // get the diffuse component
-        float nDotL = dot(hit.N, l);
+        float nDotL = std::max(0.0f, dot(hit.N, l));
         Vector3 result = aLight->color();
 
-        L += std::max(0.0f, dot(hitLight.N, -l))*
-            std::max(0.0f, nDotL / falloff*
-            aLight->wattage() / aLight->area()*brdf) * result / (vp.p);
+        L += std::max(0.0f, dot(hitLight.N, -l))*nDotL / falloff*
+            aLight->wattage() / aLight->area()*brdf * result / (vp.p);
     }
     
     // add the ambient component

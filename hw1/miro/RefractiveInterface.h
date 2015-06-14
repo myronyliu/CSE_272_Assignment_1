@@ -28,7 +28,7 @@ public:
     virtual float emitPDF(const Vector3& n, const Vector3& v) const { return 0; }
     // Generates a random ray in the upper hemisphere according the BRDF*cos
     virtual vec3pdf randReflect(const Vector3& in, const Vector3& normal, const bool& isFront) const;
-    virtual float BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const;
+    virtual Vector3 BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const;
     virtual Vector3 radiance(const Vector3& normal, const Vector3& direction) const { return Vector3(0, 0, 0); }
     virtual Vector3 sum_L_cosTheta_dOmega() const { return Vector3(0, 0, 0); }
 

@@ -8,7 +8,7 @@
 RefractiveInterface::RefractiveInterface(const Vector3 & kr, const Vector3 & kt, const Vector3 & ka, const float& n0, const float& n1) : Material(), m_kr(kr), m_kt(kt), m_ka(ka), m_n0(n0), m_n1(n1) {}
 RefractiveInterface::~RefractiveInterface() {}
 
-float RefractiveInterface::BRDF(const Vector3& in, const Vector3& normal0, const Vector3& out, const bool& isFront) const {
+Vector3 RefractiveInterface::BRDF(const Vector3& in, const Vector3& normal0, const Vector3& out, const bool& isFront) const {
     // normal is assumed to be facing the FRONT of the interface.
     // First check to see that all three vectors are in the same plane
     Vector3 normal = normal0;
@@ -97,7 +97,7 @@ RefractiveInterface::shade(const Ray& ray, const HitInfo& hit, const Scene& scen
         Vector3 l = pLight->position() - hit.P;
         rayLight.o = hit.P;
         rayLight.d = l.normalized();
-        float brdf = BRDF(rayLight.d, hit.N, -ray.d, isFront);
+        Vector3 brdf = BRDF(rayLight.d, hit.N, -ray.d, isFront);
         if (brdf == 0) continue;
         if (scene.trace(hitLight, rayLight, 0.0001, l.length())) continue;
 
@@ -107,7 +107,7 @@ RefractiveInterface::shade(const Ray& ray, const HitInfo& hit, const Scene& scen
         float nDotL = fabs(dot(hit.N, l));
         Vector3 result = pLight->color();
 
-        L += std::max(0.0f, nDotL / falloff * pLight->wattage() *brdf) * result;
+        L += nDotL / falloff * pLight->wattage() *brdf * result;
     }
 
     const AreaLights *alightlist = scene.areaLights();
@@ -121,7 +121,7 @@ RefractiveInterface::shade(const Ray& ray, const HitInfo& hit, const Scene& scen
         rayLight.o = hit.P;
         rayLight.d = l.normalized();
 
-        float brdf = BRDF(rayLight.d, hit.N, -ray.d, isFront);
+        Vector3 brdf = BRDF(rayLight.d, hit.N, -ray.d, isFront);
         if (brdf == 0) continue;
         // if the shadow ray hits the "backside of the light" continue to the next area light
         if (!aLight->intersect(hitLight, rayLight)){
@@ -138,9 +138,8 @@ RefractiveInterface::shade(const Ray& ray, const HitInfo& hit, const Scene& scen
         float nDotL = fabs(dot(hit.N, l));
         Vector3 result = aLight->color();
 
-        L += std::max(0.0f, dot(hitLight.N, -l))*
-            std::max(0.0f, nDotL / falloff*
-            aLight->wattage() / aLight->area() *brdf) * result / (vp.p);
+        L += std::max(0.0f, dot(hitLight.N, -l))* 0.0f, nDotL / falloff*
+            aLight->wattage() / aLight->area() *brdf * result / (vp.p);
     }
 
     // add the ambient component

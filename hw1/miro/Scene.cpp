@@ -107,7 +107,7 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     Ray newRay;
     newRay.o = hit.P;
     newRay.d = newDir;
-    float brdf = hit.object->BRDF(-ray.d, hit.N, newRay.d, hit.P);
+    Vector3 brdf = hit.object->BRDF(-ray.d, hit.N, newRay.d, hit.P);
     float cos = fabs(dot(hit.N, newDir)); // changed this to fabs for transmissible materials such as RefractiveInterface
     Vector3 gather = hit.object->shade(ray, hit, *this, hit.P); // gathered direct lighting
     if (hit.object->material()->isInteracting() == false) return gather + (1.0 / (1.0 - em)) / vp.p*brdf*cos*recursiveTrace_fromEye(newRay, bounces, maxbounces);
@@ -200,7 +200,7 @@ void Scene::tracePhoton(Camera *cam, Image *img, const LightPDF& lp, const RayPD
         double reflectance = hit.object->material()->reflectance()[0];
         rayToEye.o = hit.P;
         rayToEye.d = (cam->eye() - hit.P).normalize();
-        float brdf = hit.object->material()->BRDF(-rayIn.d, hit.N, rayToEye.d); // BRDF between eye-ray and incoming-ray
+        Vector3 brdf = hit.object->material()->BRDF(-rayIn.d, hit.N, rayToEye.d); // BRDF between eye-ray and incoming-ray
         if (!trace(tryHitEye, rayToEye)) { // check if anything is occluding the eye from current hitpoint
             pix = cam->imgProject(hit.P, w, h); // find the pixel the onto which the current hitpoint projects
             int x = round(pix[0]);
@@ -329,7 +329,7 @@ Vector3 Scene::bidiRadiance(int i, int j, LightPath lightPath, EyePath eyePath) 
 
     vector<float> probF;
     vector<float> probB;
-    float estimatorLink;
+    Vector3 estimatorLink;
     if (!forwardBackwardProbs(i, j, lightPath, eyePath, true, probF, probB, estimatorLink)) return Vector3(0, 0, 0);
 
     Vector3 flux = lightPath.m_light->wattage()*estimatorLink;
@@ -462,51 +462,58 @@ LightPath Scene::randLightPath(Light* lightInput, const int& bounces) {
     return lightPath;
 }
 
-void Scene::bounceRayPath(RayPath & raypath, const int& maxBounces) {
+void Scene::bounceRayPath(RayPath & rayPath, const int& maxBounces) {
     if (maxBounces < 1) return;
     
-    HitInfo hit;
+    HitInfo newHit;
     int bounce = 1;
     bool terminate = false;
     while (bounce < maxBounces)
     {
-        Ray lastRay = raypath.m_ray.back();
-        HitInfo lastHit = raypath.m_hit.back();
+        Ray lastRay = rayPath.m_ray.back();
+        HitInfo lastHit = rayPath.m_hit.back();
 
         // Russian Roulette
-        Vector3 reflectanceRGB = lastHit.object->material()->reflectance();
-        float reflectance = (reflectanceRGB[0] + reflectanceRGB[1] + reflectanceRGB[2]) / 3;
-        //float reflectance = 1.0f;
+        Vector3 lastReflectanceRGB = lastHit.object->material()->reflectance();
+        float lastReflectance = (lastReflectanceRGB[0] + lastReflectanceRGB[1] + lastReflectanceRGB[2]) / 3;
         float rn = (float)rand() / RAND_MAX;
-        if (rn > reflectance)
-            terminate = true;
+        if (rn > lastReflectance) terminate = true; // terminate upon this next hit
 
         vec3pdf vp = lastHit.object->material()->randReflect(-lastRay.d, lastHit.N);
         Ray newRay(lastHit.P, vp.v);
-        if (!trace(hit, newRay)) return;
-        if (hit.object->material()->reflectance() == 0.0f) return;
+        if (!trace(newHit, newRay)) return;
+        Vector3 newReflectanceRGB = newHit.object->material()->reflectance();
+        float newReflectance = (newReflectanceRGB[0] + newReflectanceRGB[1] + newReflectanceRGB[2]) / 3;
+        if (newReflectance == 0) return;
 
-        float brdf = lastHit.object->material()->BRDF(-lastRay.d, lastHit.N, newRay.d);
+        Vector3 brdf = lastHit.object->material()->BRDF(-lastRay.d, lastHit.N, newRay.d);
         float cos = std::max(0.0f, dot(lastHit.N, newRay.d));
-        float cosPrime = std::max(0.0f, dot(hit.N, -newRay.d));
-        float distSqr = (hit.P - lastHit.P).length2();
+        float cosPrime = std::max(0.0f, dot(newHit.N, -newRay.d));
+        float distSqr = (newHit.P - lastHit.P).length2();
 
-        float estimator = brdf / (vp.p / cos);
+        Vector3 estimator;
         if (!terminate)
-            estimator /= reflectance;
+            estimator = brdf / (vp.p / cos) / lastReflectance;
         else
-            estimator /= 1 - reflectance;
-        if (raypath.m_estimator.size() != 0) estimator *= raypath.m_estimator.back();
-        raypath.m_estimator.push_back(estimator);
+            estimator = brdf / (vp.p / cos) / (1.0f - lastReflectance);
+        if (rayPath.m_estimator.size() != 0) estimator *= rayPath.m_estimator.back();
 
-        raypath.m_hit.push_back(hit);
-        raypath.m_brdf.push_back(brdf);
-        raypath.m_cosF.push_back(cos);
-        raypath.m_cosB.push_back(cosPrime);
+        rayPath.m_estimator.push_back(estimator);
+        rayPath.m_hit.push_back(newHit);
+        rayPath.m_cosF.push_back(cos);
+        rayPath.m_cosB.push_back(cosPrime);
 
-        raypath.m_ray.push_back(newRay);
-        raypath.m_length2.push_back(distSqr);
-        raypath.m_prob.push_back(reflectance*raypath.m_prob.back()*vp.p*(cosPrime / distSqr));
+        rayPath.m_ray.push_back(newRay);
+        rayPath.m_length2.push_back(distSqr);
+
+        float prob;
+        if (!terminate) {
+            prob = rayPath.m_prob.back()*vp.p*(cosPrime / distSqr)*lastReflectance;
+        }
+        else {
+            prob = rayPath.m_prob.back()*vp.p*(cosPrime / distSqr)*(1.0f - lastReflectance);
+        }
+        rayPath.m_prob.push_back(prob);
 
         if (terminate) return;
 
@@ -551,7 +558,7 @@ Vector3 Scene::uniRadiance(const int& i, const int& j, const LightPath& lightPat
 
     vector<float> probF;
     vector<float> probB;
-    float estimatorLink;
+    Vector3 estimatorLink;
     if (!forwardBackwardProbs(i, j, lightPath, eyePath, explicitConnection, probF, probB, estimatorLink)) return Vector3(0, 0, 0);
 
     Vector3 flux;
@@ -705,7 +712,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
 
 
 bool Scene::forwardBackwardProbs(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath, const bool& explicitConnection,
-    vector<float>& probF, vector<float>& probB, float& estimatorLink)
+    vector<float>& probF, vector<float>& probB, Vector3& estimatorLink)
 {
     HitInfo hit;
     float intersectEpsilon = 0.00001;
@@ -727,9 +734,9 @@ bool Scene::forwardBackwardProbs(const int& i, const int& j, const LightPath& li
     if (cosF_L == 0) return false;
     float cosB_E = std::max(0.0f, dot(-shadow_LtoE.d, hit_E.N));
     if (cosB_E == 0) return false;
-    float brdf_E = mat_E->BRDF(-shadow_LtoE.d, hit_E.N, -eyePath.m_ray[j - 1].d);
+    Vector3 brdf_E = mat_E->BRDF(-shadow_LtoE.d, hit_E.N, -eyePath.m_ray[j - 1].d);
     if (brdf_E == 0) return false;
-    float brdf_L = 1;
+    Vector3 brdf_L = 1;
     if (i > 0) brdf_L = mat_L->BRDF(shadow_LtoE.d, hit_L.N, -lightPath.m_ray[i - 1].d);
     if (brdf_L == 0) return false;
 
