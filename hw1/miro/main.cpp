@@ -36,7 +36,7 @@ makeTestScene() {
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(64);
-    g_scene->setBidiSamplesPerPix(8);
+    g_scene->setBidiSamplesPerPix(64);
     g_scene->setMaxBounces(100);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);

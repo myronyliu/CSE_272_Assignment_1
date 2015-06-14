@@ -58,14 +58,13 @@ public:
 
     void preCalc();
     void openGL(Camera *cam);
+    std::pair<Vector3, Vector3> axisAlignedBounds();
 
     void raytraceImage(Camera *cam, Image *img);
     void pathtraceImage(Camera *cam, Image *img);
     void photontraceImage(Camera *cam, Image *img);
     void biditraceImage(Camera *cam, Image *img);
     void unifiedpathtraceImage(Camera *cam, Image *img);
-    Ray forwardShadowRay(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath);
-    std::pair<std::vector<float>, std::vector<float>> forwardBackwardProbs(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath);
 
     bool trace(HitInfo& minHit, const Ray& ray,
         float tMin = 0.0f, float tMax = MIRO_TMAX) const;
@@ -88,7 +87,9 @@ public:
     Vector3 uniFluxDE(const int& j, const EyePath& eyePath, PhotonMap* photonMap, const int& nLightPaths = 1);
 
     std::pair<PhotonMap*, std::vector<LightPath*>> generatePhotonMap();
-    std::pair<Vector3, Vector3> axisAlignedBounds();
+
+    bool forwardBackwardProbs(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath, const bool& explicitConnection,
+        std::vector<float>& probF, std::vector<float>& probB, Vector3 estimatorLink);
 
 protected:
     Objects m_objects;

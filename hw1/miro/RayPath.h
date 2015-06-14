@@ -14,7 +14,7 @@ public:
     std::vector<float> m_brdf;
     std::vector<float> m_cosF;
     std::vector<float> m_cosB;
-    std::vector<float> m_decay; // CUMULATIVE decay in the flux (can also be amplified, since we do Russian Roulette)
+    std::vector<float> m_estimator; // CUMULATIVE estimator (can also be amplified, since we do Russian Roulette)
 
     std::vector<Ray> m_ray;
     std::vector<float> m_length2;
