@@ -697,7 +697,7 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
         if (j > 1) flux *= eyePath.m_decay[j - 2];
     }
     else {
-        flux = density*mat_E->BRDF(-lightPath.m_ray[i].d, hit_E.N, -eyePath.m_ray[j - 1].d);
+        flux = density*mat_E->BRDF(-lightPath.m_ray[i].d, hit_E.N, -eyePath.m_ray[j - 1].d) / (2 * M_PI);
         if (i > 0) {
             flux *= lightPath.m_decay[i - 1];
         }
@@ -706,7 +706,7 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
         }
     }
 
-    //return flux * pow(0.8, (i+j));
+    return flux;
 
     float probSum = 0;
     for (int k = 0; k < i + j; k++) {
@@ -809,7 +809,6 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 int lightPathIndex = min(nLightPaths - 1, randIndex );
                 LightPath lightPath = *mapAndPaths.second[lightPathIndex];
                 Vector3 fluxSum = uniFlux(0, 0, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
-                //Vector3 fluxSum = Vector3(0, 0, 0);
                 for (int j = 1; j <= eyePath.m_hit.size(); j++) {
                     fluxSum += uniFluxDE(j, eyePath, mapAndPaths.first, nLightPaths);
                     for (int i = 0; i <= lightPath.m_hit.size(); i++) {
