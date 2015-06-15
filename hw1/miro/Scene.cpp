@@ -336,7 +336,7 @@ void Scene::visualizePhotonMap(Camera *cam, Image *img) {
     int nLightPaths = mapAndPaths.second.size();
 
     for (int y = h - 1; y > -1; y--)
-        //for (int y = 0; y < h; y++)
+    //for (int y = 0; y < h; y++)
     {
         //for (int x = w / 2 - 1; x < w / 2 + 1; x++)
         for (int x = 0; x < w; x++)
@@ -347,8 +347,8 @@ void Scene::visualizePhotonMap(Camera *cam, Image *img) {
 
             vector<PhotonDeposit> photons = mapAndPaths.first->getPhotons(hitInfo.P, m_photonGatheringRadius);
             Vector3 density(0, 0, 0);
-            for (int k = 0; k<photons.size(); k++) {
-            density += photons[k].m_power;
+            for (unsigned int k = 0; k<photons.size(); k++) {
+                density += photons[k].m_power;
             }
             density /= M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
             img->setPixel(x, y, density / (2 * M_PI));
@@ -619,7 +619,7 @@ Vector3 Scene::uniRadiance(const int& i, const int& j, const LightPath& lightPat
         if (j > 1) flux *= eyePath.m_estimator[j - 2];
     }
 
-    return flux;
+    //return flux;
 
     float probSum = 0;
     for (int k = 0; k < i + j; k++) {
@@ -655,6 +655,8 @@ Vector3 Scene::uniRadianceDE(const int& j, const EyePath& eyePath, PhotonMap* ph
     density /= diskArea;
 
     Vector3 flux(0,0,0);
+
+    int smallPhotons = 0;
     
     for (auto & photon : photons) {
         int i = photon.m_hitIndex;
@@ -664,10 +666,12 @@ Vector3 Scene::uniRadianceDE(const int& j, const EyePath& eyePath, PhotonMap* ph
         LightPath lightPath = *photon.m_lightPath;
         Vector3 fluxAccum = uniRadiance(i, j, lightPath, eyePath, photonMap, false, nLightPaths, density);
         flux += fluxAccum;
-        //return flux;
+        //if (fluxAccum.length2() < 0.000001) {
+        //    smallPhotons++;
+        //}
     }
     //cout << smallPhotons << "/" << photons.size() << endl;
-    return flux / photons.size();
+    return flux;
 }
 
 void

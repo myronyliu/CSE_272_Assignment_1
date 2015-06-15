@@ -20,7 +20,7 @@ Vector3 Phong::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out
     Vector3 mirrorDir = 2 * dot(normal, in)*normal - in;
     float cosAlpha = fmax(0, dot(out, mirrorDir));
     float cosN = pow(cosAlpha, m_n);
-    if ((bool)std::fetestexcept(FE_UNDERFLOW) || cosN < 0.000000001)
+    if (std::fetestexcept(FE_UNDERFLOW) || cosN < 0.000000001)
     {
         cosN = 0.0f;
         std::feclearexcept(FE_UNDERFLOW);
