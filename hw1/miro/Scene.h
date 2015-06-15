@@ -91,6 +91,8 @@ public:
     bool forwardBackwardProbs(const int& i, const int& j, const LightPath& lightPath, const EyePath& eyePath, const bool& explicitConnection,
         std::vector<float>& probF, std::vector<float>& probB, Vector3& estimatorLink);
 
+    void visualizePhotonMap(Camera *cam, Image *img);
+
 protected:
     Objects m_objects;
     BVH m_bvh;

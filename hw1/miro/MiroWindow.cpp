@@ -239,6 +239,11 @@ MiroWindow::keyboard(unsigned char key, int x, int y)
             g_camera->setRenderer(Camera::RENDER_UNIFIEDPATH);
         break;
 
+        case 'y':
+        case 'Y':
+            g_camera->setRenderer(Camera::RENDER_VISUALIZEPHOTONMAP);
+        break;
+
         case 'g':
         case 'G':
             g_camera->setRenderer(Camera::RENDER_OPENGL);

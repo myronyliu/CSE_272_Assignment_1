@@ -104,6 +104,18 @@ Camera::click(Scene* pScene, Image* pImage)
 
         g_image->draw();
     }
+    else if (m_renderer == RENDER_VISUALIZEPHOTONMAP)
+    {
+        renderPrep();
+        if (firstRayTrace)
+        {
+            pImage->clear(bgColor());
+            pScene->visualizePhotonMap(this, g_image);
+            firstRayTrace = false;
+        }
+
+        g_image->draw();
+    }
 }
 
 void
