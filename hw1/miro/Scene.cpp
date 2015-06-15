@@ -616,16 +616,16 @@ Vector3 Scene::uniRadiance(const int& i, const int& j, const LightPath& lightPat
         if (j > 1) flux *= eyePath.m_estimator[j - 2];
     }
 
-    //return flux;
-
+    // Begin Multiple Importance Sampling Weighting
     float probSum = 0;
     for (int k = 0; k < i + j; k++) {
         float probPI = 1;
         probPI *= probB[k + 1];
         if (k > 0) probPI *= probF[k - 1];
-        float probDE = probF[k] * probB[k + 1] * diskArea;
+        float probDE = probF[k] * probB[k + 1] * diskArea;  // note the extra probF[k] as opposed to prob[k-1] in the probPI
+                                                            // diskArea converts into same space
 
-        probPI = 0; // just for testing photonmapping only
+        probPI = 0; // This is here for testing Density Estimation only
 
         if (k == i) {
             if (explicitConnection == true) flux *= probPI;
@@ -659,11 +659,8 @@ Vector3 Scene::uniRadianceDE(const int& j, const EyePath& eyePath, PhotonMap* ph
         // we do one less than usual because we make the explicit connection (for weighting) with the second to last hit
         // the extra vertex (which is treated as not actually existent and merged with it's neighbor) is handled in uniRadiance(...)
         LightPath lightPath = *photon.m_lightPath;
-        Vector3 fluxAccum = uniRadiance(i, j, lightPath, eyePath, photonMap, false, nLightPaths, density);
-        flux += fluxAccum;
-        //return flux;
+        flux += uniRadiance(i, j, lightPath, eyePath, photonMap, false, nLightPaths, density);
     }
-    //cout << smallPhotons << "/" << photons.size() << endl;
     return flux;
 }
 
@@ -698,12 +695,13 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 for (int j = 1; j <= eyePath.m_hit.size(); j++) {
                     fluxSum += uniRadianceDE(j, eyePath, mapAndPaths.first, nLightPaths);
                     for (int i = 0; i <= lightPath.m_hit.size(); i++) {
+                        // The following line is commented out for testing only Density Estimation
                         //fluxSum += uniRadiance(i, j, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
                     }
                 }
                 fluxSumOverSamples += fluxSum;
             });
-            img->setPixel(x, y, fluxSumOverSamples / m_bidiSamplesPerPix);//*/
+            img->setPixel(x, y, fluxSumOverSamples / m_bidiSamplesPerPix);
         }
         if (preview())
         {
@@ -842,11 +840,5 @@ bool Scene::forwardBackwardProbs(const int& i, const int& j, const LightPath& li
         estimatorLink = mat_E->BRDF(-lightPath.m_ray[i].d, hit_E.N, -eyePath.m_ray[j - 1].d);
     }
 
-    // The following is a paranoid check. TODO: remove this when we are sure our indexing is correct
-    for (int index = 0; index < i + j; index++) {
-        if (probF[index] == 0.0f || probB[index] == 0.0f || cosF[index] == 0.0f || cosB[index] == 0.0f || length2[index] == 0.0f) {
-            cout << "Missed a value" << endl;
-        }
-    }
     return true;
 }
