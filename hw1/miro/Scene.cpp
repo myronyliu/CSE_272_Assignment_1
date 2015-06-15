@@ -436,12 +436,21 @@ LightPath Scene::randLightPath(Light* lightInput, const int& bounces) {
     Ray rayInit = rp.m_ray;
     HitInfo lightHit(0.0f, rayInit.o, light->normal(rayInit.o), light);
     LightPath lightPath(rayInit);
-    lightPath.m_prob.push_back(rp.m_dProb);
 
     // lightPath specific values
     lightPath.m_light = light;
     lightPath.m_lightHit = lightHit;
     lightPath.m_originProb = rp.m_oProb;
+
+    if (!trace(hit, rayInit)) return lightPath;
+    else {
+        float cosPrime = std::max(0.0f, dot(hit.N, -rayInit.d));
+        float distSqr = (hit.P - lightHit.P).length2();
+        lightPath.m_hit.push_back(hit);
+        lightPath.m_cosB.push_back(cosPrime);
+        lightPath.m_length2.push_back(distSqr);
+        lightPath.m_prob.push_back(rp.m_dProb*cosPrime);
+    }
 
     if (bounces < 0) bounceRayPath(lightPath, m_maxLightPaths);
     else bounceRayPath(lightPath, bounces);
@@ -451,11 +460,13 @@ LightPath Scene::randLightPath(Light* lightInput, const int& bounces) {
 void Scene::bounceRayPath(RayPath & raypath, const int& maxBounces) {
     if (maxBounces < 1) return;
     HitInfo hit;
-    Ray rayInit = raypath.m_ray[0];
-    if (!trace(hit, rayInit)) return;
-    raypath.m_hit.push_back(hit);
-    raypath.m_cosB.push_back(std::max(0.0f, dot(hit.N, -rayInit.d)));
-    raypath.m_length2.push_back((hit.P - rayInit.o).length2());
+    if (raypath.m_hit.size() == 0) {
+        Ray rayInit = raypath.m_ray[0];
+        if (!trace(hit, rayInit)) return;
+        raypath.m_hit.push_back(hit);
+        raypath.m_cosB.push_back(std::max(0.0f, dot(hit.N, -rayInit.d)));
+        raypath.m_length2.push_back((hit.P - rayInit.o).length2());
+    }
 
     int bounce = 1;
     while (bounce < maxBounces)
@@ -472,7 +483,7 @@ void Scene::bounceRayPath(RayPath & raypath, const int& maxBounces) {
         vec3pdf vp = lastHit.object->material()->randReflect(-lastRay.d, lastHit.N);
         Ray newRay(lastHit.P, vp.v);
         if (!trace(hit, newRay)) return;
-        float brdf = lastHit.object->material()->BRDF(-lastRay.d, lastHit.N, vp.v);
+        float brdf = lastHit.object->material()->BRDF(-lastRay.d, lastHit.N, newRay.d);
         float cos = std::max(0.0f, dot(lastHit.N, newRay.d));
         float cosPrime = std::max(0.0f, dot(hit.N, -newRay.d));
         float distSqr = (hit.P - lastHit.P).length2();
@@ -524,7 +535,7 @@ Vector3 Scene::bidiFlux(int i, int j, LightPath lightPath, EyePath eyePath) {
     if (i > 0) brdf_L = mat_L->BRDF(shadow_LtoE.d, hit_L.N, -lightPath.m_ray[i - 1].d);
     if (brdf_L == 0) return Vector3(0, 0, 0);
     float dProb_EtoL = cosB_E*brdf_E*(cosF_L / shadowLength2);
-    float dProb_LtoE = dProb_EtoL;
+    float dProb_LtoE = cosF_L*brdf_L*(cosB_E / shadowLength2);
     ///////////////////////////////////////////////////////////////////////////////////////////////
     vector<float> probF(i + j + 1); // forward from light to eye (excludes the const emission probability, since it's just a constant)
     vector<float> probB(i + j + 1); // backward from eye to light
@@ -656,7 +667,7 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
     if (i > 0) brdf_L = mat_L->BRDF(shadow_LtoE.d, hit_L.N, -lightPath.m_ray[i - 1].d);
     if (brdf_L == 0) return Vector3(0, 0, 0);
     float dProb_EtoL = cosB_E*brdf_E*(cosF_L / shadowLength2);
-    float dProb_LtoE = dProb_EtoL;
+    float dProb_LtoE = cosF_L*brdf_L*(cosB_E / shadowLength2);
     ///////////////////////////////////////////////////////////////////////////////////////////////
     vector<float> probF(i + j + 1); // forward from light to eye (excludes the const emission probability, since it's just a constant)
     vector<float> probB(i + j + 1); // backward from eye to light
@@ -724,7 +735,7 @@ Vector3 Scene::uniFlux(const int& i, const int& j, const LightPath& lightPath, c
             probDE = probB[k + 1] * probF[k] * diskArea*nLightPaths;
         }
 
-        //probPI = 0; // just for testing photonmapping only
+        probPI = 0; // just for testing photonmapping only
 
         if (k == i) {
             if (explicitConnection == true) flux *= probPI;
@@ -788,7 +799,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 !trace(hitInfo, ray11)) continue;
             Vector3 fluxSumOverSamples(0, 0, 0);
 
-            Ray ray = cam->eyeRay(x, y, img->width(), img->height());
+            /*Ray ray = cam->eyeRay(x, y, img->width(), img->height());
             trace(hitInfo, ray00);
             vector<PhotonDeposit> photons = mapAndPaths.first->getPhotons(hitInfo.P, m_photonGatheringRadius);
             Vector3 density(0, 0, 0);
@@ -796,7 +807,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 density += photons[k].m_power;
             }
             density /= M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
-            img->setPixel(x, y, density);
+            img->setPixel(x, y, density / (2 * M_PI));//*/
 
             Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
                 EyePath eyePath = randEyePath(x, y, cam, img);
@@ -808,7 +819,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 for (int j = 1; j <= eyePath.m_hit.size(); j++) {
                     fluxSum += uniFluxDE(j, eyePath, mapAndPaths.first, nLightPaths);
                     for (int i = 0; i <= lightPath.m_hit.size(); i++) {
-                        fluxSum += uniFlux(i, j, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
+                        //fluxSum += uniFlux(i, j, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
                     }
                 }
                 fluxSumOverSamples += fluxSum;

@@ -86,9 +86,12 @@ void Image::gammaPixels(float * gammaData)
     {
         for (int x = 0; x < m_width; x++)
         {
-            gammaData[3*(m_width*y+x)+0] = pow(m_pixels[y*m_width+x].r,1/2.2);
-            gammaData[3*(m_width*y+x)+1] = pow(m_pixels[y*m_width+x].g,1/2.2);
-            gammaData[3*(m_width*y+x)+2] = pow(m_pixels[y*m_width+x].b,1/2.2);
+            float gammaRed = pow(m_pixels[y*m_width+x].r,1/2.2);
+            float gammaGreen = pow(m_pixels[y*m_width+x].g,1/2.2);
+            float gammaBlue = pow(m_pixels[y*m_width+x].b,1/2.2);
+            gammaData[3 * (m_width*y + x) + 0] = gammaRed;
+            gammaData[3 * (m_width*y + x) + 1] = gammaGreen;
+            gammaData[3 * (m_width*y + x) + 2] = gammaBlue;
         }
     }
 }

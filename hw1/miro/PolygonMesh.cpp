@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include "PolygonMesh.h"
 #include "Triangle.h"
 #include "Quad.h"
@@ -92,7 +93,7 @@ void PolygonMesh::addMeshToScene(Scene* scene) {
             float spanY = (D - A).length() / 2;
             ParallelogramLight* light = new ParallelogramLight(center,vecX,vecY,spanX,spanY);
             light->setMaterial(m_quadMaterials[i]);
-            light->setWattage(8*light->area());
+            light->setWattage(2 * M_PI*light->area());
             scene->addAreaLight(light,20000);
         }
     }
