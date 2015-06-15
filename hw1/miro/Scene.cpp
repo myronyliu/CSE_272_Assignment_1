@@ -301,6 +301,9 @@ LightPDF Scene::randLightByWattage() {
         rlbw.p = m_lights[i]->wattage() / wattageConcattage[n];
         return rlbw;
     }
+    rlbw.l = NULL;
+    rlbw.p = 0;
+    return rlbw;
 }
 
 pair<Vector3, Vector3> Scene::axisAlignedBounds() {
@@ -308,7 +311,7 @@ pair<Vector3, Vector3> Scene::axisAlignedBounds() {
     pair<Vector3, Vector3> objBounds = m_objects[0]->axisAlignedBounds();
     Vector3 minBounds = objBounds.first;
     Vector3 maxBounds = objBounds.second;
-    for (int i = 1; i < m_objects.size(); i++) {
+    for (unsigned int i = 1; i < m_objects.size(); i++) {
         objBounds = m_objects[i]->axisAlignedBounds();
         Vector3 xyz = objBounds.first;
         Vector3 XYZ = objBounds.second;
@@ -422,8 +425,8 @@ void Scene::biditraceImage(Camera *cam, Image *img) {
                 if (eyePath.m_hit.size() == 0) return;
                 LightPath lightPath = randLightPath();
                 Vector3 fluxSum = bidiRadiance(0, 0, lightPath, eyePath);
-                for (int i = 0; i <= lightPath.m_hit.size(); i++) {
-                    for (int j = 1; j <= eyePath.m_hit.size(); j++) {
+                for (unsigned int i = 0; i <= lightPath.m_hit.size(); i++) {
+                    for (unsigned int j = 1; j <= eyePath.m_hit.size(); j++) {
                         fluxSum += bidiRadiance(i, j, lightPath, eyePath);
                     }
                 }
@@ -565,12 +568,12 @@ void Scene::bounceRayPath(RayPath & rayPath, const int& maxBounces) {
 
 pair<PhotonMap*, vector<LightPath*>> Scene::generatePhotonMap() {
     int nPaths = 0;
-    for (int i = 0; i < m_lights.size(); i++) nPaths += m_emittedPhotonsPerLight[i];
+    for (unsigned int i = 0; i < m_lights.size(); i++) nPaths += m_emittedPhotonsPerLight[i];
     vector<LightPath*> paths(nPaths);
 
     SequentialPhotonMap spm;
     int pathCount = 0;
-    for (int i = 0; i < m_lights.size(); i++) {
+    for (unsigned int i = 0; i < m_lights.size(); i++) {
         Light* light = m_lights[i];
         int nPhotons = m_emittedPhotonsPerLight[i];
         Vector3 photonPower = light->wattage() / nPhotons;
@@ -585,7 +588,7 @@ pair<PhotonMap*, vector<LightPath*>> Scene::generatePhotonMap() {
             paths[pathCount] = path;
             pathCount++;
             //spm.addPhoton(PhotonDeposit(photonPower, path, -1));
-            for (int k = 0; k < path->m_hit.size(); k++) spm.addPhoton(PhotonDeposit(photonPower, path, k));
+            for (unsigned int k = 0; k < path->m_hit.size(); k++) spm.addPhoton(PhotonDeposit(photonPower, path, k));
         }
     }
     printf("\nPopulating photon Map with %i photons...\n", spm.nPhotons());
@@ -648,7 +651,7 @@ Vector3 Scene::uniRadianceDE(const int& j, const EyePath& eyePath, PhotonMap* ph
     vector<PhotonDeposit> photons = photonMap->getPhotons(hit_E.P, m_photonGatheringRadius);
     Vector3 density = 0;
     float diskArea = M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
-    for (int k = 0; k < photons.size(); k++) density += photons[k].m_power;
+    for (unsigned int k = 0; k < photons.size(); k++) density += photons[k].m_power;
     density /= diskArea;
 
     Vector3 flux(0,0,0);
@@ -692,7 +695,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 int lightPathIndex = min(nLightPaths - 1, randIndex );
                 LightPath lightPath = *mapAndPaths.second[lightPathIndex];
                 Vector3 fluxSum = uniRadiance(0, 0, lightPath, eyePath, mapAndPaths.first, true, nLightPaths);
-                for (int j = 1; j <= eyePath.m_hit.size(); j++) {
+                for (unsigned int j = 1; j <= eyePath.m_hit.size(); j++) {
                     fluxSum += uniRadianceDE(j, eyePath, mapAndPaths.first, nLightPaths);
                     for (int i = 0; i <= lightPath.m_hit.size(); i++) {
                         // The following line is commented out for testing only Density Estimation
