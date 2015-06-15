@@ -103,7 +103,7 @@ void PolygonMesh::addMeshToScene(Scene* scene) {
             ParallelogramLight* light = new ParallelogramLight(center,vecX,vecY,spanX,spanY);
             light->setMaterial(m_quadMaterials[i]);
             light->setWattage(20 * M_PI*light->area());
-            scene->addAreaLight(light,200000);
+            scene->addAreaLight(light,1000000);
         }
     }
 }

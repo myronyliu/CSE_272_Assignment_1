@@ -38,6 +38,7 @@ public:
     const Objects* objects() const { return &m_objects; }
     void setSamplingHeuristic(float p) { m_samplingHeuristic = fmin(fmax(0.0f, p), 1.0f); }
     float samplingHeuristic() { return m_samplingHeuristic; }
+    void setPhotonGatheringRadius(const float& r) { m_photonGatheringRadius = r; }
 
     void setPreview(bool preview) { m_preview = preview;  }
     bool preview(){ return m_preview; }
