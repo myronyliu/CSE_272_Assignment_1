@@ -409,8 +409,6 @@ void Scene::biditraceImage(Camera *cam, Image *img) {
 
 }
 
-
-
 EyePath Scene::randEyePath(float x, float y, Camera* cam, Image* img, const int& bounces) {
     HitInfo hit;
     Ray rayInit = cam->eyeRay(x, y, img->width(), img->height());
@@ -421,7 +419,7 @@ EyePath Scene::randEyePath(float x, float y, Camera* cam, Image* img, const int&
         eyePath.m_hit.push_back(hit);
         eyePath.m_cosB.push_back(std::max(0.0f, dot(hit.N, -rayInit.d)));
         eyePath.m_length2.push_back((hit.P - rayInit.o).length2());
-        if (hit.object->material()->reflectance()[0] == 0) return eyePath;
+        if (hit.object->material()->reflectance().length2() == 0) return eyePath;
     }
 
     if (bounces < 0) bounceRayPath(eyePath, m_maxEyePaths);
@@ -443,7 +441,7 @@ LightPath Scene::randLightPath(Light* lightInput, const int& bounces) {
     // lightPath specific values
     lightPath.m_light = light;
     lightPath.m_lightHit = lightHit;
-    lightPath.m_originProb = rp.m_oProb;
+    lightPath.m_originProb = rp.m_oProb; // this is just 1/area for uniform sampling of the area light
 
     if (!trace(hit, rayInit)) return lightPath;
     else {
@@ -453,7 +451,7 @@ LightPath Scene::randLightPath(Light* lightInput, const int& bounces) {
         lightPath.m_cosB.push_back(cosPrime);
         lightPath.m_length2.push_back(distSqr);
         lightPath.m_prob.push_back(rp.m_dProb*cosPrime / distSqr);
-        if (hit.object->material()->reflectance()[0] == 0) return lightPath;
+        if (hit.object->material()->reflectance().length2() == 0) return lightPath;
     }
 
     if (bounces < 0) bounceRayPath(lightPath, m_maxLightPaths);
@@ -466,17 +464,11 @@ void Scene::bounceRayPath(RayPath & rayPath, const int& maxBounces) {
     
     HitInfo newHit;
     int bounce = 1;
-    bool terminate = false;
+    bool terminate = false; // this is for Russian Roulette
     while (bounce < maxBounces)
     {
         Ray lastRay = rayPath.m_ray.back();
         HitInfo lastHit = rayPath.m_hit.back();
-
-        // Russian Roulette
-        Vector3 lastReflectanceRGB = lastHit.object->material()->reflectance();
-        float lastReflectance = (lastReflectanceRGB[0] + lastReflectanceRGB[1] + lastReflectanceRGB[2]) / 3;
-        float rn = (float)rand() / RAND_MAX;
-        if (rn > lastReflectance) terminate = true; // terminate upon this next hit
 
         vec3pdf vp = lastHit.object->material()->randReflect(-lastRay.d, lastHit.N);
         Ray newRay(lastHit.P, vp.v);
@@ -484,6 +476,12 @@ void Scene::bounceRayPath(RayPath & rayPath, const int& maxBounces) {
         Vector3 newReflectanceRGB = newHit.object->material()->reflectance();
         float newReflectance = (newReflectanceRGB[0] + newReflectanceRGB[1] + newReflectanceRGB[2]) / 3;
         if (newReflectance == 0) return;
+
+        // Russian Roulette
+        Vector3 lastReflectanceRGB = lastHit.object->material()->reflectance();
+        float lastReflectance = (lastReflectanceRGB[0] + lastReflectanceRGB[1] + lastReflectanceRGB[2]) / 3;
+        float rn = (float)rand() / RAND_MAX;
+        if (rn > lastReflectance) terminate = true; // terminate upon filling in the relevant fields for this newHit
 
         Vector3 brdf = lastHit.object->material()->BRDF(-lastRay.d, lastHit.N, newRay.d);
         float cos = std::max(0.0f, dot(lastHit.N, newRay.d));

@@ -20,6 +20,7 @@ public:
     std::vector<float> m_prob;  // CUMULATIVE probability DENSITY in area space
 
 };
+
 class EyePath : public RayPath
 {
 public:
