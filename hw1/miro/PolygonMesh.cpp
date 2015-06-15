@@ -72,9 +72,18 @@ void PolygonMesh::addMeshToScene(Scene* scene) {
     }
     for (int i = 0; i < m_quadVertexIndices.size(); i++) {
         if (m_quadIsLight[i] == false) {
-            Quad* quad = new Quad(this, i);
-            quad->setMaterial(m_quadMaterials[i]);
-            scene->addObject(quad);
+            Vector3 A = m_vertices[m_quadVertexIndices[i].m_a];
+            Vector3 B = m_vertices[m_quadVertexIndices[i].m_b];
+            Vector3 C = m_vertices[m_quadVertexIndices[i].m_c];
+            Vector3 D = m_vertices[m_quadVertexIndices[i].m_d];
+            Vector3 center = (A + C) / 2;
+            Vector3 vecX = (B - A).normalize();
+            Vector3 vecY = (D - A).normalize();
+            float spanX = (B - A).length() / 2;
+            float spanY = (D - A).length() / 2;
+            Parallelogram* parallelogram = new Parallelogram(center, vecX, vecY, spanX, spanY);
+            parallelogram->setMaterial(m_quadMaterials[i]);
+            scene->addObject(parallelogram);
         }
         else {
             //QuadLight* quadLight = new QuadLight(this, i);
@@ -93,8 +102,8 @@ void PolygonMesh::addMeshToScene(Scene* scene) {
             float spanY = (D - A).length() / 2;
             ParallelogramLight* light = new ParallelogramLight(center,vecX,vecY,spanX,spanY);
             light->setMaterial(m_quadMaterials[i]);
-            light->setWattage(2 * M_PI*light->area());
-            scene->addAreaLight(light,20000);
+            light->setWattage(20 * M_PI*light->area());
+            scene->addAreaLight(light,200000);
         }
     }
 }

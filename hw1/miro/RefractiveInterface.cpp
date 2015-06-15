@@ -5,24 +5,23 @@
 #include <algorithm>
 #include <random>
 
-RefractiveInterface::RefractiveInterface(const Vector3 & kr, const Vector3 & kt, const Vector3 & ka, const float& n0, const float& n1) : Material(), m_kr(kr), m_kt(kt), m_ka(ka), m_n0(n0), m_n1(n1) {}
+RefractiveInterface::RefractiveInterface() : m_kr(Vector3(1)), m_kt(Vector3(1)), m_ka(Vector3(0)), m_n(1) {}
+RefractiveInterface::RefractiveInterface(const Vector3 & kr, const Vector3 & kt, const Vector3 & ka, const float& n) :
+m_kr(kr), m_kt(kt), m_ka(ka), m_n(n) {}
 RefractiveInterface::~RefractiveInterface() {}
 
-float RefractiveInterface::BRDF(const Vector3& in, const Vector3& normal0, const Vector3& out, const bool& isFront) const {
-    // normal is assumed to be facing the FRONT of the interface.
+//
+Vector3 RefractiveInterface::BRDF(const Vector3& in, const Vector3& ambiguousNormal, const Vector3& out, const bool& isFront) const {
+    return Vector3(0, 0, 0);
     // First check to see that all three vectors are in the same plane
-    Vector3 normal = normal0;
-    if (isFront == false) normal = -normal0;
-    bool coPlanarCheck = false;
-    if (fabs(dot(in, cross(normal, out).normalize())) < 0.000001 ||
-        fabs(dot(normal, cross(out, in).normalize())) < 0.000001 ||
-        fabs(dot(out, cross(in, normal).normalize())) < 0.000001) coPlanarCheck = true;
-    if (coPlanarCheck == false) {
-        std::cout << "not coplanar" << std::endl;
-        return 0;
-    }
-    ////////////////////////////////////////////////////////////////////////////////////
-    float nIn = m_n0;
+    if (!coplanar(in, ambiguousNormal, out)) return Vector3(0, 0, 0);
+
+    Vector3 normal;
+    if (isFront == false) normal = ambiguousNormal;
+    else normal = -ambiguousNormal;
+
+
+    /*float nIn = m_n0;
     float nOut = m_n1;
     float cosIn = dot(normal, in);
     float cosOut = dot(normal, out);
@@ -34,12 +33,12 @@ float RefractiveInterface::BRDF(const Vector3& in, const Vector3& normal0, const
     if (cosIn*cosOut < 0) { // rays are on opposite sides of interface (TRANSMITTED)
         float nSinIn = nIn*sinIn;
         float nSinOut = nOut*sinOut;
-        if (fmin(nSinIn, nSinOut) / fmax(nSinIn, nSinOut) > 0.99999) return (m_kt[0] + m_kt[1] + m_kt[2]) / 3;
-        else return 0;
+        if (fmin(nSinIn, nSinOut) / fmax(nSinIn, nSinOut) > 0.99999) return m_kt;
+        else return Vector3(0,0,0);
     }
     else if (cosIn*cosOut > 0) { // rays are on the same side of interface (REFLECTED)
-        if (fmin(sinIn, sinOut) / fmax(sinIn, sinOut) > 0.99999) return (m_kr[0] + m_kr[1] + m_kr[2]) / 3;
-        else return 0;
+        if (fmin(sinIn, sinOut) / fmax(sinIn, sinOut) > 0.99999) return m_kr;
+        else return Vector3(0,0,0);
     }
     else { // at least one of the rays is parallel to the interface
         if (cosIn == 0) {
@@ -54,12 +53,12 @@ float RefractiveInterface::BRDF(const Vector3& in, const Vector3& normal0, const
             return 0;
         }
     }
-    return 0;
+    return 0;*/
 }
 
 vec3pdf RefractiveInterface::randReflect(const Vector3& in, const Vector3& normal0, const bool& isFront) const{
-    //return vec3pdf(-in, 1);
-    if (m_n0 == m_n1) return vec3pdf(-in, 1);
+    return vec3pdf(Vector3(0, 0, 0), 0);
+    /*if (m_n0 == m_n1) return vec3pdf(-in, 1);
     Vector3 normal = normal0;
     if (isFront == false) normal = -normal0;
     float cosIn = dot(in, normal);
@@ -97,7 +96,7 @@ RefractiveInterface::shade(const Ray& ray, const HitInfo& hit, const Scene& scen
         Vector3 l = pLight->position() - hit.P;
         rayLight.o = hit.P;
         rayLight.d = l.normalized();
-        float brdf = BRDF(rayLight.d, hit.N, -ray.d, isFront);
+        Vector3 brdf = BRDF(rayLight.d, hit.N, -ray.d, isFront);
         if (brdf == 0) continue;
         if (scene.trace(hitLight, rayLight, 0.0001, l.length())) continue;
 
@@ -107,7 +106,7 @@ RefractiveInterface::shade(const Ray& ray, const HitInfo& hit, const Scene& scen
         float nDotL = fabs(dot(hit.N, l));
         Vector3 result = pLight->color();
 
-        L += std::max(0.0f, nDotL / falloff * pLight->wattage() *brdf) * result;
+        L += nDotL / falloff * pLight->wattage() *brdf * result;
     }
 
     const AreaLights *alightlist = scene.areaLights();
@@ -121,7 +120,7 @@ RefractiveInterface::shade(const Ray& ray, const HitInfo& hit, const Scene& scen
         rayLight.o = hit.P;
         rayLight.d = l.normalized();
 
-        float brdf = BRDF(rayLight.d, hit.N, -ray.d, isFront);
+        Vector3 brdf = BRDF(rayLight.d, hit.N, -ray.d, isFront);
         if (brdf == 0) continue;
         // if the shadow ray hits the "backside of the light" continue to the next area light
         if (!aLight->intersect(hitLight, rayLight)){
@@ -138,9 +137,8 @@ RefractiveInterface::shade(const Ray& ray, const HitInfo& hit, const Scene& scen
         float nDotL = fabs(dot(hit.N, l));
         Vector3 result = aLight->color();
 
-        L += std::max(0.0f, dot(hitLight.N, -l))*
-            std::max(0.0f, nDotL / falloff*
-            aLight->wattage() / aLight->area() *brdf) * result / (vp.p);
+        L += std::max(0.0f, dot(hitLight.N, -l))* 0.0f, nDotL / falloff*
+            aLight->wattage() / aLight->area() *brdf * result / (vp.p);
     }
 
     // add the ambient component

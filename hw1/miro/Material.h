@@ -16,7 +16,6 @@ class Material
 {
 public:
     Material();
-    Material(const bool& interacting);
     virtual ~Material();
 
     virtual void preCalc() {}
@@ -26,7 +25,8 @@ public:
     virtual vec3pdf randEmit(const Vector3& n) const;
     virtual float emitPDF(const Vector3& n, const Vector3& v) const { return 0; }
     virtual vec3pdf randReflect(const Vector3& ray, const Vector3& hit, const bool& isFront = true) const;
-    virtual float BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront = true) const { return 0; }
+    virtual Vector3 BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront = true) const { return 0; }
+    virtual float reflectPDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront = true) const { return 0; }
 
     virtual Vector3 transmittance() const { return Vector3(0, 0, 0); }
     virtual Vector3 reflectance() const { return Vector3(0,0,0); }
@@ -38,13 +38,9 @@ public:
     virtual Vector3 radiance(const Vector3&normal, const Vector3& direction) const;
     virtual Vector3 sum_L_cosTheta_dOmega() const;
 
-    bool isInteracting() const { return m_interacting; }
-    void disableInteraction() { m_interacting = false; }
-    void enableInteraction() { m_interacting = true; }
 protected:
     Vector3 m_powerPerArea = Vector3(0, 0, 0); // emitted power per unit dx.dy patch area
     float m_emittance = 0; // probability of emitting light
-    bool m_interacting;
     Vector3 m_ka = 0;
 };
 

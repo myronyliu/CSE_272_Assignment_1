@@ -220,7 +220,8 @@ public:
     Vector3 project(const Vector3 & u, const Vector3 & v); // project onto the plane spanned by u,v
     Vector3 orthogonal(const Vector3 & v); // return the component that is perpendicular to v
     Vector3 orthogonal(const Vector3 & u, const Vector3 &v); // return the component that is perpendicular to the plane spanned by u,v
-    Vector3 inBasis(const Vector3 & u, const Vector3 &v, const Vector3 &w);
+    Vector3 inBasis(const Vector3 & u, const Vector3 &v, const Vector3 &w); // returns the components in the new basis defined by (u,v,w)
+    
 };
 
 
@@ -277,5 +278,7 @@ operator<<(std::ostream& out, const Vector3& v)
 {
     return out << v.x << " " << v.y << " " << v.z ;
 }
+
+bool coplanar(const Vector3 & u, const Vector3& v, const Vector3& w);
 
 #endif // CSE168_VECTOR3_H_INCLUDED

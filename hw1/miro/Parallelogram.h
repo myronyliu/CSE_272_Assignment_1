@@ -59,7 +59,7 @@ public:
         bool isFront = dot(hit.N, normal()) > 0;
         return m_material->shade(ray, hit, scene, isFront);
     }
-    virtual float BRDF(const Vector3& in, const Vector3& n, const Vector3& out, Vector3& point = Vector3(0, 0, 0)) const {
+    virtual Vector3 BRDF(const Vector3& in, const Vector3& n, const Vector3& out, Vector3& point = Vector3(0, 0, 0)) const {
         bool isFront = dot(n, normal()) > 0;
         return m_material->BRDF(in, n, out, isFront);
     }

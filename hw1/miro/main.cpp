@@ -36,7 +36,7 @@ makeTestScene() {
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(64);
-    g_scene->setBidiSamplesPerPix(8);
+    g_scene->setBidiSamplesPerPix(64);
     g_scene->setMaxBounces(100);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);
@@ -63,9 +63,9 @@ makeRoomScene(){
     g_camera->setFOV(40);
 
     g_scene->setPreview(true);
-    g_scene->setSamplesPerPix(64);
-    g_scene->setBidiSamplesPerPix(8);
-    g_scene->setMaxBounces(100);
+    g_scene->setSamplesPerPix(16);
+    g_scene->setBidiSamplesPerPix(4);
+    g_scene->setMaxBounces(16);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);
     g_scene->setPhotonSamples(100000000);
@@ -90,7 +90,7 @@ makeRoomScene(){
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
-    wall_F->setMaterial(mat);
+    wall_F->setMaterial(mir);
     g_scene->addObject(wall_B);
     g_scene->addObject(wall_F);
     g_scene->addObject(wall_L);
