@@ -21,7 +21,8 @@ public:
         RENDER_PATHTRACE = 2,
         RENDER_PHOTONTRACE = 3,
         RENDER_BIDITRACE = 4,
-        RENDER_UNIFIEDPATH = 5
+        RENDER_UNIFIEDPATH = 5,
+        RENDER_VISUALIZEPHOTONMAP = 6
     };
 
     void click(Scene* pScene, Image* pImage);

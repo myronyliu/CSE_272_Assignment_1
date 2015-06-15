@@ -325,6 +325,57 @@ pair<Vector3, Vector3> Scene::axisAlignedBounds() {
     return pair<Vector3, Vector3>(minBounds, maxBounds);
 }
 
+void Scene::visualizePhotonMap(Camera *cam, Image *img) {
+    int w = img->width();
+    int h = img->height();
+    HitInfo hitInfo;
+
+    int integrationStart = glutGet(GLUT_ELAPSED_TIME);
+
+    pair<PhotonMap*, vector<LightPath*>> mapAndPaths = generatePhotonMap();
+    int nLightPaths = mapAndPaths.second.size();
+
+    for (int y = h - 1; y > -1; y--)
+        //for (int y = 0; y < h; y++)
+    {
+        //for (int x = w / 2 - 1; x < w / 2 + 1; x++)
+        for (int x = 0; x < w; x++)
+        {
+            Ray ray = cam->eyeRay(x, y, img->width(), img->height());
+            if (!trace(hitInfo, ray)) continue;
+            Vector3 fluxSumOverSamples(0, 0, 0);
+
+            vector<PhotonDeposit> photons = mapAndPaths.first->getPhotons(hitInfo.P, m_photonGatheringRadius);
+            Vector3 density(0, 0, 0);
+            for (int k = 0; k<photons.size(); k++) {
+            density += photons[k].m_power;
+            }
+            density /= M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
+            img->setPixel(x, y, density / (2 * M_PI));
+        }
+        if (preview())
+        {
+            img->drawScanline(y);
+        }
+        glFinish();
+        printf("Rendering Progress: %.3f%%\r", y / float(img->height())*100.0f);
+        fflush(stdout);
+    }
+    if (!preview())
+    {
+        img->draw();
+    }
+    glFinish();
+
+    printf("Rendering Progress: 100.000%\n");
+
+    int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
+    std::cout << "Rendering took " << ((integrationEnd - integrationStart) / 1000.0f) << "s" << std::endl;
+
+    debug("Done PhotonMap Visualization!\n");
+}
+
+
 Vector3 Scene::bidiRadiance(int i, int j, LightPath lightPath, EyePath eyePath) {
     if (i == 0 && j == 0) return eyePath.m_hit[0].object->material()->radiance(eyePath.m_hit[0].N, -eyePath.m_ray[0].d);
     if (i < 0 || j < 1) return Vector3(0, 0, 0);
@@ -365,14 +416,8 @@ void Scene::biditraceImage(Camera *cam, Image *img) {
     {
         for (int x = 0; x < w; x++)
         {
-            Ray ray00 = cam->eyeRay((float)x - 0.5, (float)y - 0.5, img->width(), img->height());
-            Ray ray01 = cam->eyeRay((float)x - 0.5, (float)y + 0.5, img->width(), img->height());
-            Ray ray10 = cam->eyeRay((float)x + 0.5, (float)y - 0.5, img->width(), img->height());
-            Ray ray11 = cam->eyeRay((float)x + 0.5, (float)y + 0.5, img->width(), img->height());
-            if (!trace(hitInfo, ray00) &&
-                !trace(hitInfo, ray01) &&
-                !trace(hitInfo, ray10) &&
-                !trace(hitInfo, ray11)) continue;
+            Ray ray = cam->eyeRay(x, y, img->width(), img->height());
+            if (!trace(hitInfo, ray)) continue;
             Vector3 fluxSumOverSamples(0, 0, 0);
 
             Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
@@ -587,7 +632,7 @@ Vector3 Scene::uniRadiance(const int& i, const int& j, const LightPath& lightPat
 
         if (k == i) {
             if (explicitConnection == true) flux *= probPI;
-            else flux *= probDE;
+            else flux *= probDE; // the division by nLightPaths is implicitly done here
         }
 
         probSum += probPI + probDE*nLightPaths;
@@ -609,12 +654,8 @@ Vector3 Scene::uniRadianceDE(const int& j, const EyePath& eyePath, PhotonMap* ph
     for (unsigned int k = 0; k < photons.size(); k++) density += photons[k].m_power;
     density /= diskArea;
 
-    //cout << density[0] << endl;
-
     Vector3 flux(0,0,0);
-
-    int smallPhotons = 0;
-
+    
     for (auto & photon : photons) {
         int i = photon.m_hitIndex;
         // usually with explicit connection we would make i = photon.m_hitIndex +1
@@ -623,9 +664,6 @@ Vector3 Scene::uniRadianceDE(const int& j, const EyePath& eyePath, PhotonMap* ph
         LightPath lightPath = *photon.m_lightPath;
         Vector3 fluxAccum = uniRadiance(i, j, lightPath, eyePath, photonMap, false, nLightPaths, density);
         flux += fluxAccum;
-        if (fluxAccum[0] < 0.000001) {
-            smallPhotons++;
-        }
         //return flux;
     }
     //cout << smallPhotons << "/" << photons.size() << endl;
@@ -649,25 +687,9 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
         //for (int x = w / 2 - 1; x < w / 2 + 1; x++)
         for (int x = 0; x < w; x++)
         {
-            Ray ray00 = cam->eyeRay((float)x - 0.5, (float)y - 0.5, img->width(), img->height());
-            Ray ray01 = cam->eyeRay((float)x - 0.5, (float)y + 0.5, img->width(), img->height());
-            Ray ray10 = cam->eyeRay((float)x + 0.5, (float)y - 0.5, img->width(), img->height());
-            Ray ray11 = cam->eyeRay((float)x + 0.5, (float)y + 0.5, img->width(), img->height());
-            if (!trace(hitInfo, ray00) &&
-                !trace(hitInfo, ray01) &&
-                !trace(hitInfo, ray10) &&
-                !trace(hitInfo, ray11)) continue;
+            Ray ray = cam->eyeRay(x, y, img->width(), img->height());
+            if (!trace(hitInfo, ray)) continue;
             Vector3 fluxSumOverSamples(0, 0, 0);
-
-            /*Ray ray = cam->eyeRay(x, y, img->width(), img->height());
-            trace(hitInfo, ray00);
-            vector<PhotonDeposit> photons = mapAndPaths.first->getPhotons(hitInfo.P, m_photonGatheringRadius);
-            Vector3 density(0, 0, 0);
-            for (int k = 0; k<photons.size(); k++) {
-                density += photons[k].m_power;
-            }
-            density /= M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
-            img->setPixel(x, y, density / (2 * M_PI));//*/
 
             Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
                 EyePath eyePath = randEyePath(x, y, cam, img);
