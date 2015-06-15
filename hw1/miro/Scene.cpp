@@ -582,12 +582,8 @@ pair<PhotonMap*, vector<LightPath*>> Scene::generatePhotonMap() {
             if (j % printStep == 0 || j == nPhotons - 1) printf("Bouncing photon %i/%i light %i __________\r", j, nPhotons, i);
             LightPath* path = new LightPath;
             *path = randLightPath(light, m_maxLightPaths);
-            //if (path->m_hit.size() > 1) {
-            //    cout << "oh nos\n" << endl;
-            //}
             paths[pathCount] = path;
             pathCount++;
-            //spm.addPhoton(PhotonDeposit(photonPower, path, -1));
             for (unsigned int k = 0; k < path->m_hit.size(); k++) spm.addPhoton(PhotonDeposit(photonPower, path, k));
         }
     }
