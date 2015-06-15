@@ -62,14 +62,14 @@ public:
 
     void addVertex(const Vector3& v) { m_vertices.push_back(v); }
     void addVertices(const std::vector<Vector3>& v) {
-        for (int i = 0; i < v.size(); i++) m_vertices.push_back(v[i]);
+        for (unsigned int i = 0; i < v.size(); i++) m_vertices.push_back(v[i]);
     }
     void addTriangle(const TupleI3& vertexIndices, const TupleI3& normalIndices) {
         m_triangleVertexIndices.push_back(vertexIndices);
         m_triangleNormalIndices.push_back(normalIndices);
     }
     void addTriangle(const std::vector<TupleI3>& vertexIndices, const std::vector<TupleI3>& normalIndices) {
-        for (int i = 0; i < vertexIndices.size(); i++) {
+        for (unsigned int i = 0; i < vertexIndices.size(); i++) {
             m_triangleVertexIndices.push_back(vertexIndices[i]);
             m_triangleNormalIndices.push_back(normalIndices[i]);
         }

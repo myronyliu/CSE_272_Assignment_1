@@ -124,7 +124,7 @@ public:
     std::vector<PhotonDeposit> getPhotons(const Vector3& x, const float& r) {
         std::vector<PhotonDeposit> candidatePhotons = getPhotons(x-Vector3(r,r,r),x+Vector3(r,r,r));
         std::vector<PhotonDeposit> photons(0);
-        for (int i = 0; i < candidatePhotons.size(); i++) {
+        for (unsigned int i = 0; i < candidatePhotons.size(); i++) {
             if ((candidatePhotons[i].location() - x).length2() < r*r) photons.push_back(candidatePhotons[i]);
         }
         return photons;
