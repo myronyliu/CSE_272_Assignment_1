@@ -346,7 +346,7 @@ void Scene::visualizePhotonMap(Camera *cam, Image *img) {
 
             vector<PhotonDeposit> photons = mapAndPaths.first->getPhotons(hitInfo.P, m_photonGatheringRadius);
             Vector3 density(0, 0, 0);
-            for (int k = 0; k<photons.size(); k++) {
+            for (unsigned int k = 0; k<photons.size(); k++) {
             density += photons[k].m_power;
             }
             density /= M_PI*m_photonGatheringRadius*m_photonGatheringRadius;
@@ -650,6 +650,8 @@ Vector3 Scene::uniRadianceDE(const int& j, const EyePath& eyePath, PhotonMap* ph
     density /= diskArea;
 
     Vector3 flux(0,0,0);
+    
+    int smallPhotons = 0;
     
     for (auto & photon : photons) {
         int i = photon.m_hitIndex;
