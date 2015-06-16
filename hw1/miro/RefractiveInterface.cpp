@@ -5,77 +5,81 @@
 #include <algorithm>
 #include <random>
 
-RefractiveInterface::RefractiveInterface() : m_kr(Vector3(1)), m_kt(Vector3(1)), m_ka(Vector3(0)), m_n(1) {}
 RefractiveInterface::RefractiveInterface(const Vector3 & kr, const Vector3 & kt, const Vector3 & ka, const float& n) :
 m_kr(kr), m_kt(kt), m_ka(ka), m_n(n) {}
 RefractiveInterface::~RefractiveInterface() {}
 
-//
-Vector3 RefractiveInterface::BRDF(const Vector3& in, const Vector3& ambiguousNormal, const Vector3& out, const bool& isFront) const {
-    return Vector3(0, 0, 0);
+// in and normal should be on the same side when this is called
+Vector3 RefractiveInterface::BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const {
     // First check to see that all three vectors are in the same plane
-    if (!coplanar(in, ambiguousNormal, out)) return Vector3(0, 0, 0);
-
-    Vector3 normal;
-    if (isFront == false) normal = ambiguousNormal;
-    else normal = -ambiguousNormal;
-
-
-    /*float nIn = m_n0;
-    float nOut = m_n1;
-    float cosIn = dot(normal, in);
-    float cosOut = dot(normal, out);
-    float sinIn = sqrt(1.0f - cosIn*cosIn); // sin's are all positive by definition of sqrt(...)
-    float sinOut = sqrt(1.0f - cosOut*cosOut);
-    if (cosIn < 0) nIn = m_n1;
-    if (cosOut > 0) nOut = m_n0;
-    float sinCrit = fmin(m_n0, m_n1) / fmax(m_n0, m_n1); // critical sin(theta) for total internal reflection
-    if (cosIn*cosOut < 0) { // rays are on opposite sides of interface (TRANSMITTED)
-        float nSinIn = nIn*sinIn;
-        float nSinOut = nOut*sinOut;
-        if (fmin(nSinIn, nSinOut) / fmax(nSinIn, nSinOut) > 0.99999) return m_kt;
-        else return Vector3(0,0,0);
+    if (!coplanar(in, normal, out)){
+        return Vector3(0, 0, 0);
     }
-    else if (cosIn*cosOut > 0) { // rays are on the same side of interface (REFLECTED)
-        if (fmin(sinIn, sinOut) / fmax(sinIn, sinOut) > 0.99999) return m_kr;
-        else return Vector3(0,0,0);
+
+    Vector3 sinVecIn = cross(in, normal);
+    Vector3 sinVecOut = cross(out, normal);
+
+    if (dot(sinVecIn, sinVecOut) > 0) {
+        return Vector3(0, 0, 0);
     }
-    else { // at least one of the rays is parallel to the interface
-        if (cosIn == 0) {
-            if (cosOut == 0) return 1; // special case of ray skimming the surface (no energy lost)
-            if (nIn > nOut) return 0;
-            if (fmin(sinCrit, sinOut) / fmax(sinCrit, sinOut) > 0.99999) return (m_kt[0] + m_kt[1] + m_kt[2]) / 3;
-            return 0;
-        }
-        else if (cosOut == 0) {
-            if (nIn < nOut) return 0;
-            if (fmin(sinCrit, sinIn) / fmax(sinCrit, sinIn) > 0.99999) return (m_kt[0] + m_kt[1] + m_kt[2]) / 3;
-            return 0;
-        }
-    }
-    return 0;*/
+    
+    float cosIn = dot(in, normal);
+    float cosOut = dot(out, normal);
+
+    //return Vector3(1, 1, 1) / fabs(cosOut);
+
+    if (cosOut == 0) return Vector3(0, 0, 0); // this case cannot be handled due to division by zero
+
+    if (fabs((cosOut - cosIn) / cosIn) < 0.000001) return m_kr / fabs(cosOut); // reflected
+
+    float sinIn = sinVecIn.length();
+    float sinOut = sinVecOut.length();
+    float sinIn_sinOut = sinIn / sinOut;
+
+    float nOut_nIn; // ratio of indices of refraction n_out/n_in 
+    if (isFront) nOut_nIn = m_n;
+    else nOut_nIn = 1 / m_n; // this is also sin(theta_critical)
+
+    if (fabs((sinIn_sinOut - nOut_nIn) / nOut_nIn) < 0.000001) return m_kt / cosOut;
+    return Vector3(0, 0, 0);
 }
 
-vec3pdf RefractiveInterface::randReflect(const Vector3& in, const Vector3& normal0, const bool& isFront) const{
-    return vec3pdf(Vector3(0, 0, 0), 0);
-    /*if (m_n0 == m_n1) return vec3pdf(-in, 1);
-    Vector3 normal = normal0;
-    if (isFront == false) normal = -normal0;
+vec3pdf RefractiveInterface::randReflect(const Vector3& in, const Vector3& normal, const bool& isFront) const{
+    //return vec3pdf(-in, fabs(dot(in,normal)));
     float cosIn = dot(in, normal);
     float sinIn = sqrt(1 - cosIn*cosIn);
-    float nIn = m_n0;
-    float nOpp = m_n1;
-    if (cosIn < 0) {
-        nIn = m_n1;
-        nOpp = m_n0;
+
+    float nOut_nIn;
+    if (isFront) nOut_nIn = m_n;
+    else nOut_nIn = 1 / m_n;
+
+    Vector3 outR = 2 * dot(normal, in)*normal - in;
+
+    //return vec3pdf(outR, 1);
+
+    if (nOut_nIn < 1 && sinIn>nOut_nIn) {
+        return vec3pdf(outR, 1);
     }
-    float sinCrit = fmin(m_n0, m_n1) / fmax(m_n0, m_n1);
-    if (nIn > nOpp && sinIn > sinCrit) return vec3pdf(2 * dot(normal, in)*normal - in, 1);
-    float sinOut = sinIn*nIn / m_n0;
-    float thetaOut = asin(sinOut);
-    Vector3 rotAxis = cross(normal, in).normalize();
-    if (nIn == m_n1) rotAxis = -rotAxis;
-    return vec3pdf(normal.rotated(thetaOut, rotAxis), 1);//*/
+
+    // otherwise, both transmission and reflection are possible
+
+    float sinOut = sinIn / nOut_nIn;
+    float cosOut = sqrt(1 - sinOut*sinOut);
+    Vector3 rotAxis = cross(normal, in);
+    Vector3 outT = -normal.rotated(asin(sinOut), rotAxis);
+
+    float rhoPara = (nOut_nIn*cosIn - cosOut) / (nOut_nIn*cosIn + cosOut);
+    float rhoPerp = (cosIn - nOut_nIn*cosOut) / (cosIn + nOut_nIn*cosOut);
+
+    float probR = (rhoPara*rhoPara + rhoPerp*rhoPerp) / 2;
+
+    float rn = (float)rand() / RAND_MAX;
+    if (rn < probR) {
+        return vec3pdf(outR, probR);
+    }
+    else {
+        return vec3pdf(outT, 1 - probR);
+    }
 }
 
 Vector3

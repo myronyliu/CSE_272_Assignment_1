@@ -6,7 +6,6 @@
 class RefractiveInterface : public Material
 {
 public:
-    RefractiveInterface();
     RefractiveInterface(const Vector3& kr = Vector3(1), const Vector3& kt = Vector3(1), const Vector3& ka = Vector3(0), const float& n = 1);
     virtual ~RefractiveInterface();
 
@@ -30,7 +29,6 @@ public:
     virtual vec3pdf randReflect(const Vector3& in, const Vector3& normal, const bool& isFront) const;
     virtual Vector3 BRDF(const Vector3& in, const Vector3& normal, const Vector3& out, const bool& isFront) const;
     virtual Vector3 radiance(const Vector3& normal, const Vector3& direction) const { return Vector3(0, 0, 0); }
-    virtual Vector3 sum_L_cosTheta_dOmega() const { return Vector3(0, 0, 0); }
 
     virtual Vector3 reflectance() const { return m_kr; }
     virtual Vector3 transmittance() const { return m_kt; }

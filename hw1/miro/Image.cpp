@@ -82,7 +82,7 @@ Vector3 Image::getPixel(int x, int y) const
 
 void Image::gammaPixels(float * gammaData)
 {
-    for (int y = 0; y < m_width; y++)
+    for (int y = 0; y < m_height; y++)
     {
         for (int x = 0; x < m_width; x++)
         {

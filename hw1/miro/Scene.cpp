@@ -86,8 +86,7 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounce
     double em = hit.object->material()->emittance();
     if (em == 1.0 || rn < em) {
         Vector3 rad = hit.object->material()->radiance(hit.N, ray.o - hit.P);
-        if (bounces == 0) return (1.0 / em)*rad;
-        else return Vector3(0, 0, 0);
+        return (1.0 / em)*rad;
     }
     rn = (double)rand() / RAND_MAX;
     vec3pdf vp;
@@ -420,7 +419,7 @@ void Scene::biditraceImage(Camera *cam, Image *img) {
             if (!trace(hitInfo, ray)) continue;
             Vector3 fluxSumOverSamples(0, 0, 0);
 
-            Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
+            Concurrency::parallel_for(0, m_samplesPerPix, [&](int k) {
                 EyePath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hit.size() == 0) return;
                 LightPath lightPath = randLightPath();
@@ -432,7 +431,7 @@ void Scene::biditraceImage(Camera *cam, Image *img) {
                 }
                 fluxSumOverSamples += fluxSum;
             });
-            img->setPixel(x, y, fluxSumOverSamples / m_bidiSamplesPerPix);
+            img->setPixel(x, y, fluxSumOverSamples / m_samplesPerPix);
         }
         if (preview())
         {
@@ -684,7 +683,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
             if (!trace(hitInfo, ray)) continue;
             Vector3 fluxSumOverSamples(0, 0, 0);
 
-            Concurrency::parallel_for(0, m_bidiSamplesPerPix, [&](int k) {
+            Concurrency::parallel_for(0, m_samplesPerPix, [&](int k) {
                 EyePath eyePath = randEyePath(x, y, cam, img);
                 if (eyePath.m_hit.size() == 0) return;
                 int randIndex = (int)nLightPaths*((float)rand() / RAND_MAX);
@@ -700,7 +699,7 @@ Scene::unifiedpathtraceImage(Camera *cam, Image *img) {
                 }
                 fluxSumOverSamples += fluxSum;
             });
-            img->setPixel(x, y, fluxSumOverSamples / m_bidiSamplesPerPix);
+            img->setPixel(x, y, fluxSumOverSamples / m_samplesPerPix);
         }
         if (preview())
         {

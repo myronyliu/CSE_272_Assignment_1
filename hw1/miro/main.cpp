@@ -36,7 +36,6 @@ makeTestScene() {
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(1024);
-    g_scene->setBidiSamplesPerPix(256);
     g_scene->setMaxBounces(100);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);
@@ -54,7 +53,7 @@ makeRoomScene(){
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
-    g_image->resize(256, 256);
+    g_image->resize(150, 150);
 
     // set up the camera
     g_camera->setEye(Vector3(0, -4, 1));
@@ -64,7 +63,6 @@ makeRoomScene(){
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(16);
-    g_scene->setBidiSamplesPerPix(4);
     g_scene->setMaxBounces(16);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);
@@ -79,23 +77,37 @@ makeRoomScene(){
     Phong* pho = new Phong(0.0f, 0.8f, 50);
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
     coverMat->setKd(0.0f);
+    RefractiveInterface* waterMat = new RefractiveInterface();
+    waterMat->setRefractiveIndex(1.5f);
 
+    Sphere* sphere = new Sphere(Vector3(0, 0, 1), 0.5);
+    sphere->setMaterial(mat);
+    g_scene->addObject(sphere);
 
     Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
     Parallelogram * wall_R = new Parallelogram(Vector3(1, 0, 1), Vector3(0, 0, 1), Vector3(0, 1, 0), 1, 1); // right
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
     Parallelogram * wall_B = new Parallelogram(Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1); // bottom
+    Parallelogram * water_T = new Parallelogram(Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1);
+    Parallelogram * water_N = new Parallelogram(Vector3(0, 0.1, 0.5), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 0.5);
+    Parallelogram * water_F = new Parallelogram(Vector3(0, 0.1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     wall_T->setMaterial(mat);
     wall_B->setMaterial(mat);
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
     wall_F->setMaterial(mat);
+    water_F->setMaterial(waterMat);
+    water_T->setMaterial(waterMat);
+    water_N->setMaterial(waterMat);
     g_scene->addObject(wall_B);
     g_scene->addObject(wall_F);
     g_scene->addObject(wall_L);
     g_scene->addObject(wall_R);
-    g_scene->addObject(wall_T);//*/
+    g_scene->addObject(wall_T);
+    g_scene->addObject(water_F);
+    //g_scene->addObject(water_T);
+    //g_scene->addObject(water_N);
 
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
     g_scene->addAreaLight(light, 20000);
@@ -105,7 +117,7 @@ makeRoomScene(){
     cover->disableBack();
     cover->setMaterial(coverMat);
 
-    //light->flip(); cover->flip(); light->setWattage(2);
+    light->flip(); cover->flip(); light->setWattage(5);
     
 
     g_scene->preCalc();
