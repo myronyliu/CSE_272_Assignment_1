@@ -69,7 +69,7 @@ public:
         float tMin = 0.0f, float tMax = MIRO_TMAX) const;
     bool trace(HitInfo& minHit, const Ray& ray, const Object* skip,
         float tMin = 0.0f, float tMax = MIRO_TMAX) const;
-    Vector3 recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounces);
+    Vector3 recursiveTrace_fromEye(const Ray& ray, const int& maxbounces);
     // trace a ray through the scene and return an image with accumlated pixel values from that single photon
     void tracePhoton(Camera *cam, Image *img, const LightPDF& lightAndProb, const RayPDF& rayAndProb);
 

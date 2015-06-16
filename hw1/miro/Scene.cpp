@@ -76,40 +76,47 @@ Scene::raytraceImage(Camera *cam, Image *img)
     debug("done Raytracing!\n");
 }
 
-Vector3 Scene::recursiveTrace_fromEye(const Ray& ray, int bounces, int maxbounces) {
-    if (bounces >= maxbounces) return Vector3(0, 0, 0);
+Vector3 Scene::recursiveTrace_fromEye(const Ray& rayInit, const int& maxBounces) {
+    Vector3 radiance(0,0,0);
+    Vector3 multiplier(1, 1, 1);
+    Ray ray = rayInit;
     HitInfo hit;
-    if (!trace(hit, ray)) {
-        return Vector3(0, 0, 0);
+    int bounces = 0;
+    while (bounces < maxBounces) {
+        if (!trace(hit, ray)) break;
+        double rn = (double)(rand() / RAND_MAX);
+        double em = hit.object->material()->emittance();
+        if (em == 1.0 || rn < em) {
+            radiance += (1.0 / em)*multiplier*hit.object->material()->radiance(hit.N, ray.o - hit.P);
+            break;
+        }
+        rn = (double)rand() / RAND_MAX;
+        vec3pdf vp;
+        if (m_samplingHeuristic == 1 || rn < m_samplingHeuristic) { // sample BRDF
+            vp = hit.object->randReflect(-ray.d, hit.N, hit.P); // pick BRDF weighted random direction
+        }
+        else { // sample AreaLight
+            int numAL = m_areaLights.size();
+            int randALind = std::fmin(floor((double)numAL* rand() / RAND_MAX), numAL - 1);
+            AreaLight* randAL = m_areaLights[randALind];
+            vp = randAL->randPt();
+            Vector3 lightPt = vp.v;
+            vp.v -= hit.P;
+            vp.p *= vp.v.length2() / fabs(dot(vp.v.normalized(), randAL->normal(lightPt))); // convert PDF from 1/A to 1/SA
+        }
+        Vector3 newDir = vp.v.normalized();
+        Ray newRay;
+        newRay.o = hit.P;
+        newRay.d = newDir;
+        Vector3 brdf = hit.object->BRDF(-ray.d, hit.N, newRay.d, hit.P);
+        float cos = fabs(dot(hit.N, newDir)); // changed this to fabs for transmissible materials such as RefractiveInterface
+        Vector3 gather = hit.object->shade(ray, hit, *this, hit.P); // gathered direct lighting
+        radiance += multiplier*gather;
+        multiplier *= (1.0 / (1.0 - em))*brdf*cos / vp.p;
+        ray = newRay;
+        bounces++;
     }
-    double rn = (double)(rand() / RAND_MAX);
-    double em = hit.object->material()->emittance();
-    if (em == 1.0 || rn < em) {
-        Vector3 rad = hit.object->material()->radiance(hit.N, ray.o - hit.P);
-        return (1.0 / em)*rad;
-    }
-    rn = (double)rand() / RAND_MAX;
-    vec3pdf vp;
-    if (m_samplingHeuristic == 1 || rn < m_samplingHeuristic) { // sample BRDF
-        vp = hit.object->randReflect(-ray.d, hit.N, hit.P); // pick BRDF weighted random direction
-    }
-    else { // sample AreaLight
-        int numAL = m_areaLights.size();
-        int randALind = std::fmin(floor((double)numAL* rand() / RAND_MAX), numAL - 1);
-        AreaLight* randAL = m_areaLights[randALind];
-        vp = randAL->randPt();
-        Vector3 lightPt = vp.v;
-        vp.v -= hit.P;
-        vp.p *= vp.v.length2() / fabs(dot(vp.v.normalized(), randAL->normal(lightPt))); // convert PDF from 1/A to 1/SA
-    }
-    Vector3 newDir = vp.v.normalized();
-    Ray newRay;
-    newRay.o = hit.P;
-    newRay.d = newDir;
-    Vector3 brdf = hit.object->BRDF(-ray.d, hit.N, newRay.d, hit.P);
-    float cos = fabs(dot(hit.N, newDir)); // changed this to fabs for transmissible materials such as RefractiveInterface
-    Vector3 gather = hit.object->shade(ray, hit, *this, hit.P); // gathered direct lighting
-    return gather + (1.0 / (1.0 - em)) / vp.p*brdf*cos*recursiveTrace_fromEye(newRay, bounces + 1, maxbounces);
+    return radiance;
 }
 
 void
@@ -135,7 +142,7 @@ Scene::pathtraceImage(Camera *cam, Image *img)
             for (int k = 0; k < m_samplesPerPix; k++){
                 Ray ray = cam->eyeRayJittered(i, j, img->width(), img->height());
                 if (!trace(hitInfo, ray)) continue;
-                pixSum += recursiveTrace_fromEye(ray, 0, m_maxBounces) / (double)m_samplesPerPix;
+                pixSum += recursiveTrace_fromEye(ray, m_maxBounces) / (double)m_samplesPerPix;
             }
             img->setPixel(i, j, pixSum);
         }

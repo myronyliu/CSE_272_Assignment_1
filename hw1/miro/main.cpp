@@ -63,7 +63,7 @@ makeRoomScene(){
 
     g_scene->setPreview(true);
     g_scene->setSamplesPerPix(16);
-    g_scene->setMaxBounces(16);
+    g_scene->setMaxBounces(64);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);
     g_scene->setPhotonSamples(100000000);
@@ -105,7 +105,7 @@ makeRoomScene(){
     g_scene->addObject(wall_L);
     g_scene->addObject(wall_R);
     g_scene->addObject(wall_T);
-    g_scene->addObject(water_F);
+    //g_scene->addObject(water_F);
     //g_scene->addObject(water_T);
     //g_scene->addObject(water_N);
 
