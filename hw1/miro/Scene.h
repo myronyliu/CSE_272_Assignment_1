@@ -101,13 +101,13 @@ protected:
     int m_maxEyePaths = 1;
     int m_maxLightPaths = 0;
     int m_nGatheredPhotons = 32;
-    float m_photonGatheringRadius = 0.1f; // radius for gathering photons in the vicinity
+    float m_photonGatheringRadius = 0.5f; // radius for gathering photons in the vicinity
 
     std::vector<int> m_emittedPhotonsPerLight;
     Lights m_lights;
     PointLights m_pointLights;
     AreaLights m_areaLights;
-    float m_samplingHeuristic = 0.5f; // probability of sampling BRDF. Complement is for sampling light
+    float m_samplingHeuristic = 1.0f; // probability of sampling BRDF. Complement is for sampling light
     bool m_preview = false;
 };
 

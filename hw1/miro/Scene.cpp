@@ -109,6 +109,9 @@ Vector3 Scene::recursiveTrace_fromEye(const Ray& rayInit, const int& maxBounces)
         newRay.o = hit.P;
         newRay.d = newDir;
         Vector3 brdf = hit.object->BRDF(-ray.d, hit.N, newRay.d, hit.P);
+        if (brdf == Vector3(0, 0, 0)) {
+            //cout << endl;
+        }
         float cos = fabs(dot(hit.N, newDir)); // changed this to fabs for transmissible materials such as RefractiveInterface
         Vector3 gather = hit.object->shade(ray, hit, *this, hit.P); // gathered direct lighting
         radiance += multiplier*gather;

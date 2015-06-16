@@ -76,13 +76,16 @@ makeRoomScene(){
     mir->setKs(0.8f);
     Phong* pho = new Phong(0.0f, 0.8f, 50);
     Lambert* coverMat = new Lambert(Vector3(0.0f, 0.0f, 0.0f));
-    coverMat->setKd(0.0f);
+    coverMat->setKd(0.000001f);
     RefractiveInterface* waterMat = new RefractiveInterface();
-    waterMat->setRefractiveIndex(1.5f);
+    waterMat->setRefractiveIndex(2.0/3.0);
 
-    Sphere* sphere = new Sphere(Vector3(0, 0, 1), 0.5);
-    sphere->setMaterial(mat);
-    g_scene->addObject(sphere);
+    Sphere* sphereL = new Sphere(Vector3(-0.5, 0, 1), 0.25);
+    Sphere* sphereR = new Sphere(Vector3(0.5, 0, 1), 0.25);
+    sphereL->setMaterial(mat);
+    sphereR->setMaterial(mat);
+    g_scene->addObject(sphereL);
+    g_scene->addObject(sphereR);
 
     Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
@@ -90,7 +93,8 @@ makeRoomScene(){
     Parallelogram * wall_T = new Parallelogram(Vector3(0, 0, 2), Vector3(0, 1, 0), Vector3(1, 0, 0), 1, 1); // top
     Parallelogram * wall_B = new Parallelogram(Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1); // bottom
     Parallelogram * water_T = new Parallelogram(Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), 1, 1);
-    Parallelogram * water_N = new Parallelogram(Vector3(0, 0.1, 0.5), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 0.5);
+    Parallelogram * water_N = new Parallelogram(Vector3(0.5, -1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 0.5, 1);
+    Parallelogram * water_L = new Parallelogram(Vector3(0, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1);
     Parallelogram * water_F = new Parallelogram(Vector3(0, 0.1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     wall_T->setMaterial(mat);
     wall_B->setMaterial(mat);
@@ -100,14 +104,15 @@ makeRoomScene(){
     water_F->setMaterial(waterMat);
     water_T->setMaterial(waterMat);
     water_N->setMaterial(waterMat);
+    water_L->setMaterial(waterMat);
     g_scene->addObject(wall_B);
     g_scene->addObject(wall_F);
     g_scene->addObject(wall_L);
     g_scene->addObject(wall_R);
     g_scene->addObject(wall_T);
-    //g_scene->addObject(water_F);
-    //g_scene->addObject(water_T);
+    
     //g_scene->addObject(water_N);
+    //g_scene->addObject(water_L);
 
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
     g_scene->addAreaLight(light, 20000);

@@ -30,7 +30,9 @@ Vector3 RefractiveInterface::BRDF(const Vector3& in, const Vector3& normal, cons
 
     if (cosOut == 0) return Vector3(0, 0, 0); // this case cannot be handled due to division by zero
 
-    if (fabs((cosOut - cosIn) / cosIn) < 0.000001) return m_kr / fabs(cosOut); // reflected
+    if (fabs((cosOut - cosIn) / cosIn) < 0.000001) {
+        return m_kr / fabs(cosOut); // reflected
+    }
 
     float sinIn = sinVecIn.length();
     float sinOut = sinVecOut.length();
@@ -38,9 +40,11 @@ Vector3 RefractiveInterface::BRDF(const Vector3& in, const Vector3& normal, cons
 
     float nOut_nIn; // ratio of indices of refraction n_out/n_in 
     if (isFront) nOut_nIn = m_n;
-    else nOut_nIn = 1 / m_n; // this is also sin(theta_critical)
+    else nOut_nIn = 1.0f / m_n; // this is also sin(theta_critical)
 
-    if (fabs((sinIn_sinOut - nOut_nIn) / nOut_nIn) < 0.000001) return m_kt / cosOut;
+    if (fabs((sinIn_sinOut - nOut_nIn) / nOut_nIn) < 0.000001) {
+        return m_kt / cosOut;
+    }
     return Vector3(0, 0, 0);
 }
 
@@ -51,9 +55,16 @@ vec3pdf RefractiveInterface::randReflect(const Vector3& in, const Vector3& norma
 
     float nOut_nIn;
     if (isFront) nOut_nIn = m_n;
-    else nOut_nIn = 1 / m_n;
+    else nOut_nIn = 1.0f / m_n;
 
     Vector3 outR = 2 * dot(normal, in)*normal - in;
+
+    Vector3 sinVecIn = cross(in, normal);
+    Vector3 sinVecOut = cross(outR, normal);
+
+    if (dot(sinVecIn, sinVecOut) > 0) {
+        std::cout << std::endl;
+    }
 
     //return vec3pdf(outR, 1);
 
@@ -65,8 +76,15 @@ vec3pdf RefractiveInterface::randReflect(const Vector3& in, const Vector3& norma
 
     float sinOut = sinIn / nOut_nIn;
     float cosOut = sqrt(1 - sinOut*sinOut);
-    Vector3 rotAxis = cross(normal, in);
+    Vector3 rotAxis = cross(normal, in).normalize();
     Vector3 outT = -normal.rotated(asin(sinOut), rotAxis);
+
+    sinVecIn = cross(in, normal);
+    sinVecOut = cross(outT, normal);
+
+    if (dot(sinVecIn, sinVecOut) > 0) {
+        std::cout << std::endl;
+    }
 
     float rhoPara = (nOut_nIn*cosIn - cosOut) / (nOut_nIn*cosIn + cosOut);
     float rhoPerp = (cosIn - nOut_nIn*cosOut) / (cosIn + nOut_nIn*cosOut);
