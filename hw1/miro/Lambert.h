@@ -1,5 +1,5 @@
-#ifndef CSE168_LAMBERT_H_INCLUDED
-#define CSE168_LAMBERT_H_INCLUDED
+#ifndef LAMBERT_H_INCLUDED
+#define LAMBERT_H_INCLUDED
 
 #include "Material.h"
 
@@ -36,4 +36,4 @@ protected:
     Vector3 m_ka;
 };
 
-#endif // CSE168_LAMBERT_H_INCLUDED
+#endif // LAMBERT_H_INCLUDED

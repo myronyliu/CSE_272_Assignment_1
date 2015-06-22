@@ -1,5 +1,5 @@
-#ifndef CSE168_BL_PATCH_H_INCLUDED
-#define CSE168_BL_PATCH_H_INCLUDED
+#ifndef BL_PATCH_H_INCLUDED
+#define BL_PATCH_H_INCLUDED
 
 #include "Vector3.h"
 #include "Object.h"
@@ -21,4 +21,4 @@ protected:
     Vector3 m_verts[4];
 };
 
-#endif // CSE168_BL_PATCH_H_INCLUDED
+#endif // BL_PATCH_H_INCLUDED

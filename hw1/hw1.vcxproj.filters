@@ -96,6 +96,9 @@
     <ClCompile Include="miro\PhotonMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="miro\Parallelepiped.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="miro\BLPatch.h">
@@ -195,6 +198,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="miro\PhotonMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="miro\Matrix3x3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="miro\Parallelepiped.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

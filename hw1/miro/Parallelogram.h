@@ -1,5 +1,5 @@
-#ifndef CSE168_PARALLELOGRAM_H_INCLUDED
-#define CSE168_PARALLELOGRAM_H_INCLUDED
+#ifndef PARALLELOGRAM_H_INCLUDED
+#define PARALLELOGRAM_H_INCLUDED
 
 #include "Vector3.h"
 #include "Object.h"
@@ -81,4 +81,4 @@ protected:
     bool m_front;
 };
 
-#endif // CSE168_PARALLELOGRAM_H_INCLUDED
+#endif // PARALLELOGRAM_H_INCLUDED

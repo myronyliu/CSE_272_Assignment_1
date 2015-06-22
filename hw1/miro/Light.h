@@ -1,5 +1,5 @@
-#ifndef CSE168_LIGHT_H_INCLUDED
-#define CSE168_LIGHT_H_INCLUDED
+#ifndef LIGHT_H_INCLUDED
+#define LIGHT_H_INCLUDED
 
 #include <vector>
 #include "Vector3.h"
@@ -33,4 +33,4 @@ protected:
 
 typedef std::vector<Light*> Lights;
 
-#endif // CSE168_LIGHT_H_INCLUDED
+#endif // LIGHT_H_INCLUDED

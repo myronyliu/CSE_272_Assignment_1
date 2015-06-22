@@ -1,5 +1,5 @@
-#ifndef CSE168_TRIANGLELIGHT_H_INCLUDED
-#define CSE168_TRIANGLELIGHT_H_INCLUDED
+#ifndef TRIANGLELIGHT_H_INCLUDED
+#define TRIANGLELIGHT_H_INCLUDED
 
 #include <vector>
 #include "Vector3.h"
@@ -23,4 +23,4 @@ protected:
 
 typedef std::vector<TriangleLight*> TriangleLights;
 
-#endif // CSE168_TRIANGLELIGHT_H_INCLUDED
+#endif // TRIANGLELIGHT_H_INCLUDED

@@ -1,5 +1,5 @@
-#ifndef CSE168_MATRIX4X4_H_INCLUDED
-#define CSE168_MATRIX4X4_H_INCLUDED
+#ifndef MATRIX4X4_H_INCLUDED
+#define MATRIX4X4_H_INCLUDED
 
 #include <math.h>
 #include <float.h>
@@ -586,4 +586,4 @@ operator*(const Matrix4x4& A, const Vector3& u)
     // note that this ignores the fourth row in the matrix!
 }
 
-#endif // CSE168_MATRIX4X4_H_INCLUDED
+#endif // MATRIX4X4_H_INCLUDED

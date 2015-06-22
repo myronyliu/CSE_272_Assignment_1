@@ -1,5 +1,5 @@
-#ifndef CSE168_OBJECT_H_INCLUDED
-#define CSE168_OBJECT_H_INCLUDED
+#ifndef OBJECT_H_INCLUDED
+#define OBJECT_H_INCLUDED
 
 #include <vector>
 #include "Miro.h"
@@ -36,4 +36,4 @@ protected:
 
 typedef std::vector<Object*> Objects;
 
-#endif // CSE168_OBJECT_H_INCLUDED
+#endif // OBJECT_H_INCLUDED

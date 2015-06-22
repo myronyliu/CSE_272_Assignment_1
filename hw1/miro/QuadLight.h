@@ -1,5 +1,5 @@
-#ifndef CSE168_QUADLIGHT_H_INCLUDED
-#define CSE168_QUADLIGHT_H_INCLUDED
+#ifndef QUADLIGHT_H_INCLUDED
+#define QUADLIGHT_H_INCLUDED
 
 #include <vector>
 #include "Vector3.h"
@@ -24,4 +24,4 @@ protected:
 
 typedef std::vector<QuadLight*> QuadLights;
 
-#endif // CSE168_QUADLIGHT_H_INCLUDED
+#endif // QUADLIGHT_H_INCLUDED

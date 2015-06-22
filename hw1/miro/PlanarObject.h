@@ -1,5 +1,5 @@
-#ifndef CSE168_PLANAROBJECT_H_INCLUDED
-#define CSE168_PlANAROBJECT_H_INCLUDED
+#ifndef PLANAROBJECT_H_INCLUDED
+#define PlANAROBJECT_H_INCLUDED
 
 #include <vector>
 #include "Object.h"
@@ -20,4 +20,4 @@ protected:
     bool m_front;
 };
 
-#endif // CSE168_PLANAROBJECT_H_INCLUDED
+#endif // PLANAROBJECT_H_INCLUDED

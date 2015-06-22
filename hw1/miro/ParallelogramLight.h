@@ -1,5 +1,5 @@
-#ifndef CSE168_PARALLELOGRAMLIGHT_H_INCLUDED
-#define CSE168_PARALLELOGRAMLIGHT_H_INCLUDED
+#ifndef PARALLELOGRAMLIGHT_H_INCLUDED
+#define PARALLELOGRAMLIGHT_H_INCLUDED
 
 #include <vector>
 #include "Vector3.h"
@@ -28,4 +28,4 @@ protected:
 
 typedef std::vector<ParallelogramLight*> ParallelogramLights;
 
-#endif // CSE168_PARALLELOGRAMLIGHT_H_INCLUDED
+#endif // PARALLELOGRAMLIGHT_H_INCLUDED

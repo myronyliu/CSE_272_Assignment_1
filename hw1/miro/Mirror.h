@@ -1,5 +1,5 @@
-#ifndef CSE168_MIRROR_H_INCLUDED
-#define CSE168_MIRROR_H_INCLUDED
+#ifndef MIRROR_H_INCLUDED
+#define MIRROR_H_INCLUDED
 
 #include "Material.h"
 
@@ -37,4 +37,4 @@ protected:
     Vector3 m_ka;
 };
 
-#endif // CSE168_MIRROR_H_INCLUDED
+#endif // MIRROR_H_INCLUDED

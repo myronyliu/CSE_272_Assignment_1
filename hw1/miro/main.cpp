@@ -10,6 +10,7 @@
 #include "PointLight.h"
 #include "Sphere.h"
 #include "Parallelogram.h"
+#include "Parallelepiped.h"
 #include "PolygonMesh.h"
 #include "Triangle.h"
 #include "Quad.h"
@@ -114,8 +115,12 @@ makeRoomScene(){
     //g_scene->addObject(water_N);
     //g_scene->addObject(water_L);
 
+    Parallelepiped* box = new Parallelepiped(Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1), 0.5, 0.5, 0.5);
+    box->setMaterial(mat);
+    g_scene->addObject(box);
+
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
-    g_scene->addAreaLight(light, 20000);
+    g_scene->addAreaLight(light, 200000);
 
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     g_scene->addObject(cover);

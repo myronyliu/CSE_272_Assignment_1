@@ -1,5 +1,5 @@
-#ifndef CSE168_PHONG_H_INCLUDED
-#define CSE168_PHONG_H_INCLUDED
+#ifndef PHONG_H_INCLUDED
+#define PHONG_H_INCLUDED
 
 #include "Material.h"
 
@@ -40,4 +40,4 @@ protected:
     float m_n;
 };
 
-#endif // CSE168_PHONG_H_INCLUDED
+#endif // PHONG_H_INCLUDED

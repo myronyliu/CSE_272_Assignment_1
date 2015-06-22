@@ -11,6 +11,8 @@
 
 #include <algorithm>
 
+//#pragma omp parallel for
+
 using namespace std;
 Scene * g_scene = 0;
 

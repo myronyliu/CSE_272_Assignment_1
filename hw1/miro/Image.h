@@ -1,5 +1,5 @@
-#ifndef CSE168_IMAGE_H_INCLUDED
-#define CSE168_IMAGE_H_INCLUDED
+#ifndef IMAGE_H_INCLUDED
+#define IMAGE_H_INCLUDED
 
 #include "Vector3.h"
 
@@ -44,4 +44,4 @@ private:
 
 extern Image * g_image;
 
-#endif // CSE168_IMAGE_H_INCLUDED
+#endif // IMAGE_H_INCLUDED

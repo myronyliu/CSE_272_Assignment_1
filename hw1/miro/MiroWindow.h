@@ -1,5 +1,5 @@
-#ifndef CSE168_MIRO_GLUT_WINDOW_H_INCLUDED
-#define CSE168_MIRO_GLUT_WINDOW_H_INCLUDED
+#ifndef MIRO_GLUT_WINDOW_H_INCLUDED
+#define MIRO_GLUT_WINDOW_H_INCLUDED
 
 class MiroWindow
 {
@@ -21,6 +21,6 @@ protected:
     int   m_mouseX, m_mouseY;
 };
 
-#endif // CSE168_MIRO_GLUT_WINDOW_H_INCLUDED
+#endif // MIRO_GLUT_WINDOW_H_INCLUDED
 
 

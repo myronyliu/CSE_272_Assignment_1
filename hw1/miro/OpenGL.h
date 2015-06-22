@@ -1,5 +1,5 @@
-#ifndef CSE168_OPENGL_H_INCLUDED
-#define CSE168_OPENGL_H_INCLUDED
+#ifndef OPENGL_H_INCLUDED
+#define OPENGL_H_INCLUDED
 
 // use the following on Windows or GNU/Linux
 #ifndef __APPLE__
@@ -16,6 +16,6 @@
 
 #endif
 
-#endif // CSE168_OPENGL_H_INCLUDED
+#endif // OPENGL_H_INCLUDED
 
 

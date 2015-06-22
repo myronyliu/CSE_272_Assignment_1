@@ -1,5 +1,5 @@
-#ifndef CSE168_SCENE_H_INCLUDED
-#define CSE168_SCENE_H_INCLUDED
+#ifndef SCENE_H_INCLUDED
+#define SCENE_H_INCLUDED
 
 #include "Miro.h"
 #include "Object.h"
@@ -101,7 +101,7 @@ protected:
     int m_maxEyePaths = 1;
     int m_maxLightPaths = 0;
     int m_nGatheredPhotons = 32;
-    float m_photonGatheringRadius = 0.5f; // radius for gathering photons in the vicinity
+    float m_photonGatheringRadius = 0.1f; // radius for gathering photons in the vicinity
 
     std::vector<int> m_emittedPhotonsPerLight;
     Lights m_lights;
@@ -113,4 +113,4 @@ protected:
 
 extern Scene * g_scene;
 
-#endif // CSE168_SCENE_H_INCLUDED
+#endif // SCENE_H_INCLUDED

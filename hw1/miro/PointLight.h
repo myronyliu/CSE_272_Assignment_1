@@ -1,5 +1,5 @@
-#ifndef CSE168_POINTLIGHT_H_INCLUDED
-#define CSE168_POINTLIGHT_H_INCLUDED
+#ifndef POINTLIGHT_H_INCLUDED
+#define POINTLIGHT_H_INCLUDED
 
 #include <vector>
 #include "Vector3.h"
@@ -27,4 +27,4 @@ protected:
 
 typedef std::vector<PointLight*> PointLights;
 
-#endif // CSE168_POINTLIGHT_H_INCLUDED
+#endif // POINTLIGHT_H_INCLUDED

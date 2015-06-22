@@ -1,5 +1,5 @@
-#ifndef CSE168_CAMERA_H_INCLUDED
-#define CSE168_CAMERA_H_INCLUDED
+#ifndef CAMERA_H_INCLUDED
+#define CAMERA_H_INCLUDED
 
 #include "Vector3.h"
 #include "Miro.h"
@@ -133,4 +133,4 @@ inline void Camera::setBGColor(const Vector3& vd)
     setBGColor(vd.x, vd.y, vd.z);
 }
 
-#endif // CSE168_CAMERA_H_INCLUDED
+#endif // CAMERA_H_INCLUDED

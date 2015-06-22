@@ -1,5 +1,5 @@
-#ifndef CSE168_RAYPATH_H_INCLUDED
-#define CSE168_RAYPATH_H_INCLUDED
+#ifndef RAYPATH_H_INCLUDED
+#define RAYPATH_H_INCLUDED
 
 #include <vector>
 #include "Ray.h"
@@ -43,4 +43,4 @@ public:
     Light* m_light;
 };
 
-#endif // CSE168_RAYPATH_H_INCLUDED
+#endif // RAYPATH_H_INCLUDED

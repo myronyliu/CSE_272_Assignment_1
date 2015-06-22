@@ -68,6 +68,7 @@
   <ItemGroup>
     <ClCompile Include="miro\AreaLight.cpp" />
     <ClCompile Include="miro\BLPatch.cpp" />
+    <ClCompile Include="miro\Parallelepiped.cpp" />
     <ClCompile Include="miro\BVH.cpp" />
     <ClCompile Include="miro\Camera.cpp" />
     <ClCompile Include="miro\Console.cpp" />
@@ -96,7 +97,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="miro\AreaLight.h" />
+    <ClInclude Include="miro\Parallelepiped.h" />
     <ClInclude Include="miro\Light.h" />
+    <ClInclude Include="miro\Matrix3x3.h" />
     <ClInclude Include="miro\Mirror.h" />
     <ClInclude Include="miro\ParallelogramLight.h" />
     <ClInclude Include="miro\BLPatch.h" />

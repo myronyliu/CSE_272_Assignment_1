@@ -1,5 +1,5 @@
-#ifndef CSE168_VECTOR3_H_INCLUDED
-#define CSE168_VECTOR3_H_INCLUDED
+#ifndef VECTOR3_H_INCLUDED
+#define VECTOR3_H_INCLUDED
 
 #include <math.h>
 #include <float.h>
@@ -281,4 +281,4 @@ operator<<(std::ostream& out, const Vector3& v)
 
 bool coplanar(const Vector3 & u, const Vector3& v, const Vector3& w);
 
-#endif // CSE168_VECTOR3_H_INCLUDED
+#endif // VECTOR3_H_INCLUDED

@@ -1,5 +1,5 @@
-#ifndef CSE168_POLYGON_MESH_H_INCLUDED
-#define CSE168_POLYGON_MESH_H_INCLUDED
+#ifndef POLYGON_MESH_H_INCLUDED
+#define POLYGON_MESH_H_INCLUDED
 
 #include "Matrix4x4.h"
 #include "Scene.h"
@@ -103,4 +103,4 @@ protected:
 };
 
 
-#endif // CSE168_POLYGON_MESH_H_INCLUDED
+#endif // POLYGON_MESH_H_INCLUDED

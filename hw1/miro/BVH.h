@@ -1,5 +1,5 @@
-#ifndef CSE168_BVH_H_INCLUDED
-#define CSE168_BVH_H_INCLUDED
+#ifndef BVH_H_INCLUDED
+#define BVH_H_INCLUDED
 
 #include "Miro.h"
 #include "Object.h"
@@ -25,4 +25,4 @@ protected:
     AreaLights* m_areaLights;
 };
 
-#endif // CSE168_BVH_H_INCLUDED
+#endif // BVH_H_INCLUDED

@@ -1,5 +1,5 @@
-#ifndef CSE168_MATERIAL_H_INCLUDED
-#define CSE168_MATERIAL_H_INCLUDED
+#ifndef MATERIAL_H_INCLUDED
+#define MATERIAL_H_INCLUDED
 
 #include <cmath>
 #include "Miro.h"
@@ -44,4 +44,4 @@ protected:
     Vector3 m_ka = 0;
 };
 
-#endif // CSE168_MATERIAL_H_INCLUDED
+#endif // MATERIAL_H_INCLUDED

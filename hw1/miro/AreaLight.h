@@ -1,5 +1,5 @@
-#ifndef CSE168_AREALIGHT_H_INCLUDED
-#define CSE168_AREALIGHT_H_INCLUDED
+#ifndef AREALIGHT_H_INCLUDED
+#define AREALIGHT_H_INCLUDED
 
 #include <vector>
 #include "Vector3.h"
@@ -19,4 +19,4 @@ protected:
 
 typedef std::vector<AreaLight*> AreaLights;
 
-#endif // CSE168_AREALIGHT_H_INCLUDED
+#endif // AREALIGHT_H_INCLUDED

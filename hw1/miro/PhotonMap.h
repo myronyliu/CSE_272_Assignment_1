@@ -1,5 +1,5 @@
-#ifndef CSE168_PHOTONMAP_H_INCLUDED
-#define CSE168_PHOTONMAP_H_INCLUDED
+#ifndef PHOTONMAP_H_INCLUDED
+#define PHOTONMAP_H_INCLUDED
 
 #include <vector>
 #include <queue>
@@ -94,8 +94,8 @@ protected:
     Vector3 m_xyz;
     Vector3 m_XYZ;
     PhotonMap* m_parent;
-    PhotonMap* m_child0;
-    PhotonMap* m_child1;
+    PhotonMap* m_left;
+    PhotonMap* m_right;
     PhotonDeposit* m_photon; // the photon associated with this octant if this is a leaf node
 
     void setAxis() { m_axis = m_depth % 3; } // this is just here in case one wishes to define a different splitting convention
@@ -107,18 +107,18 @@ public:
         PhotonDeposit* photon = NULL,
         PhotonMap* parent = NULL,
         PhotonMap* child0 = NULL, PhotonMap* child1 = NULL) :
-        m_xyz(xyz), m_XYZ(XYZ), m_photon(photon), m_parent(parent), m_child0(child0), m_child1(child1)
+        m_xyz(xyz), m_XYZ(XYZ), m_photon(photon), m_parent(parent), m_left(child0), m_right(child1)
     {
         if (m_parent == NULL) m_depth = 0;
         else m_depth = m_parent->m_depth + 1;
         setAxis();
     }
     PhotonMap(const PhotonMap& copy) :
-        m_xyz(copy.m_xyz), m_XYZ(copy.m_XYZ), m_photon(copy.m_photon), m_parent(copy.m_parent), m_child0(copy.m_child0), m_child1(copy.m_child1) {}
-    ~PhotonMap() { delete m_child0; delete m_child1; } // recursively delete children
+        m_xyz(copy.m_xyz), m_XYZ(copy.m_XYZ), m_photon(copy.m_photon), m_parent(copy.m_parent), m_left(copy.m_left), m_right(copy.m_right) {}
+    ~PhotonMap() { delete m_left; delete m_right; } // recursively delete children
 
     PhotonMap* getLeafNode(const Vector3& x);
-    inline bool isLeafNode() const { return m_child0 == NULL; }
+    inline bool isLeafNode() const { return m_left == NULL; }
     void addPhoton(PhotonDeposit photon);
     std::vector<PhotonDeposit> getPhotons(const Vector3& bmin, const Vector3& bmax);
     std::vector<PhotonDeposit> getPhotons(const Vector3& x, const float& r) {
@@ -136,9 +136,9 @@ public:
 
     inline PhotonMap* getSibling() {
         if (m_parent == NULL) return NULL;
-        else if (m_parent->m_child0 == this) return m_parent->m_child1;
-        else return m_parent->m_child0;
+        else if (m_parent->m_left == this) return m_parent->m_right;
+        else return m_parent->m_left;
     }
 };
 
-#endif // CSE168_PHOTONMAP_H_INCLUDED
+#endif // PHOTONMAP_H_INCLUDED

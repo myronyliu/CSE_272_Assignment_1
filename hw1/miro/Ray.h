@@ -1,5 +1,5 @@
-#ifndef CSE168_RAY_H_INCLUDED
-#define CSE168_RAY_H_INCLUDED
+#ifndef RAY_H_INCLUDED
+#define RAY_H_INCLUDED
 
 #include "Vector3.h"
 #include "Object.h"
@@ -41,4 +41,4 @@ public:
     explicit HitInfo(float t, const Vector3& P, const Vector3& N, Object* object) : t(t), P(P), N(N), object(object) {}
 };
 
-#endif // CSE168_RAY_H_INCLUDED
+#endif // RAY_H_INCLUDED

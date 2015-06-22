@@ -1,5 +1,5 @@
-#ifndef CSE168_SPHERE_H_INCLUDED
-#define CSE168_SPHERE_H_INCLUDED
+#ifndef SPHERE_H_INCLUDED
+#define SPHERE_H_INCLUDED
 
 #include "Vector3.h"
 #include "Object.h"
@@ -42,4 +42,4 @@ protected:
     float m_radius;
 };
 
-#endif // CSE168_SPHERE_H_INCLUDED
+#endif // SPHERE_H_INCLUDED

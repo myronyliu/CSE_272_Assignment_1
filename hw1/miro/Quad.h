@@ -1,5 +1,5 @@
-#ifndef CSE168_Quad_H_INCLUDED
-#define CSE168_Quad_H_INCLUDED
+#ifndef Quad_H_INCLUDED
+#define Quad_H_INCLUDED
 
 #include "PolygonMesh.h"
 #include "Vector3.h"
@@ -55,4 +55,4 @@ protected:
     bool m_front;
 };
 
-#endif // CSE168_Quad_H_INCLUDED
+#endif // Quad_H_INCLUDED

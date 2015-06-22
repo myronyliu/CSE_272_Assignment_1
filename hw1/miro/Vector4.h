@@ -1,5 +1,5 @@
-#ifndef CSE168_VECTOR4_H_INCLUDED
-#define CSE168_VECTOR4_H_INCLUDED
+#ifndef VECTOR4_H_INCLUDED
+#define VECTOR4_H_INCLUDED
 
 #include <math.h>
 #include <float.h>
@@ -249,4 +249,4 @@ operator<<(std::ostream& out, const Vector4& v)
     return out << v.x << " " << v.y << " " << v.z << " " << v.w;
 }
 
-#endif // CSE168_VECTOR4_H_INCLUDED
+#endif // VECTOR4_H_INCLUDED

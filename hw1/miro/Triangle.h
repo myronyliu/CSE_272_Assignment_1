@@ -1,5 +1,5 @@
-#ifndef CSE168_TRIANGLE_H_INCLUDED
-#define CSE168_TRIANGLE_H_INCLUDED
+#ifndef TRIANGLE_H_INCLUDED
+#define TRIANGLE_H_INCLUDED
 
 #include "PolygonMesh.h"
 #include "Vector3.h"
@@ -55,4 +55,4 @@ protected:
     bool m_front;
 };
 
-#endif // CSE168_TRIANGLE_H_INCLUDED
+#endif // TRIANGLE_H_INCLUDED
