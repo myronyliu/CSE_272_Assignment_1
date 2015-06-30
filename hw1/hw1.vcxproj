@@ -81,6 +81,7 @@
     <ClCompile Include="miro\Mirror.cpp" />
     <ClCompile Include="miro\Parallellogram.cpp" />
     <ClCompile Include="miro\ParallelogramLight.cpp" />
+    <ClCompile Include="miro\ParticipatingMedium.cpp" />
     <ClCompile Include="miro\Phong.cpp" />
     <ClCompile Include="miro\PhotonMap.cpp" />
     <ClCompile Include="miro\PointLight.cpp" />
@@ -114,6 +115,7 @@
     <ClInclude Include="miro\MiroWindow.h" />
     <ClInclude Include="miro\Object.h" />
     <ClInclude Include="miro\OpenGL.h" />
+    <ClInclude Include="miro\ParticipatingMedium.h" />
     <ClInclude Include="miro\Phong.h" />
     <ClInclude Include="miro\PhotonMap.h" />
     <ClInclude Include="miro\PlanarObject.h" />

@@ -63,7 +63,7 @@ makeRoomScene(){
     g_camera->setFOV(40);
 
     g_scene->setPreview(true);
-    g_scene->setSamplesPerPix(16);
+    g_scene->setSamplesPerPix(8);
     g_scene->setMaxBounces(64);
     g_scene->setMaxEyePaths(64);
     g_scene->setMaxLightPaths(64);
@@ -85,8 +85,8 @@ makeRoomScene(){
     Sphere* sphereR = new Sphere(Vector3(0.5, 0, 1), 0.25);
     sphereL->setMaterial(mat);
     sphereR->setMaterial(mat);
-    g_scene->addObject(sphereL);
-    g_scene->addObject(sphereR);
+    //g_scene->addObject(sphereL);
+    //g_scene->addObject(sphereR);
 
     Parallelogram * wall_F = new Parallelogram(Vector3(0, 1, 1), Vector3(1, 0, 0), Vector3(0, 0, 1), 1, 1); // far
     Parallelogram * wall_L = new Parallelogram(Vector3(-1, 0, 1), Vector3(0, 1, 0), Vector3(0, 0, 1), 1, 1); // left
@@ -102,10 +102,10 @@ makeRoomScene(){
     wall_L->setMaterial(mat);
     wall_R->setMaterial(mat);
     wall_F->setMaterial(mat);
-    water_F->setMaterial(waterMat);
-    water_T->setMaterial(waterMat);
-    water_N->setMaterial(waterMat);
-    water_L->setMaterial(waterMat);
+    //water_F->setMaterial(waterMat);
+    //water_T->setMaterial(waterMat);
+    //water_N->setMaterial(waterMat);
+    //water_L->setMaterial(waterMat);
     g_scene->addObject(wall_B);
     g_scene->addObject(wall_F);
     g_scene->addObject(wall_L);
@@ -117,17 +117,17 @@ makeRoomScene(){
 
     Parallelepiped* box = new Parallelepiped(Vector3(0, 0, 1), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1), 0.5, 0.5, 0.5);
     box->setMaterial(mat);
-    g_scene->addObject(box);
+    //g_scene->addObject(box);
 
     ParallelogramLight * light = new ParallelogramLight(Vector3(0, 0, 1.98), Vector3(1, 0, 0), Vector3(0, 1, 0), 0.1, 0.1);
-    g_scene->addAreaLight(light, 200000);
+    g_scene->addAreaLight(light, 100000);
 
     Parallelogram * cover = new Parallelogram(Vector3(0, 0, 1.98), Vector3(0, 1, 0), Vector3(1, 0, 0), 0.1, 0.1);
     g_scene->addObject(cover);
     cover->disableBack();
     cover->setMaterial(coverMat);
 
-    light->flip(); cover->flip(); light->setWattage(5);
+    light->flip(); cover->flip(); light->setWattage(2);
     
 
     g_scene->preCalc();

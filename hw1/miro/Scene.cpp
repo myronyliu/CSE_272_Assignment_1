@@ -639,7 +639,7 @@ Vector3 Scene::uniRadiance(const int& i, const int& j, const LightPath& lightPat
 
         if (k == i) {
             if (explicitConnection == true) flux *= probPI;
-            else flux *= probDE; // the division by nLightPaths is implicitly done here
+            else flux *= probDE*1024; // the division by nLightPaths is implicitly done here
         }
 
         probSum += probPI + probDE*nLightPaths;
